@@ -44,7 +44,6 @@ brew 'imagick'
 
 # Apps
 cask "kap"
-cask "macdown"
 cask "krisp"
 cask 'docker'
 cask 'github'
