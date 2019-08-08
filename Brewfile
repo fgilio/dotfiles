@@ -40,11 +40,12 @@ brew "node"
 brew "yarn"
 brew "php"
 brew "composer"
-brew 'imagick'
+brew "imagemagick"
 
 # Apps
-cask "kap"
-cask "krisp"
+cask '1Password'
+cask 'kap'
+cask 'krisp'
 cask 'docker'
 cask 'github'
 cask 'gitup'
@@ -76,7 +77,9 @@ cask 'tripmode'
 cask 'visual-studio-code'
 cask 'vlc'
 cask 'zoom'
+casl 'the-unarchiver'
 cask 'jetbrains-toolbox'
+cask 'whatsapp'
 
 # Quicklook
 cask "provisionql"
@@ -111,6 +114,3 @@ mas "Numbers", id: 409203825
 mas "Pages", id: 409201541
 mas "Pocket", id: 568494494
 mas "Xcode", id: 497799835
-mas '1Password', id: 1333542190
-mas 'The Unarchiver', id: 425424353
-mas 'WhatsApp', id: 1147396723
