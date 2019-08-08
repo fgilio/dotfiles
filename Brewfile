@@ -79,7 +79,6 @@ cask 'zoom'
 cask 'jetbrains-toolbox'
 
 # Quicklook
-cask "betterzipql"
 cask "provisionql"
 cask "qlimagesize"
 cask "qlmarkdown"
@@ -88,6 +87,11 @@ cask "qlstephen"
 cask "quicklook-json"
 cask "quicklookapk"
 cask "webpquicklook"
+cask "suspicious-package"
+cask "quicklookase"
+cask "quicklook-csv"
+cask "qlvideo"
+cask "qlcolorcode"
 
 # Fonts
 cask 'font-open-sans'
