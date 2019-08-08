@@ -77,7 +77,7 @@ cask 'tripmode'
 cask 'visual-studio-code'
 cask 'vlc'
 cask 'zoom'
-casl 'the-unarchiver'
+cask 'the-unarchiver'
 cask 'jetbrains-toolbox'
 cask 'whatsapp'
 
