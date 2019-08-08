@@ -43,7 +43,8 @@ brew "composer"
 brew "imagemagick"
 
 # Apps
-cask '1Password'
+cask '1password'
+cask 'iterm2'
 cask 'kap'
 cask 'krisp'
 cask 'docker'
