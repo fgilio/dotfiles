@@ -14,6 +14,9 @@ brew update
 brew tap homebrew/bundle
 brew bundle
 
+# Create Sublime Text 3 terminal launcher
+ln -s "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" /usr/local/bin/sublime
+
 # Make ZSH the default shell environment
 chsh -s $(which zsh)
 
