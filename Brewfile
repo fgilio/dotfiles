@@ -47,6 +47,7 @@ brew "imagemagick"
 cask '1password'
 cask 'iterm2'
 cask 'kap'
+cask 'haptickey'
 cask 'krisp'
 cask 'docker'
 cask 'github'
