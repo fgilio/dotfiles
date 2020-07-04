@@ -81,9 +81,9 @@ cask 'jetbrains-toolbox'
 cask 'whatsapp'
 
 # Quicklook
-cask "provisionql"
+# cask "provisionql" fails in macOS 0.15 Catalina
 cask "qlimagesize"
-cask "qlmarkdown"
+# cask "qlmarkdown" fails in macOS 0.15 Catalina
 cask "qlprettypatch"
 cask "qlstephen"
 cask "quicklook-json"
