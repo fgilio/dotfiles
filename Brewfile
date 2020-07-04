@@ -40,7 +40,6 @@ brew "node"
 brew "yarn"
 brew "php"
 brew "composer"
-brew "imagemagick"
 
 # Apps
 cask '1password'
