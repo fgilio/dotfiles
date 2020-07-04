@@ -31,7 +31,6 @@ brew "youtube-dl"
 brew "zsh"
 brew "zsh-autosuggestions"
 brew "zsh-syntax-highlighting"
-brew "vagrant-completion"
 
 brew "redis", restart_service: true
 brew "postgresql@9.6", restart_service: true
@@ -61,9 +60,6 @@ cask 'skype'
 cask 'slack'
 cask 'sublime-text'
 cask 'tableplus'
-cask 'vagrant'
-cask 'virtualbox'
-cask 'virtualbox-extension-pack'
 cask 'cyberduck'
 cask 'postman'
 cask 'flotato'
