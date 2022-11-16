@@ -21,6 +21,7 @@ brew 'mas' # Mac App Store manager
 brew 'pkg-config' # https://github.com/driesvints/dotfiles/issues/20
 brew 'svn' # Needed to install fonts
 brew "htop"
+brew "handbrake"
 brew "prettyping"
 brew "qpdf"
 brew "tesseract"
