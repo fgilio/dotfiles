@@ -27,7 +27,8 @@ brew tap homebrew/bundle
 brew bundle --file $DOTFILES/Brewfile
 
 # Create Sublime Text terminal launcher
-ln -s "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" /usr/local/bin/sublime
+sudo ln -s "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" /usr/local/bin/sublime
+
 
 # Install PHP extensions with PECL
 pecl install imagick redis swoole

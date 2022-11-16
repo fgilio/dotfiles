@@ -1,19 +1,19 @@
 # ZSH Profile
-alias zsh-e="eae 'edit ~/.zshrc'"
-alias zsh-r="eae 'source ~/.zshrc'"
+alias zsh-e="edit ~/.zshrc"
+alias zsh-r="source ~/.zshrc"
 
 # Edit HOSTS file
-alias hosts-e="eae 'edit /etc/hosts'"
+alias hosts-e="edit /etc/hosts"
 
 # Show/Hide .dotfiles
-alias dfiles-s="eae 'defaults wite com.apple.finder AppleShowAllFiles YES; killall Finder /System/Library/CoreServices/Finder.app'"
-alias dfiles-h="eae 'defaults write com.apple.finder AppleShowAllFiles NO; killall Finder /System/Library/CoreServices/Finder.app'"
+alias dfiles-s="defaults wite com.apple.finder AppleShowAllFiles YES; killall Finder /System/Library/CoreServices/Finder.app"
+alias dfiles-h="defaults write com.apple.finder AppleShowAllFiles NO; killall Finder /System/Library/CoreServices/Finder.app"
 
 # Servers
-alias php-srv="eae 'open http://localhost:4444 && php -S localhost:4444'"
+alias php-srv="open http://localhost:4444 && php -S localhost:4444"
 
 # Copy Public Keys
-alias copy-ssh="eae 'cat ~/.ssh/id_rsa.pub | pbcopy'"
+alias copy-ssh="cat ~/.ssh/id_rsa.pub | pbcopy"
 
 alias h='history'
 alias rm='rm -i'
@@ -44,10 +44,10 @@ edit() {
     fi
 }
 
-alias dir-size="eae 'du -hs'"
+alias dir-size="du -hs"
 trash () { command mv "$@" ~/.Trash ; }     # trash:        Moves a file to the MacOS trash
 
-alias ipinfo="eae 'curl ipinfo.io'"
+alias ipinfo="curl ipinfo.io"
 alias myip=ipinfo
 
 alias flushDNS='dscacheutil -flushcache'
@@ -79,15 +79,15 @@ gdesktop () {
 ################
 ################
 # SSH
-alias ssh-fgilio="eae 'ssh master_upgkdvrkep@45.63.22.18'"
+alias ssh-fgilio="ssh master_upgkdvrkep@45.63.22.18"
 
-alias ssh-farfalla-production="eae 'ssh franco.gilio@35.229.106.158'"
-alias ssh-farfalla-staging="eae 'ssh franco.gilio@35.227.94.37'"
+alias ssh-farfalla-production="ssh franco.gilio@35.229.106.158"
+alias ssh-farfalla-staging="ssh franco.gilio@35.227.94.37"
 
-alias ssh-capra-production="eae 'ssh forge@34.215.138.243'"
-alias ssh-capra-staging="eae 'ssh forge@52.38.17.92'"
+alias ssh-capra-production="ssh forge@34.215.138.243"
+alias ssh-capra-staging="ssh forge@52.38.17.92"
 
-alias ssh-readers-production="eae 'ssh franco.gilio@35.196.166.201'"
-alias ssh-readers-staging="eae 'ssh franco.gilio@35.211.75.149'"
+alias ssh-readers-production="ssh franco.gilio@35.196.166.201"
+alias ssh-readers-staging="ssh franco.gilio@35.211.75.149"
 
-alias ssh-farfalla-integrations-prod="eae 'ssh franco.gilio@35.237.232.80'"
+alias ssh-farfalla-integrations-prod="ssh franco.gilio@35.237.232.80"
