@@ -75,19 +75,3 @@ alias nah='git reset --hard; git clean -df'
 gdesktop () {
     open -a GitHub\ Desktop .
 }
-
-################
-################
-# SSH
-alias ssh-fgilio="ssh master_upgkdvrkep@45.63.22.18"
-
-alias ssh-farfalla-production="ssh franco.gilio@35.229.106.158"
-alias ssh-farfalla-staging="ssh franco.gilio@35.227.94.37"
-
-alias ssh-capra-production="ssh forge@34.215.138.243"
-alias ssh-capra-staging="ssh forge@52.38.17.92"
-
-alias ssh-readers-production="ssh franco.gilio@35.196.166.201"
-alias ssh-readers-staging="ssh franco.gilio@35.211.75.149"
-
-alias ssh-farfalla-integrations-prod="ssh franco.gilio@35.237.232.80"
