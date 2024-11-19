@@ -181,6 +181,8 @@ defaults write com.apple.frameworks.diskimages auto-open-rw-root -bool true
 defaults write com.apple.finder OpenWindowForNewRemovableDisk -bool true
 
 # Disable the ctrl+cmd+d shortcut for Look Up in Dictionary
+# Source https://alexfedoseev.com/blog/post/fight-for-your-hotkeys
+# To apply the changes inmediately `/System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u`
 defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 70 '<dict><key>enabled</key><false/></dict>'
 
 # Enable snap-to-grid for icons on the desktop and in other icon views
