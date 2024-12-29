@@ -8,6 +8,7 @@ tap 'nicoverbruggen/homebrew-cask'
 # Binaries
 brew 'awscli'
 brew 'bash' # Latest Bash version
+brew 'nushell'
 brew 'bat'
 brew 'coreutils' # Those that come with macOS are outdated
 brew 'ffmpeg'
