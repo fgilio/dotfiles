@@ -2,11 +2,6 @@
 
 echo "Setting up your Mac..."
 
-# Check for Oh My Zsh and install if we don't have it
-if test ! $(which omz); then
-  /bin/sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/HEAD/tools/install.sh)"
-fi
-
 # Check for Homebrew and install if we don't have it
 if test ! $(which brew); then
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -24,20 +19,26 @@ brew update
 
 # Install all our dependencies with bundle (See Brewfile)
 brew tap homebrew/bundle
-brew bundle --file $DOTFILES/Brewfile
+brew bundle --file $HOME/.dotfiles/Brewfile
+
+# Install Starship prompt
+brew install starship
+
+# Install Bun
+curl -fsSL https://bun.sh/install | bash
+
+# Install other terminal tools
+brew install zoxide btop zsh-autosuggestions
 
 # Create Sublime Text terminal launcher
 sudo ln -s "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" /usr/local/bin/sublime
 
 
-# Install PHP extensions with PECL
-pecl install imagick redis swoole
+# Herd handles PHP and extensions
 
 # Install global Composer packages
-/usr/local/bin/composer global require laravel/installer beyondcode/expose
+composer global require laravel/installer beyondcode/expose ymirapp/cli
 
-# Install Laravel Valet
-$HOME/.composer/vendor/bin/valet install
 
 # Create a publica.la directory
 mkdir $HOME/pla

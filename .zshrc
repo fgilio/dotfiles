@@ -1,117 +1,218 @@
-# Path to your dotfiles.
-export DOTFILES=$HOME/.dotfiles
+################################################################################
+# ZSH Configuration File
+# Organized into sections for better maintainability
+################################################################################
 
-# Path to your oh-my-zsh installation.
-export ZSH="$HOME/.oh-my-zsh"
+#####################
+# History Configuration
+#####################
+HISTSIZE=5000               # Maximum events for internal history
+HISTFILE=~/.zsh_history     # History file location
+SAVEHIST=5000              # Maximum events in history file
+HISTDUP=erase              # Erase duplicates in the history file
+setopt appendhistory       # Append history to the history file (no overwriting)
+setopt incappendhistory    # Add commands to the history immediately
+setopt sharehistory        # Share history across ZSH sessions
+setopt hist_ignore_dups    # Ignore duplicate commands
+setopt hist_find_no_dups   # Don't display duplicate commands during search
+setopt hist_ignore_all_dups # Remove older duplicate entries from history
+setopt hist_save_no_dups   # Don't save duplicate entries to history file
 
-# Path to your dotfiles.
-export DOTFILES=$HOME/.dotfiles
+# History search bindings
+bindkey '^[[A' history-search-backward  # Up arrow for backward history search
+bindkey '^[[B' history-search-forward   # Down arrow for forward history search
 
-# If you come from bash you might have to change your $PATH.
-# export PATH=$HOME/bin:/usr/local/bin:$PATH
+#####################
+# Completion System
+#####################
+autoload -Uz +X compinit && compinit    # Initialize completion system
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'  # Case-insensitive completion
+zstyle ':completion:*' menu select      # Enable menu-style completion
 
-# Path to your oh-my-zsh installation.
-export ZSH="$HOME/.oh-my-zsh"
+#####################
+# Path Configuration
+#####################
+# Function to add path only if not already present
+add_to_path() {
+    if [[ ":$PATH:" != *":$1:"* ]]; then
+        export PATH="$1:$PATH"
+    fi
+}
 
-# Minimal - Theme Settings
-export MNML_INSERT_CHAR="❯"
-export MNML_PROMPT=(mnml_git mnml_keymap)
-export MNML_RPROMPT=('mnml_cwd 20')
+# MySQL client paths
+add_to_path "/opt/homebrew/opt/mysql-client@8.4/bin"
+add_to_path "/opt/homebrew/opt/mysql-client/bin"
+add_to_path "/opt/homebrew/opt/mysql-client@5.7/bin"
 
-# Set name of the theme to load --- if set to "random", it will
-# load a random theme each time oh-my-zsh is loaded, in which case,
-# to know which specific one was loaded, run: echo $RANDOM_THEME
-# See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="minimal"
+# Docker path (OrbStack)
+add_to_path "/Users/fgilio/.orbstack/bin"
 
-# Set list of themes to pick from when loading at random
-# Setting this variable when ZSH_THEME=random will cause zsh to load
-# a theme from this variable instead of looking in $ZSH/themes/
-# If set to an empty array, this variable will have no effect.
-# ZSH_THEME_RANDOM_CANDIDATES=( "robbyrussell" "agnoster" )
+# JetBrains Toolbox
+add_to_path "/Users/fgilio/Library/Application Support/JetBrains/Toolbox/scripts"
 
-# Uncomment the following line to use case-sensitive completion.
-# CASE_SENSITIVE="true"
+#####################
+# Herd Configuration
+#####################
+# PHP binary and configuration directories
+add_to_path "/Users/fgilio/Library/Application Support/Herd/bin/"
+export HERD_PHP_83_INI_SCAN_DIR="/Users/fgilio/Library/Application Support/Herd/config/php/83/"
 
-# Uncomment the following line to use hyphen-insensitive completion.
-# Case-sensitive completion must be off. _ and - will be interchangeable.
-# HYPHEN_INSENSITIVE="true"
+# NVM configuration
+export NVM_DIR="/Users/fgilio/Library/Application Support/Herd/config/nvm"
 
-# Uncomment one of the following lines to change the auto-update behavior
-# zstyle ':omz:update' mode disabled  # disable automatic updates
-# zstyle ':omz:update' mode auto      # update automatically without asking
-# zstyle ':omz:update' mode reminder  # just remind me to update when it's time
+# Load NVM but skip the auto-use functionality for performance
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" --no-use
 
-# Uncomment the following line to change how often to auto-update (in days).
-# zstyle ':omz:update' frequency 13
+# Shell integration (must come after NVM is loaded)
+[[ -f "/Applications/Herd.app/Contents/Resources/config/shell/zshrc.zsh" ]] && builtin source "/Applications/Herd.app/Contents/Resources/config/shell/zshrc.zsh"
 
-# Uncomment the following line if pasting URLs and other text is messed up.
-# DISABLE_MAGIC_FUNCTIONS="true"
+#####################
+# Bun Configuration
+#####################
+[ -s "/Users/fgilio/.bun/_bun" ] && source "/Users/fgilio/.bun/_bun"  # Bun completions
 
-# Uncomment the following line to disable colors in ls.
-# DISABLE_LS_COLORS="true"
+#####################
+# Aliases
+#####################
+# Basic shortcuts
+alias h="history"          # Show command history
+alias c="clear"            # Clear terminal
+alias f="open ./"          # Open current directory in Finder
+alias ..="cd .."           # Change to parent directory
+alias ...="cd ../.."       # Change to parent directory twice
 
-# Uncomment the following line to disable auto-setting terminal title.
-# DISABLE_AUTO_TITLE="true"
+# File operations
+# Enable colors for common commands
+export CLICOLOR=1                   # Enable colors in ls and other commands
+export LSCOLORS=ExGxBxDxCxEgEdxbxgxcxd  # Customize ls colors
 
-# Uncomment the following line to enable command auto-correction.
-# ENABLE_CORRECTION="true"
+alias ls="ls -G"                    # Colorized ls output
+alias ll="ls -alth --color=auto"    # Detailed directory listing with colors
+alias rm="rm -i"                    # Interactive removal
+alias cp="cp -iv"                   # Interactive and verbose copy
+alias mv="mv -iv"                   # Interactive and verbose move
+alias mkdir="mkdir -pv"             # Create parent dirs as needed, verbose
 
-# Uncomment the following line to display red dots whilst waiting for completion.
-# You can also set it to another string to have that shown instead of the default red dots.
-# e.g. COMPLETION_WAITING_DOTS="%F{yellow}waiting...%f"
-# Caution: this setting can cause issues with multiline prompts in zsh < 5.7.1 (see #5765)
-# COMPLETION_WAITING_DOTS="true"
+# Disk and memory utilities
+alias df="df -h"                    # Show disk free space in human-readable format (e.g., 1.5G instead of 1500000)
+alias du="du -h"                    # Show directory space usage in human-readable format (useful for finding large files/folders)
+alias top="btop"                    # Better top command with CPU, memory, network and disk monitoring
 
-# Uncomment the following line if you want to disable marking untracked files
-# under VCS as dirty. This makes repository status check for large repositories
-# much, much faster.
-# DISABLE_UNTRACKED_FILES_DIRTY="true"
+# Networking
+alias ipinfo="curl ipinfo.io"      # Get IP information
+alias myip="ipinfo"                # Alternative for IP info
+alias ping="prettyping --nolegend" # Better ping visualization
+alias flushDNS="dscacheutil -flushcache"  # Flush DNS cache
+alias edit-hosts="subl /etc/hosts"        # Edit hosts file
 
-# Uncomment the following line if you want to change the command execution time
-# stamp shown in the history command output.
-# You can set one of the optional three formats:
-# "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
-# or set a custom format using the strftime function format specifications,
-# see 'man strftime' for details.
-HIST_STAMPS="dd/mm/yyyy"
+# Configuration editing
+alias edit-zsh-config="subl '/Users/fgilio/.zshrc'"  # Edit ZSH config
+alias zsh-edit-config="edit-zsh-config"              # Alternative for editing ZSH config
 
-# Would you like to use another custom folder than $ZSH/custom?
-ZSH_CUSTOM=$DOTFILES
+# Zoo-related aliases
+alias zoo='/Users/fgilio/pla/zoo/zoo.sh'
+alias zex='/Users/fgilio/pla/zoo/zex.sh'
+alias zin='/Users/fgilio/pla/zoo/zin.sh'
+alias zar='/Users/fgilio/pla/zoo/zar.sh'
+alias zet='/Users/fgilio/pla/zoo/zet.sh'
 
-# Which plugins would you like to load?
-# Standard plugins can be found in $ZSH/plugins/
-# Custom plugins may be added to $ZSH_CUSTOM/plugins/
-# Example format: plugins=(rails git textmate ruby lighthouse)
-# Add wisely, as too many plugins slow down shell startup.
-plugins=(artisan git brew composer npm yarn)
-# plugins=(z)
+# Show/Hide dotfiles in Finder
+alias dfiles-s="defaults write com.apple.finder AppleShowAllFiles YES; killall Finder /System/Library/CoreServices/Finder.app"
+alias dfiles-h="defaults write com.apple.finder AppleShowAllFiles NO; killall Finder /System/Library/CoreServices/Finder.app"
 
-source $ZSH/oh-my-zsh.sh
+# Development servers
+alias php-srv="open http://localhost:4444 && php -S localhost:4444"
 
-# User configuration
+# Clipboard operations
+alias copy-ssh="cat ~/.ssh/id_ed25519.pub | pbcopy"  # Updated to use Ed25519 key
+alias ocr='screencapture -i ~/tmp/screenshot.png && tesseract ~/tmp/screenshot.png stdout | pbcopy && rm -f ~/tmp/screenshot.png'
 
-# export MANPATH="/usr/local/man:$MANPATH"
+# Trash command - move files to macOS trash instead of rm
+trash() { command mv "$@" ~/.Trash ; }
 
-# You may need to manually set your language environment
-export LC_ALL=en_US.UTF-8
-export LANG=en_US.UTF-8
+#####################
+# Custom Functions
+#####################
+# Change to Home and Clear screen
+r() {
+    cd ~
+    clear
+}
 
-# Preferred editor for local and remote sessions
-# if [[ -n $SSH_CONNECTION ]]; then
-#   export EDITOR='vim'
-# else
-#   export EDITOR='mvim'
+# Open in Sublime Text
+edit() {
+    if [ -z "$1" ]; then
+        subl "."
+    else
+        subl "$1"
+    fi
+}
+
+# Git Reset and Clean
+gnah() {
+    git reset --hard
+    git clean -df
+}
+
+# Open GitHub Desktop
+gdesktop() {
+    open -a 'GitHub Desktop' .
+}
+
+# Opens the git repository URL in your default browser
+function git-open() {
+    # Get the remote URL, defaulting to 'origin' if no remote is specified
+    local remote="${1:-origin}"
+    
+    # Extract the URL from git config and remove .git suffix
+    local url=$(git config --get remote.$remote.url | sed 's/\.git$//')
+    
+    # Convert SSH URLs to HTTPS format
+    url=$(echo $url | sed 's/git@\([^:]*\):/https:\/\/\1\//')
+    
+    # Open the URL using the system's default browser
+    if [[ $(uname) == "Darwin" ]]; then
+        open $url
+    elif [[ $(uname) == "Linux" ]]; then
+        xdg-open $url
+    else
+        echo "Unsupported operating system"
+        return 1
+    fi
+}
+
+# Create the alias for easier usage
+alias gopen='git-open'
+alias gop='git-open'
+
+alias tm='task-master'
+
+#####################
+# Shell Integrations
+#####################
+# Starship configuration
+export STARSHIP_COMMAND_TIMEOUT=3000            # Increase timeout to 3 seconds (default is 500ms)
+# Initialize Starship prompt
+eval "$(starship init zsh)"
+
+# Enable ZSH autosuggestions (hardcoded path for performance)
+source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+
+# Initialize Zoxide (smart cd command)
+eval "$(zoxide init zsh)"
+
+# Zoo Shell Integration (currently commented out)
+# if [[ -f ~/pla/zoo/zoo_shell_integration.zsh ]]; then
+#     source ~/pla/zoo/zoo_shell_integration.zsh
 # fi
 
-# Compilation flags
-# export ARCHFLAGS="-arch x86_64"
+# Added by LM Studio CLI (lms)
+add_to_path "/Users/fgilio/.cache/lm-studio/bin"
 
-# Set personal aliases, overriding those provided by oh-my-zsh libs,
-# plugins, and themes. Aliases can be placed here, though oh-my-zsh
-# users are encouraged to define aliases within the ZSH_CUSTOM folder.
-# For a full list of active aliases, run `alias`.
-#
-# Example aliases
-# alias zshconfig="mate ~/.zshrc"
-# alias ohmyzsh="mate ~/.oh-my-zsh"
+# Source environment variables (API keys, etc.)
+[ -f ~/.env ] && source ~/.env
+
+# Zoo formatting and linting commands
+alias zsetup-hooks='/Users/fgilio/pla/zoo/bin/zsetup-hooks'
+add_to_path "/Users/fgilio/pla/zoo/bin"
+add_to_path "/Users/fgilio/.local/bin"

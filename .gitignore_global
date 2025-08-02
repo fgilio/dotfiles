@@ -38,3 +38,6 @@ Thumbs.db
 .idea/
 .vscode
 .vagrant/
+
+# Ignore Gemini CLI
+GEMINI.md

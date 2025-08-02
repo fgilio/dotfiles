@@ -29,11 +29,8 @@ brew "tesseract"
 brew "youtube-dl"
 
 # Development
-brew 'php'
 brew 'composer'
 brew 'imagemagick'
-brew 'node'
-brew 'yarn'
 
 # Apps
 cask '1password'
@@ -54,7 +51,7 @@ cask 'sublime-text'
 cask 'tableplus'
 cask 'cyberduck'
 cask 'postman'
-cask 'phpmon'
+cask 'herd'
 cask 'calibre'
 cask 'disk-inventory-x'
 cask 'exodus'
@@ -69,10 +66,8 @@ cask 'vlc'
 cask 'zoom'
 cask 'the-unarchiver'
 cask 'jetbrains-toolbox'
-cask 'slack'
 cask 'pocket-casts'
 cask 'raycast'
-cask 'tableplus'
 cask 'sequel-ace'
 cask 'tinkerwell'
 cask 'whatsapp'
