@@ -50,21 +50,6 @@ add_to_path "/Users/fgilio/.orbstack/bin"
 # JetBrains Toolbox
 add_to_path "/Users/fgilio/Library/Application Support/JetBrains/Toolbox/scripts"
 
-#####################
-# Herd Configuration
-#####################
-# PHP binary and configuration directories
-add_to_path "/Users/fgilio/Library/Application Support/Herd/bin/"
-export HERD_PHP_83_INI_SCAN_DIR="/Users/fgilio/Library/Application Support/Herd/config/php/83/"
-
-# NVM configuration
-export NVM_DIR="/Users/fgilio/Library/Application Support/Herd/config/nvm"
-
-# Load NVM but skip the auto-use functionality for performance
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" --no-use
-
-# Shell integration (must come after NVM is loaded)
-[[ -f "/Applications/Herd.app/Contents/Resources/config/shell/zshrc.zsh" ]] && builtin source "/Applications/Herd.app/Contents/Resources/config/shell/zshrc.zsh"
 
 #####################
 # Bun Configuration
@@ -216,3 +201,24 @@ add_to_path "/Users/fgilio/.cache/lm-studio/bin"
 alias zsetup-hooks='/Users/fgilio/pla/zoo/bin/zsetup-hooks'
 add_to_path "/Users/fgilio/pla/zoo/bin"
 add_to_path "/Users/fgilio/.local/bin"
+
+################################################################################
+# Herd Configuration (Keep at bottom for auto-injected configs)
+################################################################################
+# PHP binary and configuration directories
+add_to_path "/Users/fgilio/Library/Application Support/Herd/bin/"
+
+# NVM configuration
+export NVM_DIR="/Users/fgilio/Library/Application Support/Herd/config/nvm"
+
+# Load NVM fully (Node will always be available)
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+# Shell integration (must come after NVM is loaded)
+[[ -f "/Applications/Herd.app/Contents/Resources/config/shell/zshrc.zsh" ]] && builtin source "/Applications/Herd.app/Contents/Resources/config/shell/zshrc.zsh"
+
+# Herd injected PHP 8.3 configuration.
+export HERD_PHP_83_INI_SCAN_DIR="/Users/fgilio/Library/Application Support/Herd/config/php/83/"
+
+# Herd injected PHP 8.4 configuration.
+export HERD_PHP_84_INI_SCAN_DIR="/Users/fgilio/Library/Application Support/Herd/config/php/84/"
