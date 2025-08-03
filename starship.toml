@@ -1,0 +1,62 @@
+# Minimal Starship configuration
+# Clean single-line prompt with only essential information
+
+format = """
+$directory$git_branch$git_status$cmd_duration
+$character """
+
+[directory]
+truncation_length = 3
+truncate_to_repo = true
+
+[git_branch]
+format = "[$symbol$branch]($style) "
+symbol = " "
+
+[git_status]
+format = '([$all_status$ahead_behind]($style) )'
+conflicted = "="
+ahead = "⇡"
+behind = "⇣"
+diverged = "⇕"
+untracked = "?"
+stashed = "\\$"
+modified = "!"
+staged = "+"
+renamed = "»"
+deleted = "✘"
+
+[cmd_duration]
+min_time = 500
+format = "[$duration]($style) "
+
+# Disable version displays
+[nodejs]
+disabled = true
+
+[php]
+disabled = true
+
+# Also disable other common version displays
+[python]
+disabled = true
+
+[ruby]
+disabled = true
+
+[golang]
+disabled = true
+
+[rust]
+disabled = true
+
+[java]
+disabled = true
+
+[package]
+disabled = true
+
+# Character shows different symbol based on last command status
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"
