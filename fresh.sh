@@ -16,7 +16,7 @@ ln -s $HOME/.dotfiles/.zshrc $HOME/.zshrc
 
 # Symlink Starship config
 mkdir -p $HOME/.config
-ln -s $HOME/.dotfiles/starship.toml $HOME/.config/starship.toml
+ln -sf $HOME/.dotfiles/starship.toml $HOME/.config/starship.toml
 
 # Update Homebrew recipes
 brew update
