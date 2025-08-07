@@ -55,6 +55,7 @@ add_to_path "/Users/fgilio/Library/Application Support/JetBrains/Toolbox/scripts
 # Bun Configuration
 #####################
 [ -s "/Users/fgilio/.bun/_bun" ] && source "/Users/fgilio/.bun/_bun"  # Bun completions
+export PATH="/Users/fgilio/.bun/bin:$PATH"
 
 #####################
 # Aliases
