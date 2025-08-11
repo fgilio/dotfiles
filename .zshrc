@@ -9,7 +9,6 @@
 HISTSIZE=5000               # Maximum events for internal history
 HISTFILE=~/.zsh_history     # History file location
 SAVEHIST=5000              # Maximum events in history file
-HISTDUP=erase              # Erase duplicates in the history file
 setopt appendhistory       # Append history to the history file (no overwriting)
 setopt incappendhistory    # Add commands to the history immediately
 setopt sharehistory        # Share history across ZSH sessions
@@ -39,10 +38,8 @@ add_to_path() {
     fi
 }
 
-# MySQL client paths
+# MySQL client
 add_to_path "/opt/homebrew/opt/mysql-client@8.4/bin"
-add_to_path "/opt/homebrew/opt/mysql-client/bin"
-add_to_path "/opt/homebrew/opt/mysql-client@5.7/bin"
 
 # Docker path (OrbStack)
 add_to_path "/Users/fgilio/.orbstack/bin"
