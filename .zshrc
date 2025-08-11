@@ -18,15 +18,45 @@ setopt hist_ignore_all_dups # Remove older duplicate entries from history
 setopt hist_save_no_dups   # Don't save duplicate entries to history file
 
 # History search bindings
-bindkey '^[[A' history-search-backward  # Up arrow for backward history search
-bindkey '^[[B' history-search-forward   # Down arrow for forward history search
+autoload -U history-search-end
+zle -N history-beginning-search-backward-end history-search-end
+zle -N history-beginning-search-forward-end history-search-end
+
+# Substring history search with arrow keys
+bindkey '^[[A' history-beginning-search-backward-end  # Up arrow for backward history search
+bindkey '^[[B' history-beginning-search-forward-end   # Down arrow for forward history search
 
 #####################
 # Completion System
 #####################
-autoload -Uz +X compinit && compinit    # Initialize completion system
-zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'  # Case-insensitive completion
+autoload -Uz compinit && compinit    # Initialize completion system
+
+# Basic completion behavior
 zstyle ':completion:*' menu select      # Enable menu-style completion
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'  # Case-insensitive + substring matching
+
+# Colored completions
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*:*:*:*:descriptions' format '%F{green}-- %d --%f'
+zstyle ':completion:*:*:*:*:corrections' format '%F{yellow}!- %d (errors: %e) -!%f'
+zstyle ':completion:*:messages' format ' %F{purple} -- %d --%f'
+zstyle ':completion:*:warnings' format ' %F{red}-- no matches found --%f'
+
+# Grouped completions (separate files/directories/commands)
+zstyle ':completion:*' group-name ''
+zstyle ':completion:*:*:-command-:*:*' group-order builtins commands functions
+zstyle ':completion:*' list-dirs-first true
+
+# Recent directories first (using zoxide's frecency when available)
+zstyle ':completion:*:cd:*' tag-order 'local-directories directory-stack path-directories'
+zstyle ':completion:*:*:cd:*:directory-stack' menu yes select
+
+# Auto-select single match (but still show it)
+zstyle ':completion:*' menu select=1 _complete _ignored _approximate
+
+# Performance: Use cache for expensive completions
+zstyle ':completion::complete:*' use-cache true
+zstyle ':completion::complete:*' cache-path ~/.zsh/cache
 
 #####################
 # Path Configuration
