@@ -50,6 +50,9 @@ add_to_path "/Users/fgilio/.orbstack/bin"
 # JetBrains Toolbox
 add_to_path "/Users/fgilio/Library/Application Support/JetBrains/Toolbox/scripts"
 
+# Composer global packages
+add_to_path "/Users/fgilio/.composer/vendor/bin"
+
 
 #####################
 # Bun Configuration
