@@ -47,9 +47,6 @@ add_to_path "/opt/homebrew/opt/mysql-client@5.7/bin"
 # Docker path (OrbStack)
 add_to_path "/Users/fgilio/.orbstack/bin"
 
-# JetBrains Toolbox
-add_to_path "/Users/fgilio/Library/Application Support/JetBrains/Toolbox/scripts"
-
 # Composer global packages
 add_to_path "/Users/fgilio/.composer/vendor/bin"
 
