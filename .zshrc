@@ -140,6 +140,9 @@ alias php-srv="open http://localhost:4444 && php -S localhost:4444"
 alias copy-ssh="cat ~/.ssh/id_ed25519.pub | pbcopy"  # Updated to use Ed25519 key
 alias ocr='screencapture -i ~/tmp/screenshot.png && tesseract ~/tmp/screenshot.png stdout | pbcopy && rm -f ~/tmp/screenshot.png'
 
+# Claude CLI
+alias lfc="claude --dangerously-skip-permissions"
+
 # Trash command - move files to macOS trash instead of rm
 trash() { command mv "$@" ~/.Trash ; }
 
