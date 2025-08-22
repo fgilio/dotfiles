@@ -140,8 +140,27 @@ alias php-srv="open http://localhost:4444 && php -S localhost:4444"
 alias copy-ssh="cat ~/.ssh/id_ed25519.pub | pbcopy"  # Updated to use Ed25519 key
 alias ocr='screencapture -i ~/tmp/screenshot.png && tesseract ~/tmp/screenshot.png stdout | pbcopy && rm -f ~/tmp/screenshot.png'
 
-# Claude CLI
-alias lfc="claude --dangerously-skip-permissions"
+# Claude Code - Smart function that launches or queries
+cc() {
+    if [ $# -eq 0 ]; then
+        # No arguments: launch Claude Code
+        claude --dangerously-skip-permissions
+    else
+        # With arguments: execute as a query
+        ANTHROPIC_API_KEY="" claude --print --output-format=text "$*"
+    fi
+}
+
+# Cursor Agent - Smart function that launches or queries
+ca() {
+    if [ $# -eq 0 ]; then
+        # No arguments: launch Cursor Agent
+        cursor-agent
+    else
+        # With arguments: execute as a query
+        cursor-agent -p --output-format=text "$*"
+    fi
+}
 
 # Trash command - move files to macOS trash instead of rm
 trash() { command mv "$@" ~/.Trash ; }
