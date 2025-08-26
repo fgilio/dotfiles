@@ -147,20 +147,22 @@ cc() {
         claude --dangerously-skip-permissions
     else
         # With arguments: execute as a query
-        ANTHROPIC_API_KEY="" claude --print --output-format=text "$*"
+        ANTHROPIC_API_KEY="" claude --print --output-format=text "$@"
     fi
 }
+alias cc='noglob cc'
 
 # Cursor Agent - Smart function that launches or queries
 ca() {
     if [ $# -eq 0 ]; then
-        # No arguments: launch Cursor Agent
-        cursor-agent
+        # No arguments: launch Cursor Agent with gpt-5
+        cursor-agent -m gpt-5
     else
-        # With arguments: execute as a query
-        cursor-agent -p --output-format=text "$*"
+        # With arguments: execute as a query with gpt-5
+        cursor-agent -p --output-format=text -m gpt-5 "$@"
     fi
 }
+alias ca='noglob ca'
 
 # Trash command - move files to macOS trash instead of rm
 trash() { command mv "$@" ~/.Trash ; }
