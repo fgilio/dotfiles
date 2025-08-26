@@ -18,6 +18,9 @@ ln -s $HOME/.dotfiles/.zshrc $HOME/.zshrc
 mkdir -p $HOME/.config
 ln -sf $HOME/.dotfiles/starship.toml $HOME/.config/starship.toml
 
+# Symlink hushlogin to suppress terminal login message
+ln -sf $HOME/.dotfiles/hushlogin $HOME/.hushlogin
+
 # Update Homebrew recipes
 brew update
 
