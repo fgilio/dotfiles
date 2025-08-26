@@ -151,6 +151,7 @@ cc() {
     fi
 }
 # noglob prevents zsh from interpreting glob characters (?, *, []) before passing to function
+# Note: ! (history expansion) still needs escaping as 'hi\!' or "hi!" or hi\!\!
 alias cc='noglob cc'
 
 # Cursor Agent - Smart function that launches or queries
@@ -164,6 +165,7 @@ ca() {
     fi
 }
 # noglob prevents zsh from interpreting glob characters (?, *, []) before passing to function
+# Note: ! (history expansion) still needs escaping as 'hi\!' or "hi!" or hi\!\!
 alias ca='noglob ca'
 
 # Trash command - move files to macOS trash instead of rm
