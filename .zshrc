@@ -150,6 +150,7 @@ cc() {
         ANTHROPIC_API_KEY="" claude --print --output-format=text "$@"
     fi
 }
+# noglob prevents zsh from interpreting glob characters (?, *, []) before passing to function
 alias cc='noglob cc'
 
 # Cursor Agent - Smart function that launches or queries
@@ -162,6 +163,7 @@ ca() {
         cursor-agent -p --output-format=text -m gpt-5 "$@"
     fi
 }
+# noglob prevents zsh from interpreting glob characters (?, *, []) before passing to function
 alias ca='noglob ca'
 
 # Trash command - move files to macOS trash instead of rm
