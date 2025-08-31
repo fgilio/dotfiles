@@ -168,6 +168,20 @@ ca() {
 # Note: ! (history expansion) still needs escaping as 'hi\!' or "hi!" or hi\!\!
 alias ca='noglob ca'
 
+# Codex - Smart function that launches or queries
+co() {
+    if [ $# -eq 0 ]; then
+        # No arguments: launch Codex interactively with gpt-5 and high reasoning
+        codex --dangerously-bypass-approvals-and-sandbox --model gpt-5 --config model_reasoning_effort="high"
+    else
+        # With arguments: execute as a query with gpt-5 and high reasoning
+        codex --dangerously-bypass-approvals-and-sandbox --model gpt-5 --config model_reasoning_effort="high" exec --skip-git-repo-check "$@"
+    fi
+}
+# noglob prevents zsh from interpreting glob characters (?, *, []) before passing to function
+# Note: ! (history expansion) still needs escaping as 'hi\!' or "hi!" or hi\!\!
+alias co='noglob co'
+
 # Trash command - move files to macOS trash instead of rm
 trash() { command mv "$@" ~/.Trash ; }
 
