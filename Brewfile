@@ -10,25 +10,40 @@ brew 'awscli'
 brew 'bash' # Latest Bash version
 brew 'nushell'
 brew 'bat'
+brew 'btop' # Modern htop alternative
 brew 'coreutils' # Those that come with macOS are outdated
 brew 'ffmpeg'
 brew 'gh'
 brew 'git'
-brew "git-lfs"
+brew 'git-lfs'
+brew 'git-open'
+brew 'glab' # GitLab CLI
 brew 'grep'
+brew 'htop'
 brew 'httpie'
+brew 'jq' # JSON processor
 brew 'mackup'
 brew 'mas' # Mac App Store manager
+brew 'mkcert' # Local HTTPS certificates
 brew 'pkg-config' # https://github.com/driesvints/dotfiles/issues/20
-brew 'svn' # Needed to install fonts
-brew "htop"
-brew "handbrake"
-brew "prettyping"
-brew "qpdf"
-brew "tesseract"
-brew "youtube-dl"
+brew 'handbrake'
+brew 'prettyping'
+brew 'qpdf'
+brew 'ripgrep' # Fast grep alternative
+brew 'speedtest-cli'
+brew 'starship' # Shell prompt
+brew 'tesseract'
+brew 'tree'
+brew 'wget'
+brew 'wifi-password'
+brew 'yt-dlp' # YouTube downloader (replaces youtube-dl)
+brew 'zoxide' # Smarter cd command
+brew 'zsh-autosuggestions'
 
 # Development
+brew 'biome' # Fast formatter/linter
+brew 'bun' # JavaScript runtime
+brew 'cloudflared' # Cloudflare tunnel
 brew 'composer'
 brew 'imagemagick'
 
@@ -42,10 +57,9 @@ cask 'github'
 cask 'gitup'
 cask 'handbrake'
 cask 'imageoptim'
-cask 'google-backup-and-sync'
+cask 'google-drive'
 cask 'google-chrome'
 cask 'firefox-developer-edition'
-cask 'skype'
 cask 'slack'
 cask 'sublime-text'
 cask 'tableplus'
@@ -68,7 +82,6 @@ cask 'the-unarchiver'
 cask 'jetbrains-toolbox'
 cask 'pocket-casts'
 cask 'raycast'
-cask 'sequel-ace'
 cask 'tinkerwell'
 cask 'whatsapp'
 
