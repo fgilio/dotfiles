@@ -141,7 +141,7 @@ alias copy-ssh="cat ~/.ssh/id_ed25519.pub | pbcopy"  # Updated to use Ed25519 ke
 alias ocr='screencapture -i ~/tmp/screenshot.png && tesseract ~/tmp/screenshot.png stdout | pbcopy && rm -f ~/tmp/screenshot.png'
 
 # Claude Code - Smart function that launches or queries
-cc() {
+_cc() {
     if [ $# -eq 0 ]; then
         # No arguments: launch Claude Code
         claude --dangerously-skip-permissions
@@ -150,12 +150,12 @@ cc() {
         ANTHROPIC_API_KEY="" claude --print --output-format=text "$@"
     fi
 }
+alias cc='noglob _cc'
 # noglob prevents zsh from interpreting glob characters (?, *, []) before passing to function
 # Note: ! (history expansion) still needs escaping as 'hi\!' or "hi!" or hi\!\!
-alias cc='noglob cc'
 
 # Cursor Agent - Smart function that launches or queries
-ca() {
+_ca() {
     if [ $# -eq 0 ]; then
         # No arguments: launch Cursor Agent with gpt-5
         cursor-agent -m gpt-5
@@ -164,12 +164,12 @@ ca() {
         cursor-agent -p --output-format=text -m gpt-5 "$@"
     fi
 }
+alias ca='noglob _ca'
 # noglob prevents zsh from interpreting glob characters (?, *, []) before passing to function
 # Note: ! (history expansion) still needs escaping as 'hi\!' or "hi!" or hi\!\!
-alias ca='noglob ca'
 
 # Codex - Smart function that launches or queries
-co() {
+_co() {
     if [ $# -eq 0 ]; then
         # No arguments: launch Codex interactively with gpt-5 and high reasoning
         codex --dangerously-bypass-approvals-and-sandbox --model gpt-5 --config model_reasoning_effort="high"
@@ -178,9 +178,9 @@ co() {
         codex --dangerously-bypass-approvals-and-sandbox --model gpt-5 --config model_reasoning_effort="high" exec --skip-git-repo-check "$@"
     fi
 }
+alias co='noglob _co'
 # noglob prevents zsh from interpreting glob characters (?, *, []) before passing to function
 # Note: ! (history expansion) still needs escaping as 'hi\!' or "hi!" or hi\!\!
-alias co='noglob co'
 
 # Trash command - move files to macOS trash instead of rm
 trash() { command mv "$@" ~/.Trash ; }
