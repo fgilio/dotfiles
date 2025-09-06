@@ -62,20 +62,15 @@ zstyle ':completion::complete:*' cache-path ~/.zsh/cache
 # Path Configuration
 #####################
 # Function to add path only if not already present
-add_to_path() {
-    if [[ ":$PATH:" != *":$1:"* ]]; then
-        export PATH="$1:$PATH"
-    fi
-}
-
+# Path additions using zsh path array (deduplication handled by typeset -U in .zshenv)
 # MySQL client
-add_to_path "/opt/homebrew/opt/mysql-client@8.4/bin"
+[[ -d "/opt/homebrew/opt/mysql-client@8.4/bin" ]] && path+=("/opt/homebrew/opt/mysql-client@8.4/bin")
 
 # Docker path (OrbStack)
-add_to_path "/Users/fgilio/.orbstack/bin"
+[[ -d "$HOME/.orbstack/bin" ]] && path+=("$HOME/.orbstack/bin")
 
 # Composer global packages
-add_to_path "/Users/fgilio/.composer/vendor/bin"
+[[ -d "$HOME/.composer/vendor/bin" ]] && path+=("$HOME/.composer/vendor/bin")
 
 
 #####################
@@ -83,7 +78,7 @@ add_to_path "/Users/fgilio/.composer/vendor/bin"
 #####################
 [ -s "/Users/fgilio/.bun/_bun" ] && source "/Users/fgilio/.bun/_bun"  # Bun completions
 # PATH for dotfiles/bin is already set in .zshenv
-export PATH="/Users/fgilio/.bun/bin:$PATH"
+[[ -d "$HOME/.bun/bin" ]] && path+=("$HOME/.bun/bin")
 
 #####################
 # Aliases
@@ -170,21 +165,21 @@ eval "$(zoxide init zsh)"
 # fi
 
 # Added by LM Studio CLI (lms)
-add_to_path "/Users/fgilio/.cache/lm-studio/bin"
+[[ -d "$HOME/.cache/lm-studio/bin" ]] && path+=("$HOME/.cache/lm-studio/bin")
 
 # Source environment variables (API keys, etc.)
 [ -f ~/.env ] && source ~/.env
 
 # Zoo formatting and linting commands
 alias zsetup-hooks='/Users/fgilio/pla/zoo/bin/zsetup-hooks'
-add_to_path "/Users/fgilio/pla/zoo/bin"
-add_to_path "/Users/fgilio/.local/bin"
+[[ -d "$HOME/pla/zoo/bin" ]] && path+=("$HOME/pla/zoo/bin")
+[[ -d "$HOME/.local/bin" ]] && path+=("$HOME/.local/bin")
 
 ################################################################################
 # Herd Configuration (Keep at bottom for auto-injected configs)
 ################################################################################
 # PHP binary and configuration directories
-add_to_path "/Users/fgilio/Library/Application Support/Herd/bin/"
+[[ -d "$HOME/Library/Application Support/Herd/bin" ]] && path+=("$HOME/Library/Application Support/Herd/bin")
 
 # NVM configuration
 export NVM_DIR="/Users/fgilio/Library/Application Support/Herd/config/nvm"
