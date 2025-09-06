@@ -1,0 +1,10 @@
+#!/usr/bin/env zsh
+# Claude Code wrapper - works in any shell context
+
+if [ $# -eq 0 ]; then
+    # No arguments: launch Claude Code
+    exec claude --dangerously-skip-permissions
+else
+    # With arguments: execute as a query
+    ANTHROPIC_API_KEY="" exec claude --print --output-format=text "$@"
+fi

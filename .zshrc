@@ -82,6 +82,7 @@ add_to_path "/Users/fgilio/.composer/vendor/bin"
 # Bun Configuration
 #####################
 [ -s "/Users/fgilio/.bun/_bun" ] && source "/Users/fgilio/.bun/_bun"  # Bun completions
+# PATH for dotfiles/bin is already set in .zshenv
 export PATH="/Users/fgilio/.bun/bin:$PATH"
 
 #####################
@@ -140,105 +141,12 @@ alias php-srv="open http://localhost:4444 && php -S localhost:4444"
 alias copy-ssh="cat ~/.ssh/id_ed25519.pub | pbcopy"  # Updated to use Ed25519 key
 alias ocr='screencapture -i ~/tmp/screenshot.png && tesseract ~/tmp/screenshot.png stdout | pbcopy && rm -f ~/tmp/screenshot.png'
 
-# Claude Code - Smart function that launches or queries
-_cc() {
-    if [ $# -eq 0 ]; then
-        # No arguments: launch Claude Code
-        claude --dangerously-skip-permissions
-    else
-        # With arguments: execute as a query
-        ANTHROPIC_API_KEY="" claude --print --output-format=text "$@"
-    fi
-}
-alias cc='noglob _cc'
-# noglob prevents zsh from interpreting glob characters (?, *, []) before passing to function
-# Note: ! (history expansion) still needs escaping as 'hi\!' or "hi!" or hi\!\!
-
-# Cursor Agent - Smart function that launches or queries
-_ca() {
-    if [ $# -eq 0 ]; then
-        # No arguments: launch Cursor Agent with gpt-5
-        cursor-agent -m gpt-5
-    else
-        # With arguments: execute as a query with gpt-5
-        cursor-agent -p --output-format=text -m gpt-5 "$@"
-    fi
-}
-alias ca='noglob _ca'
-# noglob prevents zsh from interpreting glob characters (?, *, []) before passing to function
-# Note: ! (history expansion) still needs escaping as 'hi\!' or "hi!" or hi\!\!
-
-# Codex - Smart function that launches or queries
-_co() {
-    if [ $# -eq 0 ]; then
-        # No arguments: launch Codex interactively with gpt-5 and high reasoning
-        codex --dangerously-bypass-approvals-and-sandbox --model gpt-5 --config model_reasoning_effort="high"
-    else
-        # With arguments: execute as a query with gpt-5 and high reasoning
-        codex --dangerously-bypass-approvals-and-sandbox --model gpt-5 --config model_reasoning_effort="high" exec --skip-git-repo-check "$@"
-    fi
-}
-alias co='noglob _co'
-# noglob prevents zsh from interpreting glob characters (?, *, []) before passing to function
-# Note: ! (history expansion) still needs escaping as 'hi\!' or "hi!" or hi\!\!
-
-# Trash command - move files to macOS trash instead of rm
-trash() { command mv "$@" ~/.Trash ; }
-
 #####################
 # Custom Functions
 #####################
-# Change to Home and Clear screen
-r() {
-    cd ~
-    clear
-}
-
-# Open in Sublime Text
-edit() {
-    if [ -z "$1" ]; then
-        subl "."
-    else
-        subl "$1"
-    fi
-}
-
-# Git Reset and Clean
-gnah() {
-    git reset --hard
-    git clean -df
-}
-
-# Open GitHub Desktop
-gdesktop() {
-    open -a 'GitHub Desktop' .
-}
-
-# Opens the git repository URL in your default browser
-function git-open() {
-    # Get the remote URL, defaulting to 'origin' if no remote is specified
-    local remote="${1:-origin}"
-    
-    # Extract the URL from git config and remove .git suffix
-    local url=$(git config --get remote.$remote.url | sed 's/\.git$//')
-    
-    # Convert SSH URLs to HTTPS format
-    url=$(echo $url | sed 's/git@\([^:]*\):/https:\/\/\1\//')
-    
-    # Open the URL using the system's default browser
-    if [[ $(uname) == "Darwin" ]]; then
-        open $url
-    elif [[ $(uname) == "Linux" ]]; then
-        xdg-open $url
-    else
-        echo "Unsupported operating system"
-        return 1
-    fi
-}
-
-# Create the alias for easier usage
-alias gopen='git-open'
-alias gop='git-open'
+# Development functions are now loaded from functions/dev-tools.zsh
+# This includes: trash, r, edit, gnah, gdesktop, git-open
+source ~/.dotfiles/functions/dev-tools.zsh
 
 alias tm='task-master'
 

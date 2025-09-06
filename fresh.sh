@@ -14,6 +14,14 @@ fi
 rm -rf $HOME/.zshrc
 ln -s $HOME/.dotfiles/.zshrc $HOME/.zshrc
 
+# Symlink .zshenv for non-interactive shell support
+rm -rf $HOME/.zshenv
+ln -s $HOME/.dotfiles/.zshenv $HOME/.zshenv
+
+# Ensure dotfiles bin directory is in PATH (for cc, ca, co commands)
+# This is already handled by .zshenv, but we make scripts executable here
+chmod +x $HOME/.dotfiles/bin/*
+
 # Symlink Starship config
 mkdir -p $HOME/.config
 ln -sf $HOME/.dotfiles/starship.toml $HOME/.config/starship.toml

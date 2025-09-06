@@ -1,0 +1,10 @@
+#!/usr/bin/env zsh
+# Cursor Agent wrapper - works in any shell context
+
+if [ $# -eq 0 ]; then
+    # No arguments: launch Cursor Agent with gpt-5
+    exec cursor-agent -m gpt-5
+else
+    # With arguments: execute as a query with gpt-5
+    exec cursor-agent -p --output-format=text -m gpt-5 "$@"
+fi
