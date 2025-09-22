@@ -3,8 +3,8 @@
 
 if [ $# -eq 0 ]; then
     # No arguments: launch Codex interactively with gpt-5 and high reasoning
-    exec codex --dangerously-bypass-approvals-and-sandbox --model gpt-5 --config model_reasoning_effort="high"
+    exec codex --dangerously-bypass-approvals-and-sandbox --model gpt-5-codex --config model_reasoning_effort="high"
 else
     # With arguments: execute as a query with gpt-5 and high reasoning
-    exec codex --dangerously-bypass-approvals-and-sandbox --model gpt-5 --config model_reasoning_effort="high" exec --skip-git-repo-check "$@"
+    exec codex --dangerously-bypass-approvals-and-sandbox --model gpt-5-codex --config model_reasoning_effort="high" exec --skip-git-repo-check "$@"
 fi
