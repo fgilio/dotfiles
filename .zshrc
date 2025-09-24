@@ -118,13 +118,6 @@ alias edit-hosts="subl /etc/hosts"        # Edit hosts file
 alias edit-zsh-config="subl '/Users/fgilio/.zshrc'"  # Edit ZSH config
 alias zsh-edit-config="edit-zsh-config"              # Alternative for editing ZSH config
 
-# Zoo-related aliases
-alias zoo='/Users/fgilio/pla/zoo/zoo.sh'
-alias zex='/Users/fgilio/pla/zoo/zex.sh'
-alias zin='/Users/fgilio/pla/zoo/zin.sh'
-alias zar='/Users/fgilio/pla/zoo/zar.sh'
-alias zet='/Users/fgilio/pla/zoo/zet.sh'
-
 # Show/Hide dotfiles in Finder
 alias dfiles-s="defaults write com.apple.finder AppleShowAllFiles YES; killall Finder /System/Library/CoreServices/Finder.app"
 alias dfiles-h="defaults write com.apple.finder AppleShowAllFiles NO; killall Finder /System/Library/CoreServices/Finder.app"
