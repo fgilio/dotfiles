@@ -136,7 +136,6 @@ alias ocr='screencapture -i ~/tmp/screenshot.png && tesseract ~/tmp/screenshot.p
 # This includes: trash, r, edit, gnah, gdesktop, git-open
 source ~/.dotfiles/functions/dev-tools.zsh
 
-alias tm='task-master'
 
 #####################
 # Shell Integrations
