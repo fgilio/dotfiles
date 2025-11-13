@@ -1,6 +1,5 @@
 # Taps
 tap 'homebrew/cask'
-tap 'homebrew/bundle'
 tap 'nicoverbruggen/homebrew-cask'
 
 # Binaries
@@ -84,8 +83,7 @@ cask 'tinkerwell'
 cask 'whatsapp'
 
 # Quicklook
-cask 'qlmarkdown'
-cask 'quicklook-json'
+cask 'quickjson'
 
 # Fonts
 cask 'font-open-sans'
