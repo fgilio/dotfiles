@@ -1,5 +1,4 @@
 # Taps
-tap 'homebrew/cask'
 tap 'nicoverbruggen/homebrew-cask'
 
 # Binaries
