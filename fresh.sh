@@ -27,6 +27,9 @@ chmod +x "$DOTFILES/bin/"*
 mkdir -p "$HOME/.config"
 ln -sf "$DOTFILES/starship.toml" "$HOME/.config/starship.toml"
 
+# Create ~/tmp for ocr alias and other temp operations
+mkdir -p "$HOME/tmp"
+
 # Symlink hushlogin to suppress terminal login message
 ln -sf "$DOTFILES/hushlogin" "$HOME/.hushlogin"
 
