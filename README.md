@@ -35,15 +35,17 @@ After backing up your old Mac you may now follow these install instructions to s
     git clone --recursive git@github.com:fgilio/dotfiles.git ~/.dotfiles
     ```
 
-4. Run the installation with:
+4. Sign into the App Store (required for `mas` apps in Brewfile)
+
+5. Run the installation with:
 
     ```zsh
     chmod +x ~/.dotfiles/fresh.sh
     ~/.dotfiles/fresh.sh
     ```
 
-5. After mackup is synced with your cloud storage, restore preferences by running `mackup restore`
-6. Restart your computer to finalize the process
+6. After mackup is synced with your cloud storage, restore preferences by running `mackup restore`
+7. Restart your computer to finalize the process
 
 Your Mac is now ready to use!
 
