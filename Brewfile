@@ -84,6 +84,7 @@ cask 'whatsapp'
 
 # Quicklook
 cask 'quickjson'
+cask 'thumbhost3mf'
 
 # Fonts
 cask 'font-open-sans'
