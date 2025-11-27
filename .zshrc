@@ -64,7 +64,7 @@ zstyle ':completion:*:cd:*' tag-order 'local-directories directory-stack path-di
 zstyle ':completion:*:*:cd:*:directory-stack' menu yes select
 
 # Auto-select single match (but still show it)
-zstyle ':completion:*' menu select=1 _complete _ignored _approximate
+zstyle ':completion:*' menu select=1
 
 # Performance: Use cache for expensive completions
 zstyle ':completion::complete:*' use-cache true
