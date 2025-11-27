@@ -73,7 +73,7 @@ defaults write NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false
 # Trackpad, mouse, keyboard, Bluetooth accessories, and input                 #
 ###############################################################################
 
-# Disable mouse acceleration
+# Set mouse scaling to 1 (linear, but not fully disabled - use -1 to disable)
 defaults write .GlobalPreferences com.apple.mouse.scaling 1
 
 # Disable press-and-hold for keys in favor of key repeat
@@ -144,9 +144,6 @@ defaults write NSGlobalDomain AppleShowAllExtensions -bool true
 
 # Finder: show status bar
 defaults write com.apple.finder ShowStatusBar -bool true
-
-# Finder: show path bar
-defaults write com.apple.finder ShowPathbar -bool true
 
 # Display full POSIX path as Finder window title
 defaults write com.apple.finder _FXShowPosixPathInTitle -bool true

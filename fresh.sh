@@ -1,70 +1,63 @@
-#!/bin/sh
+#!/bin/bash
+set -euo pipefail
 
 DOTFILES="$HOME/.dotfiles"
 
 echo "Setting up your Mac..."
 
 # Check for Homebrew and install if we don't have it
-if test ! $(which brew); then
+if ! command -v brew &> /dev/null; then
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-  echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zprofile
+  # Only add if not already present (idempotent)
+  if ! grep -q 'brew shellenv' "$HOME/.zprofile" 2>/dev/null; then
+    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> "$HOME/.zprofile"
+  fi
   eval "$(/opt/homebrew/bin/brew shellenv)"
 fi
 
-# Removes .zshrc from $HOME (if it exists) and symlinks the .zshrc file from the .dotfiles
-rm -rf $HOME/.zshrc
-ln -s $HOME/.dotfiles/.zshrc $HOME/.zshrc
+# Symlink shell config files (ln -sf overwrites safely, no rm -rf needed)
+ln -sf "$DOTFILES/.zshrc" "$HOME/.zshrc"
+ln -sf "$DOTFILES/.zshenv" "$HOME/.zshenv"
 
-# Symlink .zshenv for non-interactive shell support
-rm -rf $HOME/.zshenv
-ln -s $HOME/.dotfiles/.zshenv $HOME/.zshenv
-
-# Ensure dotfiles bin directory is in PATH (for cc, ca, co commands)
-# This is already handled by .zshenv, but we make scripts executable here
-chmod +x $HOME/.dotfiles/bin/*
+# Ensure dotfiles bin directory scripts are executable
+chmod +x "$DOTFILES/bin/"*
 
 # Symlink Starship config
-mkdir -p $HOME/.config
-ln -sf $HOME/.dotfiles/starship.toml $HOME/.config/starship.toml
+mkdir -p "$HOME/.config"
+ln -sf "$DOTFILES/starship.toml" "$HOME/.config/starship.toml"
 
 # Symlink hushlogin to suppress terminal login message
-ln -sf $HOME/.dotfiles/hushlogin $HOME/.hushlogin
+ln -sf "$DOTFILES/hushlogin" "$HOME/.hushlogin"
 
 # Update Homebrew recipes
 brew update
 
-# Install all our dependencies with bundle (See Brewfile)
+# Install all dependencies with bundle (See Brewfile)
+# Includes: starship, zoxide, btop, zsh-autosuggestions, coreutils, etc.
 brew tap homebrew/bundle
-brew bundle --file $HOME/.dotfiles/Brewfile
-
-# Install Starship prompt
-brew install starship
+brew bundle --file "$DOTFILES/Brewfile"
 
 # Install Bun
 curl -fsSL https://bun.sh/install | bash
 
-# Install other terminal tools
-brew install zoxide btop zsh-autosuggestions
-
-# Create Sublime Text terminal launcher
-sudo ln -s "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" /usr/local/bin/sublime
-
+# Create Sublime Text terminal launcher (subl, not sublime)
+if [[ -d "/Applications/Sublime Text.app" ]]; then
+  sudo ln -sf "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" /usr/local/bin/subl
+fi
 
 # Herd handles PHP and extensions
 
 # Install global Composer packages
-composer global require laravel/installer beyondcode/expose ymirapp/cli
-
-
-# Create a publica.la directory
-mkdir $HOME/pla
-
-# Clone Github and GitLab repositories
-$DOTFILES/clone.sh
+if command -v composer &> /dev/null; then
+  composer global require laravel/installer beyondcode/expose ymirapp/cli
+fi
 
 # Symlink the Mackup config file to the home directory
-ln -s $DOTFILES/.mackup.cfg $HOME/.mackup.cfg
+ln -sf "$DOTFILES/.mackup.cfg" "$HOME/.mackup.cfg"
 
 # Set macOS preferences - we will run this last because this will reload the shell
-source $DOTFILES/.macos
+# Disable errexit for .macos since many defaults commands exit non-zero on reruns
+set +e
+source "$DOTFILES/.macos"
+set -e

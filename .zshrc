@@ -29,7 +29,19 @@ bindkey '^[[B' history-beginning-search-forward-end   # Down arrow for forward h
 #####################
 # Completion System
 #####################
-autoload -Uz compinit && compinit    # Initialize completion system
+# Ensure completion cache directory exists
+[[ -d ~/.zsh/cache ]] || mkdir -p ~/.zsh/cache
+
+# Required for glob qualifiers in compinit cache check
+setopt extended_glob
+
+autoload -Uz compinit
+# Only regenerate completion dump once per day (check if older than 24h)
+if [[ -n ~/.zsh/cache/zcompdump(#qN.mh+24) ]]; then
+  compinit -d ~/.zsh/cache/zcompdump
+else
+  compinit -C -d ~/.zsh/cache/zcompdump  # -C skips security check for speed
+fi
 
 # Basic completion behavior
 zstyle ':completion:*' menu select      # Enable menu-style completion
@@ -96,7 +108,7 @@ export CLICOLOR=1                   # Enable colors in ls and other commands
 export LSCOLORS=ExGxBxDxCxEgEdxbxgxcxd  # Customize ls colors
 
 alias ls="ls -G"                    # Colorized ls output
-alias ll="ls -alth --color=auto"    # GNU coreutils ls (via Brewfile) supports --color
+alias ll="gls -alth --color=auto"   # GNU coreutils ls (gls) for --color support
 alias rm="rm -i"                    # Interactive removal
 alias cp="cp -iv"                   # Interactive and verbose copy
 alias mv="mv -iv"                   # Interactive and verbose move
@@ -141,13 +153,15 @@ source ~/.dotfiles/functions/dev-tools.zsh
 # Shell Integrations
 #####################
 # Starship configuration
-export STARSHIP_COMMAND_TIMEOUT=3000            # Increase timeout to 3 seconds (default is 500ms)
+export STARSHIP_COMMAND_TIMEOUT=1000            # 1 second timeout (default 500ms is too aggressive)
 # Initialize Starship prompt
 eval "$(starship init zsh)"
 
 # Enable ZSH autosuggestions
 # Hardcoded path intentional - $(brew --prefix) adds ~30-50ms subprocess overhead
-source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+# Guard with file check to prevent startup errors if package missing
+[[ -f /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]] && \
+  source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 # Initialize Zoxide (smart cd command)
 eval "$(zoxide init zsh)"

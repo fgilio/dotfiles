@@ -6,5 +6,7 @@ if [ $# -eq 0 ]; then
     exec claude --dangerously-skip-permissions
 else
     # With arguments: execute as a query
+    # ANTHROPIC_API_KEY="" is intentional - workaround for Claude Code bug where
+    # env API key causes issues in query mode. Forces use of stored credentials.
     ANTHROPIC_API_KEY="" exec claude --print --output-format=text "$@"
 fi
