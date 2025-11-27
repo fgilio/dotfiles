@@ -369,13 +369,13 @@ defaults write com.apple.TextEdit PlainTextEncoding -int 4
 defaults write com.apple.TextEdit PlainTextEncodingForWrite -int 4
 
 # Show 24 hours a day
-defaults write com.apple.ical "number of hours displayed" 24
+defaults write com.apple.iCal "number of hours displayed" 24
 
 # Week should start on Sunday
-defaults write com.apple.ical "first day of the week" 0
+defaults write com.apple.iCal "first day of the week" 0
 
 # Day starts at 9AM
-defaults write com.apple.ical "first minute of work hours" 540
+defaults write com.apple.iCal "first minute of work hours" 540
 
 ###############################################################################
 # Mac App Store                                                               #
