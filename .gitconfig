@@ -38,6 +38,7 @@
         enabled = true
         autoupdate = true
 [core]
+	# TODO: Hardcoded path - could use ~/.dotfiles/.gitignore_global
 	excludesfile = /Users/fgilio/.dotfiles/.gitignore_global
 [rebase]
         autoSquash = true

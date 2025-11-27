@@ -76,6 +76,7 @@ zstyle ':completion::complete:*' cache-path ~/.zsh/cache
 #####################
 # Bun Configuration
 #####################
+# TODO: Hardcoded path - should use $HOME/.bun/_bun
 [ -s "/Users/fgilio/.bun/_bun" ] && source "/Users/fgilio/.bun/_bun"  # Bun completions
 # PATH for dotfiles/bin is already set in .zshenv
 [[ -d "$HOME/.bun/bin" ]] && path+=("$HOME/.bun/bin")
@@ -96,7 +97,7 @@ export CLICOLOR=1                   # Enable colors in ls and other commands
 export LSCOLORS=ExGxBxDxCxEgEdxbxgxcxd  # Customize ls colors
 
 alias ls="ls -G"                    # Colorized ls output
-alias ll="ls -alth --color=auto"    # Detailed directory listing with colors
+alias ll="ls -alth --color=auto"    # GNU coreutils ls (via Brewfile) supports --color
 alias rm="rm -i"                    # Interactive removal
 alias cp="cp -iv"                   # Interactive and verbose copy
 alias mv="mv -iv"                   # Interactive and verbose move
@@ -105,16 +106,17 @@ alias mkdir="mkdir -pv"             # Create parent dirs as needed, verbose
 # Disk and memory utilities
 alias df="df -h"                    # Show disk free space in human-readable format (e.g., 1.5G instead of 1500000)
 alias du="du -h"                    # Show directory space usage in human-readable format (useful for finding large files/folders)
-alias top="btop"                    # Better top command with CPU, memory, network and disk monitoring
+alias top="btop"                    # Intentionally replaces top with btop (not shadowing)
 
 # Networking
 alias ipinfo="curl ipinfo.io"      # Get IP information
 alias myip="ipinfo"                # Alternative for IP info
-alias ping="prettyping --nolegend" # Better ping visualization
+alias ping="prettyping --nolegend" # Installed via Brewfile
 alias flushDNS="dscacheutil -flushcache"  # Flush DNS cache
 alias edit-hosts="subl /etc/hosts"        # Edit hosts file
 
 # Configuration editing
+# TODO: Hardcoded path - should use $HOME/.zshrc
 alias edit-zsh-config="subl '/Users/fgilio/.zshrc'"  # Edit ZSH config
 alias zsh-edit-config="edit-zsh-config"              # Alternative for editing ZSH config
 
@@ -145,7 +147,8 @@ export STARSHIP_COMMAND_TIMEOUT=3000            # Increase timeout to 3 seconds 
 # Initialize Starship prompt
 eval "$(starship init zsh)"
 
-# Enable ZSH autosuggestions (hardcoded path for performance)
+# Enable ZSH autosuggestions
+# Hardcoded path intentional - $(brew --prefix) adds ~30-50ms subprocess overhead
 source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 # Initialize Zoxide (smart cd command)
@@ -163,17 +166,20 @@ eval "$(zoxide init zsh)"
 [ -f ~/.env ] && source ~/.env
 
 # Zoo formatting and linting commands
+# TODO: Hardcoded path - update on new machine or use $HOME
 alias zsetup-hooks='/Users/fgilio/pla/zoo/bin/zsetup-hooks'
 [[ -d "$HOME/pla/zoo/bin" ]] && path+=("$HOME/pla/zoo/bin")
 [[ -d "$HOME/.local/bin" ]] && path+=("$HOME/.local/bin")
 
 ################################################################################
 # Herd Configuration (Keep at bottom for auto-injected configs)
+# NOTE: Herd auto-injects some lines with hardcoded paths - don't modify those
 ################################################################################
 # PHP binary and configuration directories
 [[ -d "$HOME/Library/Application Support/Herd/bin" ]] && path+=("$HOME/Library/Application Support/Herd/bin")
 
 # NVM configuration
+# TODO: Hardcoded path - should use $HOME/Library/...
 export NVM_DIR="/Users/fgilio/Library/Application Support/Herd/config/nvm"
 
 # Load NVM fully (Node will always be available)
@@ -189,4 +195,5 @@ export HERD_PHP_83_INI_SCAN_DIR="/Users/fgilio/Library/Application Support/Herd/
 export HERD_PHP_84_INI_SCAN_DIR="/Users/fgilio/Library/Application Support/Herd/config/php/84/"
 
 # Added by Antigravity
+# TODO: Hardcoded path - should use $HOME/.antigravity/...
 export PATH="/Users/fgilio/.antigravity/antigravity/bin:$PATH"
