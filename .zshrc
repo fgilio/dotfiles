@@ -175,11 +175,20 @@ alias zsetup-hooks="$HOME/pla/zoo/bin/zsetup-hooks"
 # PHP binary and configuration directories
 [[ -d "$HOME/Library/Application Support/Herd/bin" ]] && path+=("$HOME/Library/Application Support/Herd/bin")
 
-# NVM configuration
+# NVM configuration (lazy-loaded for ~200ms faster shell startup)
 export NVM_DIR="$HOME/Library/Application Support/Herd/config/nvm"
 
-# Load NVM fully (Node will always be available)
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+# Lazy-load NVM - only initialize on first use of node/npm/npx/nvm
+_nvm_lazy_load() {
+  unset -f node npm npx nvm nvm_find_nvmrc 2>/dev/null
+  [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+}
+# Stub nvm_find_nvmrc to prevent Herd from triggering full NVM load on startup
+# After first node/npm/nvm call, real nvm_find_nvmrc becomes available
+nvm_find_nvmrc() { echo ""; }
+for cmd in node npm npx nvm; do
+  eval "$cmd() { _nvm_lazy_load && $cmd \"\$@\" }"
+done
 
 # Shell integration (must come after NVM is loaded)
 [[ -f "/Applications/Herd.app/Contents/Resources/config/shell/zshrc.zsh" ]] && builtin source "/Applications/Herd.app/Contents/Resources/config/shell/zshrc.zsh"
