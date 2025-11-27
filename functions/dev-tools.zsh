@@ -32,28 +32,6 @@ gdesktop() {
     open -a 'GitHub Desktop' .
 }
 
-# Opens the git repository URL in your default browser
-git-open() {
-    # Get the remote URL, defaulting to 'origin' if no remote is specified
-    local remote="${1:-origin}"
-    
-    # Extract the URL from git config and remove .git suffix
-    local url=$(git config --get remote.$remote.url | sed 's/\.git$//')
-    
-    # Convert SSH URLs to HTTPS format
-    url=$(echo $url | sed 's/git@\([^:]*\):/https:\/\/\1\//')
-    
-    # Open the URL using the system's default browser
-    if [[ $(uname) == "Darwin" ]]; then
-        open $url
-    elif [[ $(uname) == "Linux" ]]; then
-        xdg-open $url
-    else
-        echo "Unsupported operating system"
-        return 1
-    fi
-}
-
-# Aliases for git-open
+# git-open is provided by brew 'git-open' in Brewfile
 alias gopen='git-open'
 alias gop='git-open'
