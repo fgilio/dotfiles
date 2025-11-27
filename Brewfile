@@ -22,7 +22,6 @@ brew 'mackup'
 brew 'mas' # Mac App Store manager
 brew 'mkcert' # Local HTTPS certificates
 brew 'pkg-config' # https://github.com/driesvints/dotfiles/issues/20
-brew 'handbrake'
 brew 'prettyping'
 brew 'qpdf'
 brew 'ripgrep' # Fast grep alternative

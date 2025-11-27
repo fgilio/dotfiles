@@ -176,6 +176,8 @@ alias zsetup-hooks="$HOME/pla/zoo/bin/zsetup-hooks"
 [[ -d "$HOME/Library/Application Support/Herd/bin" ]] && path+=("$HOME/Library/Application Support/Herd/bin")
 
 # NVM configuration (lazy-loaded for ~200ms faster shell startup)
+# Note: No fallback for missing NVM - this is a personal setup with Herd always installed.
+# If NVM is missing, node/npm commands will fail, which is the desired behavior.
 export NVM_DIR="$HOME/Library/Application Support/Herd/config/nvm"
 
 # Lazy-load NVM - only initialize on first use of node/npm/npx/nvm
