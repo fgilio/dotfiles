@@ -38,9 +38,6 @@ brew update
 brew tap homebrew/bundle
 brew bundle --file "$DOTFILES/Brewfile"
 
-# Install Bun
-curl -fsSL https://bun.sh/install | bash
-
 # Create Sublime Text terminal launcher (subl, not sublime)
 if [[ -d "/Applications/Sublime Text.app" ]]; then
   sudo ln -sf "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" /usr/local/bin/subl
