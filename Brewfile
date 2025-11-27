@@ -38,6 +38,7 @@ brew 'zoxide' # Smarter cd command
 brew 'zsh-autosuggestions'
 
 # Development
+brew 'php@8.4'
 brew 'biome' # Fast formatter/linter
 brew 'bun' # JavaScript runtime
 brew 'cloudflared' # Cloudflare tunnel
