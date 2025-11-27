@@ -19,6 +19,7 @@ fi
 # Symlink shell config files (ln -sf overwrites safely, no rm -rf needed)
 ln -sf "$DOTFILES/.zshrc" "$HOME/.zshrc"
 ln -sf "$DOTFILES/.zshenv" "$HOME/.zshenv"
+ln -sf "$DOTFILES/.gitconfig" "$HOME/.gitconfig"
 
 # Ensure dotfiles bin directory scripts are executable
 chmod +x "$DOTFILES/bin/"*
