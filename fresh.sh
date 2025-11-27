@@ -39,7 +39,6 @@ brew update
 
 # Install all dependencies with bundle (See Brewfile)
 # Includes: starship, zoxide, btop, zsh-autosuggestions, coreutils, etc.
-brew tap homebrew/bundle
 brew bundle --file "$DOTFILES/Brewfile"
 
 # Create Sublime Text terminal launcher (subl, not sublime)
