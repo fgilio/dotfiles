@@ -76,8 +76,7 @@ zstyle ':completion::complete:*' cache-path ~/.zsh/cache
 #####################
 # Bun Configuration
 #####################
-# TODO: Hardcoded path - should use $HOME/.bun/_bun
-[ -s "/Users/fgilio/.bun/_bun" ] && source "/Users/fgilio/.bun/_bun"  # Bun completions
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"  # Bun completions
 # PATH for dotfiles/bin is already set in .zshenv
 [[ -d "$HOME/.bun/bin" ]] && path+=("$HOME/.bun/bin")
 
@@ -116,8 +115,7 @@ alias flushDNS="dscacheutil -flushcache"  # Flush DNS cache
 alias edit-hosts="subl /etc/hosts"        # Edit hosts file
 
 # Configuration editing
-# TODO: Hardcoded path - should use $HOME/.zshrc
-alias edit-zsh-config="subl '/Users/fgilio/.zshrc'"  # Edit ZSH config
+alias edit-zsh-config="subl '$HOME/.zshrc'"  # Edit ZSH config
 alias zsh-edit-config="edit-zsh-config"              # Alternative for editing ZSH config
 
 # Show/Hide dotfiles in Finder
@@ -166,8 +164,7 @@ eval "$(zoxide init zsh)"
 [ -f ~/.env ] && source ~/.env
 
 # Zoo formatting and linting commands
-# TODO: Hardcoded path - update on new machine or use $HOME
-alias zsetup-hooks='/Users/fgilio/pla/zoo/bin/zsetup-hooks'
+alias zsetup-hooks="$HOME/pla/zoo/bin/zsetup-hooks"
 [[ -d "$HOME/pla/zoo/bin" ]] && path+=("$HOME/pla/zoo/bin")
 [[ -d "$HOME/.local/bin" ]] && path+=("$HOME/.local/bin")
 
@@ -179,8 +176,7 @@ alias zsetup-hooks='/Users/fgilio/pla/zoo/bin/zsetup-hooks'
 [[ -d "$HOME/Library/Application Support/Herd/bin" ]] && path+=("$HOME/Library/Application Support/Herd/bin")
 
 # NVM configuration
-# TODO: Hardcoded path - should use $HOME/Library/...
-export NVM_DIR="/Users/fgilio/Library/Application Support/Herd/config/nvm"
+export NVM_DIR="$HOME/Library/Application Support/Herd/config/nvm"
 
 # Load NVM fully (Node will always be available)
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
@@ -195,5 +191,4 @@ export HERD_PHP_83_INI_SCAN_DIR="/Users/fgilio/Library/Application Support/Herd/
 export HERD_PHP_84_INI_SCAN_DIR="/Users/fgilio/Library/Application Support/Herd/config/php/84/"
 
 # Added by Antigravity
-# TODO: Hardcoded path - should use $HOME/.antigravity/...
-export PATH="/Users/fgilio/.antigravity/antigravity/bin:$PATH"
+export PATH="$HOME/.antigravity/antigravity/bin:$PATH"
