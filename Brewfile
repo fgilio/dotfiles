@@ -38,7 +38,7 @@ brew 'zoxide' # Smarter cd command
 brew 'zsh-autosuggestions'
 
 # Development
-brew 'php@8.4'
+# PHP is managed by Laravel Herd (see cask 'herd' below), not Homebrew
 brew 'biome' # Fast formatter/linter
 brew 'bun' # JavaScript runtime
 brew 'cloudflared' # Cloudflare tunnel
@@ -63,7 +63,7 @@ cask 'sublime-text'
 cask 'tableplus'
 cask 'cyberduck'
 cask 'postman'
-cask 'herd'
+cask 'herd' # Manages PHP versions, nginx, dnsmasq for Laravel dev
 cask 'calibre'
 cask 'grandperspective'
 cask 'exodus'
