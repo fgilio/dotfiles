@@ -81,10 +81,9 @@ Go through the [`.macos`](./.macos) file and adjust the settings to your liking.
 
 Check out the [`Brewfile`](./Brewfile) file and adjust the apps you want to install for your machine. Use [their search page](https://formulae.brew.sh/) to check if the app you want to install is available.
 
-When installing these dotfiles for the first time you'll need to backup all of your settings with Mackup. Install Mackup and backup your settings with the commands below. Your settings will be synced to iCloud so you can use them to sync between computers and reinstall them when reinstalling your Mac. If you want to save your settings to a different directory or different storage than iCloud, [checkout the documentation](https://github.com/lra/mackup/blob/master/doc/README.md#storage).
+When installing these dotfiles for the first time you'll need to backup all of your settings with Mackup. Mackup is installed via the Brewfile, so just run the backup command. Your settings will be synced to iCloud so you can use them to sync between computers and reinstall them when reinstalling your Mac. If you want to save your settings to a different directory or different storage than iCloud, [checkout the documentation](https://github.com/lra/mackup/blob/master/doc/README.md#storage).
 
 ```zsh
-brew install mackup
 mackup backup
 ```
 
