@@ -12,7 +12,6 @@ SAVEHIST=5000              # Maximum events in history file
 setopt appendhistory       # Append history to the history file (no overwriting)
 setopt incappendhistory    # Add commands to the history immediately
 setopt sharehistory        # Share history across ZSH sessions
-setopt hist_ignore_dups    # Ignore duplicate commands
 setopt hist_find_no_dups   # Don't display duplicate commands during search
 setopt hist_ignore_all_dups # Remove older duplicate entries from history
 setopt hist_save_no_dups   # Don't save duplicate entries to history file
