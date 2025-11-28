@@ -45,7 +45,7 @@ brew 'imagemagick'
 
 # Apps
 cask '1password'
-cask 'warp'
+cask 'ghostty'
 cask 'krisp'
 cask 'discord'
 cask 'docker'

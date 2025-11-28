@@ -28,6 +28,10 @@ chmod +x "$DOTFILES/bin/"*
 mkdir -p "$HOME/.config"
 ln -sf "$DOTFILES/starship.toml" "$HOME/.config/starship.toml"
 
+# Symlink Ghostty config
+mkdir -p "$HOME/.config/ghostty"
+ln -sf "$DOTFILES/ghostty.config" "$HOME/.config/ghostty/config"
+
 # Create ~/tmp for ocr alias and other temp operations
 mkdir -p "$HOME/tmp"
 
