@@ -50,6 +50,11 @@ if [[ -d "/Applications/Sublime Text.app" ]]; then
   sudo ln -sf "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" /usr/local/bin/subl
 fi
 
+# Create Zed terminal launcher
+if [[ -d "/Applications/Zed.app" ]]; then
+  sudo ln -sf /Applications/Zed.app/Contents/MacOS/cli /usr/local/bin/zed
+fi
+
 # Herd handles PHP and extensions
 
 # Install global Composer packages

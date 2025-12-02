@@ -8,3 +8,7 @@ export PATH  # Ensure PATH is exported
 
 # Add dotfiles bin to PATH for custom commands
 path=("$HOME/.dotfiles/bin" $path)
+
+# Default editor
+export EDITOR="zed --wait"
+export VISUAL="$EDITOR"

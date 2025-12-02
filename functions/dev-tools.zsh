@@ -12,12 +12,12 @@ r() {
     clear
 }
 
-# Open in Sublime Text
+# Open in Zed
 edit() {
     if [ -z "$1" ]; then
-        subl "."
+        zed "."
     else
-        subl "$1"
+        zed "$1"
     fi
 }
 
