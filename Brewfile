@@ -40,7 +40,7 @@ brew 'zsh-autosuggestions'
 brew 'biome' # Fast formatter/linter
 brew 'bun' # JavaScript runtime
 brew 'cloudflared' # Cloudflare tunnel
-brew 'composer'
+# Composer is bundled with Herd
 brew 'imagemagick'
 
 # Apps
