@@ -1,6 +1,3 @@
-# Taps
-tap 'nicoverbruggen/homebrew-cask'
-
 # Binaries
 brew 'awscli'
 brew 'bash' # Latest Bash version
@@ -15,7 +12,8 @@ brew 'git-lfs'
 brew 'git-open'
 brew 'glab' # GitLab CLI
 brew 'grep'
-brew 'htop'
+brew 'fd'    # Fast find replacement, used with fzf
+brew 'fzf'   # Fuzzy finder (ctrl-r / ctrl-t / alt-c)
 brew 'httpie'
 brew 'jq' # JSON processor
 brew 'mackup'

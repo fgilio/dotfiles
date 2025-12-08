@@ -123,15 +123,15 @@ alias ipinfo="curl ipinfo.io"      # Get IP information
 alias myip="ipinfo"                # Alternative for IP info
 alias ping="prettyping --nolegend" # Installed via Brewfile
 alias flushDNS="dscacheutil -flushcache"  # Flush DNS cache
-alias edit-hosts="subl /etc/hosts"        # Edit hosts file
+alias edit-hosts='sudo $EDITOR /etc/hosts'  # Edit hosts file (uses Zed)
 
 # Configuration editing
-alias edit-zsh-config="subl '$HOME/.zshrc'"  # Edit ZSH config
-alias zsh-edit-config="edit-zsh-config"              # Alternative for editing ZSH config
+alias edit-zsh-config='$EDITOR "$HOME/.zshrc"'  # Edit ZSH config (uses Zed)
+alias zsh-edit-config='edit-zsh-config'         # Alternative for editing ZSH config
 
 # Show/Hide dotfiles in Finder
-alias dfiles-s="defaults write com.apple.finder AppleShowAllFiles YES; killall Finder /System/Library/CoreServices/Finder.app"
-alias dfiles-h="defaults write com.apple.finder AppleShowAllFiles NO; killall Finder /System/Library/CoreServices/Finder.app"
+alias dfiles-s='defaults write com.apple.finder AppleShowAllFiles YES; killall Finder'
+alias dfiles-h='defaults write com.apple.finder AppleShowAllFiles NO; killall Finder'
 
 # Development servers
 alias php-srv="open http://localhost:4444 && php -S localhost:4444"
@@ -143,9 +143,9 @@ alias ocr='screencapture -i ~/tmp/screenshot.png && tesseract ~/tmp/screenshot.p
 #####################
 # Custom Functions
 #####################
-# Development functions are now loaded from functions/dev-tools.zsh
+# Development functions are loaded from the dotfiles directory
 # This includes: trash, r, edit, gnah, gdesktop, git-open
-source ~/.dotfiles/functions/dev-tools.zsh
+source "$DOTFILES/functions/dev-tools.zsh"
 
 
 #####################
@@ -165,6 +165,21 @@ eval "$(starship init zsh)"
 # Initialize Zoxide (smart cd command)
 eval "$(zoxide init zsh)"
 
+#####################
+# Fzf / fd integration
+#####################
+# Use fd as the default source for fzf (fast, honors .gitignore)
+if command -v fd >/dev/null; then
+  export FZF_DEFAULT_COMMAND='fd --type f --hidden --exclude .git'
+  export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+fi
+
+# Load fzf key bindings and completion (ctrl-r / ctrl-t / alt-c)
+[[ -f /opt/homebrew/opt/fzf/shell/key-bindings.zsh ]] && \
+  source /opt/homebrew/opt/fzf/shell/key-bindings.zsh
+[[ -f /opt/homebrew/opt/fzf/shell/completion.zsh ]] && \
+  source /opt/homebrew/opt/fzf/shell/completion.zsh
+
 # Zoo Shell Integration (currently commented out)
 # if [[ -f ~/pla/zoo/zoo_shell_integration.zsh ]]; then
 #     source ~/pla/zoo/zoo_shell_integration.zsh
@@ -173,8 +188,10 @@ eval "$(zoxide init zsh)"
 # Added by LM Studio CLI (lms)
 [[ -d "$HOME/.cache/lm-studio/bin" ]] && path+=("$HOME/.cache/lm-studio/bin")
 
-# Source environment variables (API keys, etc.)
-[ -f ~/.env ] && source ~/.env
+# Source environment variables only on login shells (avoid re-reading in subshells)
+if [[ -o login ]] && [[ -f "$HOME/.env" ]]; then
+  source "$HOME/.env"
+fi
 
 # Zoo formatting and linting commands
 alias zsetup-hooks="$HOME/pla/zoo/bin/zsetup-hooks"

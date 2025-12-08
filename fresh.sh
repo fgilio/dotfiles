@@ -38,12 +38,14 @@ mkdir -p "$HOME/tmp"
 # Symlink hushlogin to suppress terminal login message
 ln -sf "$DOTFILES/hushlogin" "$HOME/.hushlogin"
 
-# Update Homebrew recipes
-brew update
-
 # Install all dependencies with bundle (See Brewfile)
-# Includes: starship, zoxide, btop, zsh-autosuggestions, coreutils, etc.
+# Includes: starship, zoxide, btop, fzf, fd, zsh-autosuggestions, coreutils, etc.
 brew bundle --file "$DOTFILES/Brewfile"
+
+# Install fzf key bindings and completion (no shell rc modifications)
+if [[ -x /opt/homebrew/opt/fzf/install ]]; then
+  /opt/homebrew/opt/fzf/install --key-bindings --completion --no-update-rc
+fi
 
 # Create Sublime Text terminal launcher (subl, not sublime)
 if [[ -d "/Applications/Sublime Text.app" ]]; then
