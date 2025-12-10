@@ -28,7 +28,6 @@ brew 'starship' # Shell prompt
 brew 'tesseract'
 brew 'tree'
 brew 'wget'
-brew 'wifi-password'
 brew 'yt-dlp' # YouTube downloader (replaces youtube-dl)
 brew 'zoxide' # Smarter cd command
 brew 'zsh-autosuggestions'
