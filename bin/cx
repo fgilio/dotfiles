@@ -2,9 +2,9 @@
 # Codex wrapper - works in any shell context
 
 if [ $# -eq 0 ]; then
-    # No arguments: launch Codex interactively with gpt-5.1-codex-max and medium reasoning
-    exec codex --enable web_search_request --dangerously-bypass-approvals-and-sandbox --model gpt-5.1-codex-max --config model_reasoning_effort="medium"
+    # Interactive: high reasoning for deeper exploration
+    exec codex --enable web_search_request --dangerously-bypass-approvals-and-sandbox --model gpt-5.2 --config model_reasoning_effort="high"
 else
-    # With arguments: execute as a query with gpt-5.1-codex-max and medium reasoning
-    exec codex --enable web_search_request --dangerously-bypass-approvals-and-sandbox --model gpt-5.1-codex-max --config model_reasoning_effort="medium" exec --skip-git-repo-check "$@"
+    # Non-interactive: medium reasoning for faster responses
+    exec codex --enable web_search_request --dangerously-bypass-approvals-and-sandbox --model gpt-5.2 --config model_reasoning_effort="medium" exec --skip-git-repo-check "$@"
 fi
