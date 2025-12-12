@@ -2,11 +2,11 @@
 # Claude Code wrapper - works in any shell context
 
 if [ $# -eq 0 ]; then
-    # No arguments: launch Claude Code
-    exec claude --dangerously-skip-permissions
+    # Interactive: Opus for deeper reasoning
+    exec claude --dangerously-skip-permissions --model opus
 else
-    # With arguments: execute as a query
+    # Non-interactive: Sonnet for speed, no session persistence for one-off queries
     # ANTHROPIC_API_KEY="" is intentional - workaround for Claude Code bug where
     # env API key causes issues in query mode. Forces use of stored credentials.
-    ANTHROPIC_API_KEY="" exec claude --print --output-format=text "$@"
+    ANTHROPIC_API_KEY="" exec claude --print --output-format=text --no-session-persistence --model sonnet "$@"
 fi
