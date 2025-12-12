@@ -1,0 +1,26 @@
+#!/usr/bin/env zsh
+#
+# Node.js binary resolver for shebang compatibility
+#
+# PROBLEM:
+# NVM is lazy-loaded in .zshrc to save ~200ms on shell startup. This creates
+# shell functions (node, npm, npx) that trigger the lazy-load on first use.
+# However, scripts with #!/usr/bin/env node shebangs (like `codex`) need a
+# real binary - /usr/bin/env searches PATH for executables, not shell functions.
+#
+# Without this script, any #!/usr/bin/env node script fails with "node: not found"
+# until you manually trigger the lazy-load by running `node` in your shell first.
+#
+# SOLUTION:
+# This script lives in ~/.dotfiles/bin (which is in PATH) and provides a real
+# executable that /usr/bin/env can find. It reads NVM's default alias and execs
+# the actual node binary, bypassing the lazy-load mechanism entirely.
+#
+# WHY NOT A SYMLINK?
+# A symlink would hardcode a specific Node version (e.g., v23.11.1) and break
+# whenever Node is upgraded. This script dynamically resolves the default version.
+#
+
+NVM_DIR="$HOME/Library/Application Support/Herd/config/nvm"
+version=$(<"$NVM_DIR/alias/default")
+exec "$NVM_DIR/versions/node/$version/bin/node" "$@"
