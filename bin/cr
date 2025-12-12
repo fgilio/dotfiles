@@ -2,9 +2,9 @@
 # Cursor Agent wrapper - works in any shell context
 
 if [ $# -eq 0 ]; then
-    # No arguments: launch Cursor Agent with gpt-5
-    exec cursor-agent -m gpt-5
+    # Interactive: use default model, skip permissions
+    exec cursor-agent -f
 else
-    # With arguments: execute as a query with gpt-5
-    exec cursor-agent -p --output-format=text -m gpt-5 "$@"
+    # Non-interactive: use default model, skip permissions
+    exec cursor-agent -p --output-format=text -f "$@"
 fi
