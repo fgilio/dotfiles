@@ -40,7 +40,11 @@ brew 'cloudflared' # Cloudflare tunnel
 # Composer is bundled with Herd
 brew 'imagemagick'
 
+# Taps
+tap 'steipete/tap'
+
 # Apps
+cask 'codexbar' # Menu bar app for Codex/Claude Code usage limits
 cask '1password'
 cask 'ghostty'
 cask 'krisp'
