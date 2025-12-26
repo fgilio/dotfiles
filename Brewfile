@@ -18,6 +18,7 @@ brew 'httpie'
 brew 'jq' # JSON processor
 brew 'mackup'
 brew 'mas' # Mac App Store manager
+brew 'mole' # System cleanup utility
 brew 'mkcert' # Local HTTPS certificates
 brew 'pkg-config' # https://github.com/driesvints/dotfiles/issues/20
 brew 'prettyping'
@@ -42,6 +43,7 @@ brew 'imagemagick'
 
 # Taps
 tap 'steipete/tap'
+tap 'tw93/tap'
 
 # Apps
 cask 'codexbar' # Menu bar app for Codex/Claude Code usage limits
