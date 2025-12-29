@@ -32,6 +32,10 @@ ln -sf "$DOTFILES/starship.toml" "$HOME/.config/starship.toml"
 mkdir -p "$HOME/.config/ghostty"
 ln -sf "$DOTFILES/ghostty.config" "$HOME/.config/ghostty/config"
 
+# Symlink Hammerspoon config
+mkdir -p "$HOME/.hammerspoon"
+ln -sf "$DOTFILES/hammerspoon/init.lua" "$HOME/.hammerspoon/init.lua"
+
 # Create ~/tmp for ocr alias and other temp operations
 mkdir -p "$HOME/tmp"
 

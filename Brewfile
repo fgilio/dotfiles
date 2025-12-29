@@ -69,6 +69,7 @@ cask 'postman'
 cask 'herd' # Manages PHP versions, nginx, dnsmasq for Laravel dev
 cask 'calibre'
 cask 'grandperspective'
+cask 'hammerspoon' # macOS automation via Lua scripts
 cask 'exodus'
 cask 'mouse-fix'
 cask 'namechanger'
