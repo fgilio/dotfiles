@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!--
+  Default URL scheme handlers managed by utiluti.
+  Run: utiluti manage --url-file ~/.dotfiles/default-urls.plist
+  Keys are URL schemes, values are bundle IDs.
+-->
+<dict>
+  <!-- mailto: → Chrome (configure Gmail at chrome://settings/handlers) -->
+  <key>mailto</key>
+  <string>com.google.chrome</string>
+</dict>
+</plist>

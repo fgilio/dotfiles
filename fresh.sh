@@ -71,6 +71,21 @@ fi
 # Symlink the Mackup config file to the home directory
 ln -sf "$DOTFILES/.mackup.cfg" "$HOME/.mackup.cfg"
 
+# Install utiluti for managing default apps (not in Homebrew)
+# https://github.com/scriptingosx/utiluti - signed and notarized pkg
+if ! command -v utiluti &> /dev/null; then
+  UTILUTI_VERSION="1.3"
+  UTILUTI_PKG="/tmp/utiluti-${UTILUTI_VERSION}.pkg"
+  curl -fsSL "https://github.com/scriptingosx/utiluti/releases/download/v${UTILUTI_VERSION}/utiluti-${UTILUTI_VERSION}.pkg" -o "$UTILUTI_PKG"
+  sudo installer -pkg "$UTILUTI_PKG" -target /
+  rm "$UTILUTI_PKG"
+fi
+
+# Set default apps using utiluti (Zed for text/code, VLC for video, etc.)
+if command -v utiluti &> /dev/null; then
+  utiluti manage --type-file "$DOTFILES/default-apps.plist" --url-file "$DOTFILES/default-urls.plist"
+fi
+
 # Set macOS preferences - we will run this last because this will reload the shell
 # Disable errexit for .macos since many defaults commands exit non-zero on reruns
 set +e

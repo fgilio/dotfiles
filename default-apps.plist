@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!--
+  Default file type associations managed by utiluti.
+  Run: utiluti manage --type-file ~/.dotfiles/default-apps.plist
+  Keys are UTIs (Uniform Type Identifiers), values are bundle IDs.
+-->
+<dict>
+  <!-- Text/Code files → Zed -->
+  <key>public.plain-text</key>
+  <string>dev.zed.Zed</string>
+  <key>public.source-code</key>
+  <string>dev.zed.Zed</string>
+  <key>public.shell-script</key>
+  <string>dev.zed.Zed</string>
+  <key>public.json</key>
+  <string>dev.zed.Zed</string>
+  <key>public.xml</key>
+  <string>dev.zed.Zed</string>
+  <key>public.yaml</key>
+  <string>dev.zed.Zed</string>
+  <key>net.daringfireball.markdown</key>
+  <string>dev.zed.Zed</string>
+
+  <!-- Video files → VLC -->
+  <key>public.movie</key>
+  <string>org.videolan.vlc</string>
+  <key>public.mpeg-4</key>
+  <string>org.videolan.vlc</string>
+  <key>public.avi</key>
+  <string>org.videolan.vlc</string>
+  <key>com.apple.quicktime-movie</key>
+  <string>org.videolan.vlc</string>
+</dict>
+</plist>
