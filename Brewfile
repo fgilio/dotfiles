@@ -47,6 +47,8 @@ tap 'tw93/tap'
 
 # Apps
 cask 'codexbar' # Menu bar app for Codex/Claude Code usage limits
+# TODO: Switch to stable `jordanbaird-ice` once 0.11.13 is released
+cask 'jordanbaird-ice@beta' # Menu bar manager (beta for macOS Tahoe fixes)
 cask '1password'
 cask 'ghostty'
 cask 'krisp'
