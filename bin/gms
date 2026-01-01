@@ -1,0 +1,10 @@
+#!/usr/bin/env zsh
+# Gemini CLI wrapper - secure mode (prompts for approval)
+
+if [ $# -eq 0 ]; then
+    # Interactive: Gemini 3 Pro
+    exec gemini -m gemini-3-pro-preview
+else
+    # Non-interactive: Gemini 3 Flash
+    exec gemini -m gemini-3-flash-preview "$@"
+fi

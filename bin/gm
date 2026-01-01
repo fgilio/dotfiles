@@ -1,0 +1,11 @@
+#!/usr/bin/env zsh
+# Gemini CLI wrapper - yolo mode (auto-approve, sandboxed)
+# --yolo enables sandbox by default for safety
+
+if [ $# -eq 0 ]; then
+    # Interactive: Gemini 3 Pro
+    exec gemini --yolo -m gemini-3-pro-preview
+else
+    # Non-interactive: Gemini 3 Flash
+    exec gemini --yolo -m gemini-3-flash-preview "$@"
+fi

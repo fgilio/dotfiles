@@ -6,6 +6,7 @@ brew 'bat'
 brew 'btop' # Modern htop alternative
 brew 'coreutils' # Those that come with macOS are outdated
 brew 'ffmpeg'
+brew 'gemini-cli' # Google Gemini CLI
 brew 'gh'
 brew 'git'
 brew 'git-lfs'

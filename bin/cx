@@ -1,5 +1,6 @@
 #!/usr/bin/env zsh
 # Codex wrapper - works in any shell context
+# Sandbox config in ~/.codex/config.toml (sandbox_mode = "danger-full-access")
 
 if [ $# -eq 0 ]; then
     # Interactive: high reasoning for deeper exploration

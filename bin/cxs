@@ -1,0 +1,11 @@
+#!/usr/bin/env zsh
+# Codex wrapper - secure mode (read-only sandbox, prompts for approval)
+# -s read-only overrides config's danger-full-access
+
+if [ $# -eq 0 ]; then
+    # Interactive: high reasoning, read-only sandbox
+    exec codex --search -s read-only --model gpt-5.2-codex --config model_reasoning_effort="high"
+else
+    # Non-interactive: medium reasoning, read-only sandbox
+    exec codex --search -s read-only --model gpt-5.2-codex --config model_reasoning_effort="medium" exec --skip-git-repo-check "$@"
+fi
