@@ -35,3 +35,17 @@ gdesktop() {
 # git-open is provided by brew 'git-open' in Brewfile
 alias gopen='git-open'
 alias gop='git-open'
+
+# List or pick Claude Code skills
+clskills() {
+    if [[ "$1" == "-p" || "$1" == "--pick" ]]; then
+        "$HOME/.claude/skills/picker.sh"
+    else
+        local names=()
+        for dir in "$HOME/.claude/skills"/*/; do
+            [[ -d "$dir" ]] || continue
+            names+=("$(basename "$dir")")
+        done
+        printf "%s\n" "${(j: - :)names}"
+    fi
+}
