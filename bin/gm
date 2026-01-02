@@ -6,6 +6,7 @@ if [ $# -eq 0 ]; then
     # Interactive: Gemini 3 Pro
     exec gemini --yolo -m gemini-3-pro-preview
 else
-    # Non-interactive: Gemini 3 Flash
-    exec gemini --yolo -m gemini-3-flash-preview "$@"
+    # Non-interactive/headless: Gemini 3 Flash
+    # -p enables headless mode with tool execution
+    exec gemini --yolo -m gemini-3-flash-preview -p "$@"
 fi

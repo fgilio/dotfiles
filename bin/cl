@@ -8,5 +8,7 @@ else
     # Non-interactive: Sonnet for speed, no session persistence for one-off queries
     # ANTHROPIC_API_KEY="" is intentional - workaround for Claude Code bug where
     # env API key causes issues in query mode. Forces use of stored credentials.
-    ANTHROPIC_API_KEY="" exec claude --print --output-format=text --no-session-persistence --model sonnet "$@"
+    # --tools default enables all tools (disabled by default in --print mode)
+    # --dangerously-skip-permissions required for tools to actually execute in --print mode
+    ANTHROPIC_API_KEY="" exec claude --print --output-format=text --tools default --dangerously-skip-permissions --no-session-persistence --model sonnet "$@"
 fi
