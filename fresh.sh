@@ -39,6 +39,30 @@ ln -sf "$DOTFILES/hammerspoon/init.lua" "$HOME/.hammerspoon/init.lua"
 # Create ~/tmp for ocr alias and other temp operations
 mkdir -p "$HOME/tmp"
 
+# Install Automator workflows (Quick Actions and Folder Actions)
+mkdir -p "$HOME/Library/Services"
+mkdir -p "$HOME/Library/Workflows/Applications/Folder Actions"
+cp -R "$DOTFILES/workflows/Services/"*.workflow "$HOME/Library/Services/" 2>/dev/null || true
+cp -R "$DOTFILES/workflows/Folder Actions/"*.workflow "$HOME/Library/Workflows/Applications/Folder Actions/" 2>/dev/null || true
+
+# Attach Folder Action to Screenshots Runway (for screenshot/video optimization)
+# Creates the folder if it doesn't exist and attaches the workflow
+SCREENSHOTS_RUNWAY="$HOME/Pictures/Screenshots Runway"
+mkdir -p "$SCREENSHOTS_RUNWAY"
+osascript <<'APPLESCRIPT'
+tell application "System Events"
+    set folderPath to (POSIX file (do shell script "echo $HOME/Pictures/Screenshots\\ Runway")) as alias
+    set workflowPath to (POSIX file (do shell script "echo $HOME/Library/Workflows/Applications/Folder\\ Actions/Optimize\\ and\\ Move\\ Screenshots.workflow")) as alias
+
+    try
+        attach action to folderPath using workflowPath
+    end try
+
+    -- Enable folder actions globally
+    set folder actions enabled to true
+end tell
+APPLESCRIPT
+
 # Symlink hushlogin to suppress terminal login message
 ln -sf "$DOTFILES/hushlogin" "$HOME/.hushlogin"
 
