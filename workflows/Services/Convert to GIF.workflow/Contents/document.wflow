@@ -73,7 +73,7 @@
 
 for f in "$@"; do
     output="${f%.*}.gif"
-    /opt/homebrew/bin/ffmpeg -i "$f" -vf "fps=15,scale=640:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -loop 0 "$output" -y
+    /opt/homebrew/bin/ffmpeg -i "$f" -vf "fps=20,scale=960:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=256:stats_mode=diff[p];[s1][p]paletteuse=dither=floyd_steinberg" -loop 0 "$output" -y
 done</string>
 					<key>CheckedForUserDefaultShell</key>
 					<true/>
