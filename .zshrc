@@ -123,7 +123,7 @@ alias ipinfo="curl ipinfo.io"      # Get IP information
 alias myip="ipinfo"                # Alternative for IP info
 alias ping="prettyping --nolegend" # Installed via Brewfile
 alias flushDNS="dscacheutil -flushcache"  # Flush DNS cache
-alias edit-hosts='SUDO_EDITOR="$EDITOR" sudoedit /etc/hosts'  # Edit hosts file
+alias edit-hosts='SUDO_EDITOR="$EDITOR" sudo -e /etc/hosts'  # Edit hosts file
 
 # Configuration editing
 alias edit-zsh-config='$EDITOR "$HOME/.zshrc"'  # Edit ZSH config (uses Zed)
