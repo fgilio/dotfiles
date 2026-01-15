@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+# Move files to Trash instead of permanently deleting
+# Cross-volume: files on external drives are permanently deleted (real rm)
+# Supports: -f (ignore missing), -v (verbose)
+set -euo pipefail
+
+REAL_RM="/bin/rm"
+trash_dir="${TRASH_DIR:-$HOME/.Trash}"
+
+# Debug mode: RM_DEBUG=1 trash file
+[[ "${RM_DEBUG:-0}" == "1" ]] && set -x
+
+# Get device ID for a path
+get_device() {
+  stat -f '%d' "$1" 2>/dev/null || echo ""
+}
+
+# Normalize path and check for dangerous targets
+is_dangerous_path() {
+  local p="$1"
+  local resolved
+  resolved="$(cd "$(dirname -- "$p")" 2>/dev/null && pwd -P)/$(basename -- "$p")" 2>/dev/null || resolved="$p"
+  case "$resolved" in
+    /|/.) return 0 ;;
+  esac
+  case "$p" in
+    /|.|..|""|./|../|/./*|/../*) return 0 ;;
+  esac
+  return 1
+}
+
+force=0
+verbose=0
+
+while getopts ":fv" opt; do
+  case "$opt" in
+    f) force=1 ;;
+    v) verbose=1 ;;
+    *) exit 2 ;;
+  esac
+done
+shift $((OPTIND - 1))
+
+[[ $# -eq 0 ]] && { echo "trash: missing operand" >&2; exit 1; }
+
+mkdir -p -- "$trash_dir"
+status=0
+ts="$(date +%Y%m%d-%H%M%S)"
+counter=0
+
+# Get device ID of trash directory (internal disk)
+trash_device="$(get_device "$trash_dir")"
+
+for src in "$@"; do
+  # Check existence first
+  if [[ ! -e "$src" && ! -L "$src" ]]; then
+    [[ $force -eq 1 ]] && continue
+    echo "trash: $src: No such file or directory" >&2
+    status=1
+    continue
+  fi
+
+  # Refuse dangerous paths
+  if is_dangerous_path "$src"; then
+    echo "trash: refusing dangerous path: '$src'" >&2
+    status=1
+    continue
+  fi
+
+  # Check if file is on same volume as Trash
+  src_device="$(get_device "$src")"
+  if [[ -n "$trash_device" && -n "$src_device" && "$src_device" != "$trash_device" ]]; then
+    # External volume: use real rm (standard Unix behavior)
+    [[ $verbose -eq 1 ]] && echo "trash: external volume, permanently deleting: $src" >&2
+    if [[ -d "$src" && ! -L "$src" ]]; then
+      "$REAL_RM" -rf -- "$src" || { echo "trash: failed to delete: $src" >&2; status=1; }
+    else
+      "$REAL_RM" -f -- "$src" || { echo "trash: failed to delete: $src" >&2; status=1; }
+    fi
+    continue
+  fi
+
+  # Same volume: move to Trash
+  base="$(basename -- "$src")"
+  dest="$trash_dir/$base"
+
+  # Deconflict: timestamp.PID.counter
+  if [[ -e "$dest" || -L "$dest" ]]; then
+    counter=$((counter + 1))
+    dest="$trash_dir/$base.$ts.$$.$counter"
+    # If still exists (unlikely), keep incrementing
+    while [[ -e "$dest" || -L "$dest" ]]; do
+      counter=$((counter + 1))
+      dest="$trash_dir/$base.$ts.$$.$counter"
+    done
+  fi
+
+  [[ $verbose -eq 1 ]] && printf 'trash: %s -> %s\n' "$src" "$dest" >&2
+  command mv -- "$src" "$dest" || { echo "trash: failed: $src" >&2; status=1; }
+done
+
+exit $status

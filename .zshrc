@@ -108,7 +108,7 @@ export LSCOLORS=ExGxBxDxCxEgEdxbxgxcxd  # Customize ls colors
 
 alias ls="ls -G"                    # Colorized ls output
 alias ll="gls -alth --color=auto"   # GNU coreutils ls (gls) for --color support
-alias rm="rm -i"                    # Interactive removal
+# rm wrapper in ~/bin handles safety (moved to ~/.dotfiles/bin/rm)
 alias cp="cp -iv"                   # Interactive and verbose copy
 alias mv="mv -iv"                   # Interactive and verbose move
 alias mkdir="mkdir -pv"             # Create parent dirs as needed, verbose
@@ -138,13 +138,13 @@ alias php-srv="open http://localhost:4444 && php -S localhost:4444"
 
 # Clipboard operations
 alias copy-ssh="cat ~/.ssh/id_ed25519.pub | pbcopy"  # Updated to use Ed25519 key
-alias ocr='screencapture -i ~/tmp/screenshot.png && tesseract ~/tmp/screenshot.png stdout | pbcopy && rm -f ~/tmp/screenshot.png'
+alias ocr='screencapture -i ~/tmp/screenshot.png && tesseract ~/tmp/screenshot.png stdout | pbcopy && /bin/rm -f ~/tmp/screenshot.png'
 
 #####################
 # Custom Functions
 #####################
 # Development functions are loaded from the dotfiles directory
-# This includes: trash, r, edit, gnah, gdesktop, git-open
+# This includes: r, edit, gnah, gdesktop, git-open (trash is now in bin/)
 source "$DOTFILES/functions/dev-tools.zsh"
 
 

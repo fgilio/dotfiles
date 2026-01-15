@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+# Safe rm wrapper - moves to Trash instead of permanently deleting
+# Only affects files on the same volume as ~/.Trash (internal disk)
+# External volumes: uses real rm (standard Unix behavior)
+# To permanently delete: /bin/rm or command -p rm
+set -euo pipefail
+
+REAL_RM="/bin/rm"
+
+# Debug mode: RM_DEBUG=1 rm file
+[[ "${RM_DEBUG:-0}" == "1" ]] && set -x
+
+# Ensure trash is available
+command -v trash >/dev/null 2>&1 || { echo "rm: trash not found" >&2; exit 127; }
+
+# Normalize path and check for dangerous targets
+is_dangerous_path() {
+  local p="$1"
+  # Resolve to absolute path, handle missing files gracefully
+  local resolved
+  resolved="$(cd "$(dirname -- "$p")" 2>/dev/null && pwd -P)/$(basename -- "$p")" 2>/dev/null || resolved="$p"
+  # Check if it resolves to root, current dir parent, or is empty
+  case "$resolved" in
+    /|/.) return 0 ;;  # dangerous
+  esac
+  # Check raw input for obvious dangerous patterns
+  case "$p" in
+    /|.|..|""|./|../|/./*|/../*) return 0 ;;  # dangerous
+  esac
+  return 1  # safe
+}
+
+force=0 allow_dirs=0 verbose=0
+
+# Parse rm-like options (supports combined flags like -rf)
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --) shift; break ;;
+    -*)
+      [[ "$1" == "-" ]] && break
+      opts="${1#-}"
+      for ((i=0; i<${#opts}; i++)); do
+        c="${opts:i:1}"
+        case "$c" in
+          f) force=1 ;;
+          r|R) allow_dirs=1 ;;
+          d) allow_dirs=1 ;;
+          i|I) : ;;  # ignore interactive flags (agents need non-interactive)
+          v) verbose=1 ;;
+          *) echo "rm: illegal option -- $c" >&2; exit 2 ;;
+        esac
+      done
+      shift
+      ;;
+    *) break ;;
+  esac
+done
+
+[[ $# -eq 0 ]] && { echo "rm: missing operand" >&2; exit 1; }
+
+status=0
+trash_flags=()
+[[ $verbose -eq 1 ]] && trash_flags+=("-v")
+[[ $force -eq 1 ]] && trash_flags+=("-f")
+
+for p in "$@"; do
+  # Refuse dangerous paths
+  if is_dangerous_path "$p"; then
+    echo "rm: refusing dangerous path: '$p'" >&2
+    status=1
+    continue
+  fi
+
+  # Check existence
+  if [[ ! -e "$p" && ! -L "$p" ]]; then
+    [[ $force -eq 1 ]] && continue
+    echo "rm: $p: No such file or directory" >&2
+    status=1
+    continue
+  fi
+
+  # Directory checks
+  if [[ -d "$p" && ! -L "$p" ]]; then
+    if [[ $allow_dirs -eq 0 ]]; then
+      echo "rm: $p: is a directory" >&2
+      status=1
+      continue
+    fi
+  fi
+
+  # Delegate to trash (handles cross-volume detection internally)
+  command trash "${trash_flags[@]}" -- "$p" || status=1
+done
+
+exit $status
