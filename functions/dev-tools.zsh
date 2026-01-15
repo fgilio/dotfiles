@@ -1,8 +1,6 @@
 #!/bin/zsh
 # Development utility functions that are useful in both interactive and non-interactive shells
 
-# trash is now a script at ~/.dotfiles/bin/trash
-
 # Change to home directory and clear screen
 r() {
     cd ~

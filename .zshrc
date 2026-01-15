@@ -108,7 +108,7 @@ export LSCOLORS=ExGxBxDxCxEgEdxbxgxcxd  # Customize ls colors
 
 alias ls="ls -G"                    # Colorized ls output
 alias ll="gls -alth --color=auto"   # GNU coreutils ls (gls) for --color support
-# rm wrapper in ~/bin handles safety (moved to ~/.dotfiles/bin/rm)
+# No alias needed - ~/bin/rm intercepts and moves to Trash instead of deleting
 alias cp="cp -iv"                   # Interactive and verbose copy
 alias mv="mv -iv"                   # Interactive and verbose move
 alias mkdir="mkdir -pv"             # Create parent dirs as needed, verbose
@@ -144,7 +144,7 @@ alias ocr='screencapture -i ~/tmp/screenshot.png && tesseract ~/tmp/screenshot.p
 # Custom Functions
 #####################
 # Development functions are loaded from the dotfiles directory
-# This includes: r, edit, gnah, gdesktop, git-open (trash is now in bin/)
+# This includes: r, edit, gnah, gdesktop, git-open
 source "$DOTFILES/functions/dev-tools.zsh"
 
 
