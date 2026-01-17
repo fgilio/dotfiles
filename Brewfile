@@ -17,7 +17,7 @@ brew 'glab' # GitLab CLI
 brew 'grep'
 brew 'fd'    # Fast find replacement, used with fzf
 brew 'fzf'   # Fuzzy finder (ctrl-r / ctrl-t / alt-c)
-brew 'hey' # HTTP load generator
+brew 'oha' # HTTP load generator (Rust, faster than hey)
 brew 'httpie'
 brew 'jq' # JSON processor
 brew 'mackup'
