@@ -1,9 +1,16 @@
 #!/usr/bin/env zsh
 # Claude Code wrapper - works in any shell context
 
-if [ $# -eq 0 ]; then
-    # Interactive: Opus for deeper reasoning
-    exec claude --dangerously-skip-permissions --model opus
+# Interactive mode: no args, or interactive flags (-r/--resume, -c/--continue)
+if [[ $# -eq 0 || "$1" == "--resume" || "$1" == "-r" || "$1" == "--continue" || "$1" == "-c" ]]; then
+    # Remove stale session ID before starting
+    rm -f ~/.claude/.last_session_id
+    claude --dangerously-skip-permissions --model opus "$@"
+    # Print resume command if session ID was saved by hook
+    if [[ -f ~/.claude/.last_session_id ]]; then
+        echo "To continue this session, run: cl --resume $(cat ~/.claude/.last_session_id)"
+        rm ~/.claude/.last_session_id
+    fi
 else
     # Non-interactive: Sonnet for speed, no session persistence for one-off queries
     # ANTHROPIC_API_KEY="" is intentional - workaround for Claude Code bug where
