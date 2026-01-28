@@ -5,7 +5,7 @@
 if [[ $# -eq 0 || "$1" == "--resume" || "$1" == "-r" || "$1" == "--continue" || "$1" == "-c" ]]; then
     # Remove stale session ID before starting
     rm -f ~/.claude/.last_session_id
-    claude --dangerously-skip-permissions --model opus "$@"
+    claude --dangerously-skip-permissions "$@"
     # Print resume command if session ID was saved by hook
     if [[ -f ~/.claude/.last_session_id ]]; then
         echo "To continue this session, run: cl --resume $(cat ~/.claude/.last_session_id)"
