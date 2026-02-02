@@ -88,6 +88,13 @@ for p in "$@"; do
     fi
   fi
 
+  # Skip trash for node_modules (reproducible, large, locks files in Trash)
+  if [[ -d "$p" && ! -L "$p" && "$(basename -- "$p")" == "node_modules" ]]; then
+    [[ $verbose -eq 1 ]] && echo "rm: skipping trash for node_modules: $p" >&2
+    "$REAL_RM" -rf -- "$p" || { status=1; continue; }
+    continue
+  fi
+
   # Delegate to trash (handles cross-volume detection internally)
   command trash "${trash_flags[@]}" -- "$p" || status=1
 done
