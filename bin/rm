@@ -11,7 +11,7 @@ REAL_RM="/bin/rm"
 [[ "${RM_DEBUG:-0}" == "1" ]] && set -x
 
 # Ensure trash is available
-command -v trash >/dev/null 2>&1 || { echo "rm: trash not found" >&2; exit 127; }
+[[ -x "$TRASH" ]] || { echo "rm: trash not found at $TRASH" >&2; exit 127; }
 
 # Normalize path and check for dangerous targets
 is_dangerous_path() {

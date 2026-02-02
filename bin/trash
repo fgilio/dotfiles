@@ -21,7 +21,7 @@ is_dangerous_path() {
   local resolved
   resolved="$(cd "$(dirname -- "$p")" 2>/dev/null && pwd -P)/$(basename -- "$p")" 2>/dev/null || resolved="$p"
   case "$resolved" in
-    /|/.) return 0 ;;
+    /|/.|/..|//..|//.) return 0 ;;
   esac
   case "$p" in
     /|.|..|""|./|../|/./*|/../*) return 0 ;;
