@@ -6,6 +6,8 @@
 set -euo pipefail
 
 REAL_RM="/bin/rm"
+# Sibling trash script - avoids resolving to /usr/bin/trash (macOS native)
+TRASH="$(dirname -- "$0")/trash"
 
 # Debug mode: RM_DEBUG=1 rm file
 [[ "${RM_DEBUG:-0}" == "1" ]] && set -x
@@ -21,7 +23,7 @@ is_dangerous_path() {
   resolved="$(cd "$(dirname -- "$p")" 2>/dev/null && pwd -P)/$(basename -- "$p")" 2>/dev/null || resolved="$p"
   # Check if it resolves to root, current dir parent, or is empty
   case "$resolved" in
-    /|/.) return 0 ;;  # dangerous
+    /|/.|/..|//..|//.) return 0 ;;  # dangerous
   esac
   # Check raw input for obvious dangerous patterns
   case "$p" in
@@ -96,7 +98,7 @@ for p in "$@"; do
   fi
 
   # Delegate to trash (handles cross-volume detection internally)
-  command trash "${trash_flags[@]}" -- "$p" || status=1
+  "$TRASH" "${trash_flags[@]}" -- "$p" || status=1
 done
 
 exit $status
