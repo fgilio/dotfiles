@@ -5,10 +5,10 @@ if [ $# -eq 0 ]; then
     # Interactive: Opus
     exec claude --model opus
 else
-    # Non-interactive: Sonnet, no session persistence
+    # Non-interactive: Opus, no session persistence
     # ANTHROPIC_API_KEY="" workaround for Claude Code bug in query mode
     # --tools default enables all tools (disabled by default in --print mode)
     # NOTE: Without --dangerously-skip-permissions, tools requiring approval won't execute
     # This is intentional for secure mode - use `cl` for full tool access
-    ANTHROPIC_API_KEY="" exec claude --print --output-format=text --tools default --no-session-persistence --model sonnet "$@"
+    ANTHROPIC_API_KEY="" exec claude --print --output-format=text --tools default --no-session-persistence --model opus "$@"
 fi
