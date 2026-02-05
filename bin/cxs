@@ -4,8 +4,8 @@
 
 if [ $# -eq 0 ]; then
     # Interactive: high reasoning, read-only sandbox
-    exec codex --search -s read-only --model gpt-5.2-codex --config model_reasoning_effort="high"
+    exec codex --search -s read-only --model gpt-5.3-codex --config model_reasoning_effort="high"
 else
     # Non-interactive: medium reasoning, read-only sandbox
-    exec codex --search -s read-only --model gpt-5.2-codex --config model_reasoning_effort="medium" exec --skip-git-repo-check "$@"
+    exec codex --search -s read-only --model gpt-5.3-codex --config model_reasoning_effort="medium" exec --skip-git-repo-check "$@"
 fi
