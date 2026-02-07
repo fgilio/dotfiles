@@ -4,12 +4,13 @@
 # Interactive mode: no args, or interactive flags (-r/--resume, -c/--continue)
 if [[ $# -eq 0 || "$1" == "--resume" || "$1" == "-r" || "$1" == "--continue" || "$1" == "-c" ]]; then
     # Remove stale session ID before starting
-    rm -f ~/.claude/.last_session_id
+    # Bypass custom rm wrapper - ephemeral temp files don't belong in Trash
+    /bin/rm -f ~/.claude/.last_session_id
     claude --dangerously-skip-permissions "$@"
     # Print resume command if session ID was saved by hook
     if [[ -f ~/.claude/.last_session_id ]]; then
         echo "\e[2mcl --resume $(cat ~/.claude/.last_session_id)\e[0m"
-        rm ~/.claude/.last_session_id
+        /bin/rm ~/.claude/.last_session_id
     fi
 else
     # Non-interactive: Opus, no session persistence for one-off queries
