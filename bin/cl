@@ -8,7 +8,7 @@ if [[ $# -eq 0 || "$1" == "--resume" || "$1" == "-r" || "$1" == "--continue" || 
     claude --dangerously-skip-permissions "$@"
     # Print resume command if session ID was saved by hook
     if [[ -f ~/.claude/.last_session_id ]]; then
-        echo "To continue this session, run: cl --resume $(cat ~/.claude/.last_session_id)"
+        echo "\e[2mcl --resume $(cat ~/.claude/.last_session_id)\e[0m"
         rm ~/.claude/.last_session_id
     fi
 else
