@@ -199,37 +199,6 @@ alias zsetup-hooks="$HOME/pla/zoo/bin/zsetup-hooks"
 [[ -d "$HOME/.local/bin" ]] && path+=("$HOME/.local/bin")
 
 ################################################################################
-# Herd Configuration (Keep at bottom for auto-injected configs)
-# NOTE: Herd auto-injects some lines with hardcoded paths - don't modify those
+# Herd Shell Integration (interactive-only, env vars are in .zshenv)
 ################################################################################
-# PHP binary and configuration directories
-[[ -d "$HOME/Library/Application Support/Herd/bin" ]] && path+=("$HOME/Library/Application Support/Herd/bin")
-
-# NVM configuration (lazy-loaded for ~200ms faster shell startup)
-# Note: No fallback for missing NVM - this is a personal setup with Herd always installed.
-# If NVM is missing, node/npm commands will fail, which is the desired behavior.
-export NVM_DIR="$HOME/Library/Application Support/Herd/config/nvm"
-
-# Lazy-load NVM - only initialize on first use of node/npm/npx/nvm
-_nvm_lazy_load() {
-  unset -f node npm npx nvm nvm_find_nvmrc 2>/dev/null
-  [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-}
-# Stub nvm_find_nvmrc to prevent Herd from triggering full NVM load on startup
-# After first node/npm/nvm call, real nvm_find_nvmrc becomes available
-nvm_find_nvmrc() { echo ""; }
-for cmd in node npm npx nvm; do
-  eval "$cmd() { _nvm_lazy_load && $cmd \"\$@\" }"
-done
-
-# Shell integration (must come after NVM is loaded)
 [[ -f "/Applications/Herd.app/Contents/Resources/config/shell/zshrc.zsh" ]] && builtin source "/Applications/Herd.app/Contents/Resources/config/shell/zshrc.zsh"
-
-# Herd injected PHP 8.3 configuration.
-export HERD_PHP_83_INI_SCAN_DIR="/Users/fgilio/Library/Application Support/Herd/config/php/83/"
-
-# Herd injected PHP 8.4 configuration.
-export HERD_PHP_84_INI_SCAN_DIR="/Users/fgilio/Library/Application Support/Herd/config/php/84/"
-
-# Antigravity CLI (originally added by installer, refactored for consistency)
-[[ -d "$HOME/.antigravity/antigravity/bin" ]] && path=("$HOME/.antigravity/antigravity/bin" $path)
