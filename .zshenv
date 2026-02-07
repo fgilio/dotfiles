@@ -23,13 +23,17 @@ export HERD_PHP_84_INI_SCAN_DIR="/Users/fgilio/Library/Application Support/Herd/
 
 # NVM configuration (lazy-loaded for ~200ms faster shell startup)
 export NVM_DIR="$HOME/Library/Application Support/Herd/config/nvm"
+# Lazy-load NVM on first use of node/npm/npx/nvm.
+# May return non-zero if nvm.sh is missing - callers use ; not && to handle this.
 _nvm_lazy_load() {
   unset -f node npm npx nvm nvm_find_nvmrc 2>/dev/null
   [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 }
 nvm_find_nvmrc() { echo ""; }
+# Use ; instead of && so the command runs even if NVM is unavailable,
+# falling back to any system-installed binary
 for cmd in node npm npx nvm; do
-  eval "$cmd() { _nvm_lazy_load && $cmd \"\$@\" }"
+  eval "$cmd() { _nvm_lazy_load; $cmd \"\$@\" }"
 done
 
 # Antigravity CLI
