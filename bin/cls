@@ -1,9 +1,9 @@
 #!/usr/bin/env zsh
 # Claude Code wrapper - secure mode (prompts for approval)
 
-if [ $# -eq 0 ]; then
+if [[ $# -eq 0 || "$1" == "--teleport" ]]; then
     # Interactive: Opus
-    exec claude --model opus
+    exec claude --model opus "$@"
 else
     # Non-interactive: Opus, no session persistence
     # ANTHROPIC_API_KEY="" workaround for Claude Code bug in query mode

@@ -2,7 +2,7 @@
 # Claude Code wrapper - works in any shell context
 
 # Interactive mode: no args, or interactive flags (-r/--resume, -c/--continue)
-if [[ $# -eq 0 || "$1" == "--resume" || "$1" == "-r" || "$1" == "--continue" || "$1" == "-c" ]]; then
+if [[ $# -eq 0 || "$1" == "--resume" || "$1" == "-r" || "$1" == "--continue" || "$1" == "-c" || "$1" == "--teleport" ]]; then
     # Remove stale session ID before starting
     # Bypass custom rm wrapper - ephemeral temp files don't belong in Trash
     /bin/rm -f ~/.claude/.last_session_id
