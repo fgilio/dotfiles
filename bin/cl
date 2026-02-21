@@ -1,22 +1,13 @@
 #!/usr/bin/env zsh
-# Claude Code wrapper - works in any shell context
+# Claude Code - trusted mode (no permission prompts)
 
-# Interactive mode: no args, or interactive flags (-r/--resume, -c/--continue)
-if [[ $# -eq 0 || "$1" == "--resume" || "$1" == "-r" || "$1" == "--continue" || "$1" == "-c" || "$1" == "--teleport" ]]; then
-    # Remove stale session ID before starting
-    # Bypass custom rm wrapper - ephemeral temp files don't belong in Trash
-    /bin/rm -f ~/.claude/.last_session_id
-    claude --dangerously-skip-permissions "$@"
-    # Print resume command if session ID was saved by hook
-    if [[ -f ~/.claude/.last_session_id ]]; then
-        echo "\e[2mcl --resume $(cat ~/.claude/.last_session_id)\e[0m"
-        /bin/rm ~/.claude/.last_session_id
-    fi
+if [[ $# -eq 0 || "$1" == -* ]]; then
+    # Interactive: no args, or flags (--resume, --continue, etc.)
+    # NOTE: flags before a positional arg route here too (e.g. cl --verbose "query")
+    exec claude "$@"
 else
-    # Non-interactive: Opus, no session persistence for one-off queries
-    # ANTHROPIC_API_KEY="" is intentional - workaround for Claude Code bug where
-    # env API key causes issues in query mode. Forces use of stored credentials.
-    # --tools default enables all tools (disabled by default in --print mode)
-    # --dangerously-skip-permissions required for tools to actually execute in --print mode
-    ANTHROPIC_API_KEY="" exec claude --print --output-format=text --tools default --dangerously-skip-permissions --no-session-persistence --model opus "$@"
+    # Non-interactive: one-off query, pinned to Opus
+    # ANTHROPIC_API_KEY="" forces CLI auth instead of env key, which bills to API
+    # instead of Max subscription in --print mode (issues #3040, #1932)
+    ANTHROPIC_API_KEY="" exec claude --print --output-format=text --tools default --no-session-persistence --model opus "$@"
 fi
