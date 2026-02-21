@@ -125,6 +125,9 @@ alias ping="prettyping --nolegend" # Installed via Brewfile
 alias flushDNS="dscacheutil -flushcache"  # Flush DNS cache
 alias edit-hosts='SUDO_EDITOR="$EDITOR" sudo -e /etc/hosts'  # Edit hosts file
 
+# Claude Code
+alias today='claude --resume "today"'  # Resume today's Claude Code session
+
 # Configuration editing
 alias edit-zsh-config='$EDITOR "$HOME/.zshrc"'  # Edit ZSH config (uses Zed)
 alias zsh-edit-config='edit-zsh-config'         # Alternative for editing ZSH config
