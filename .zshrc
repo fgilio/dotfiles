@@ -126,7 +126,7 @@ alias flushDNS="dscacheutil -flushcache"  # Flush DNS cache
 alias edit-hosts='SUDO_EDITOR="$EDITOR" sudo -e /etc/hosts'  # Edit hosts file
 
 # Claude Code
-alias today='claude --resume "today"'  # Resume today's Claude Code session
+alias today='claude --resume "today" --model sonnet'  # Resume today's Claude Code session
 
 # Configuration editing
 alias edit-zsh-config='$EDITOR "$HOME/.zshrc"'  # Edit ZSH config (uses Zed)
