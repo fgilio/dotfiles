@@ -15,6 +15,7 @@ brew 'git-lfs'
 brew 'git-open'
 brew 'glab' # GitLab CLI
 brew 'grep'
+brew 'lazygit' # Terminal UI for git
 brew 'fd'    # Fast find replacement, used with fzf
 brew 'fzf'   # Fuzzy finder (ctrl-r / ctrl-t / alt-c)
 brew 'oha' # HTTP load generator (Rust, faster than hey)
@@ -33,6 +34,7 @@ brew 'starship' # Shell prompt
 brew 'tesseract'
 brew 'tree'
 brew 'wget'
+brew 'yazi' # Terminal file manager
 brew 'yt-dlp' # YouTube downloader (replaces youtube-dl)
 brew 'zoxide' # Smarter cd command
 brew 'zsh-autosuggestions'

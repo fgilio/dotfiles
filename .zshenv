@@ -5,6 +5,7 @@
 # Global dotfiles directory reference
 export DOTFILES="$HOME/.dotfiles"
 
+
 # Set up PATH with automatic deduplication
 typeset -gU path PATH
 export PATH  # Ensure PATH is exported
