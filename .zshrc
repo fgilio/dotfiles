@@ -127,6 +127,7 @@ alias edit-hosts='SUDO_EDITOR="$EDITOR" sudo -e /etc/hosts'  # Edit hosts file
 
 # Claude Code
 alias today='claude --resume "today" --model sonnet'  # Resume today's Claude Code session
+alias blog='cd ~/dev/fgilio.com && claude'  # Claude Code session for the blog
 
 # Configuration editing
 alias edit-zsh-config='$EDITOR "$HOME/.zshrc"'  # Edit ZSH config (uses Zed)
