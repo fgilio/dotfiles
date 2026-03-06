@@ -7,5 +7,5 @@ if [ $# -eq 0 ]; then
     exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-5.4 --config model_reasoning_effort="xhigh"
 else
     # Non-interactive: medium reasoning for faster responses
-    exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-5.4 --config model_reasoning_effort="xhigh" exec --skip-git-repo-check "$@"
+    exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-5.4 --config model_reasoning_effort="medium" exec --skip-git-repo-check "$@"
 fi
