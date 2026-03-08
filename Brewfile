@@ -39,6 +39,8 @@ brew 'yazi' # Terminal file manager
 brew 'yt-dlp' # YouTube downloader (replaces youtube-dl)
 brew 'zoxide' # Smarter cd command
 brew 'zsh-autosuggestions'
+brew 'lefthook'   # Git hooks manager
+brew 'shellcheck' # Shell script static analysis
 
 # Development
 # PHP is managed by Laravel Herd (see cask 'herd' below), not Homebrew
