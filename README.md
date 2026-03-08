@@ -1,5 +1,7 @@
 # fgilio's Dotfiles
 
+![CI](https://github.com/fgilio/dotfiles/actions/workflows/ci.yml/badge.svg)
+
 Special thanks to https://github.com/driesvints whose [dotfiles repo](https://github.com/driesvints/dotfiles) I used as a base.
 
 This repository serves as my way to help me setup and maintain my Mac, to ease the effort out of installing everything manually. It's a constant wip, as I'm almost always tuning my setup. Feel free to explore, learn and copy anything.
