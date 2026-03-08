@@ -6,6 +6,7 @@ brew 'bat'
 brew 'btop' # Modern htop alternative
 brew 'coreutils' # Those that come with macOS are outdated
 brew 'ffmpeg'
+brew 'whisper-cpp' # Local audio transcription (Whisper via Metal)
 brew 'mozjpeg' # JPEG compression for screenshot optimization
 brew 'vips' # Image processing for screenshot optimization
 brew 'gemini-cli' # Google Gemini CLI
