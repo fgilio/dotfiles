@@ -39,6 +39,15 @@ ln -sf "$DOTFILES/hammerspoon/init.lua" "$HOME/.hammerspoon/init.lua"
 # Create ~/tmp for ocr alias and other temp operations
 mkdir -p "$HOME/tmp"
 
+# Pre-download whisper model for Transcribe Audio Quick Action (~466MB)
+WHISPER_MODEL="$HOME/.local/share/whisper-cpp/ggml-small.bin"
+if [[ ! -f "$WHISPER_MODEL" ]]; then
+    mkdir -p "$(dirname "$WHISPER_MODEL")"
+    curl -fL --retry 3 --retry-delay 2 \
+        "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin" \
+        -o "$WHISPER_MODEL.tmp" && mv "$WHISPER_MODEL.tmp" "$WHISPER_MODEL"
+fi
+
 # Install Automator workflows (Quick Actions and Folder Actions)
 mkdir -p "$HOME/Library/Services"
 mkdir -p "$HOME/Library/Workflows/Applications/Folder Actions"
