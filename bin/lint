@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Lint all shell scripts in the dotfiles repo
+set -euo pipefail
+
+DOTFILES="${DOTFILES:-$(cd "$(dirname "$0")/.." && pwd)}"
+status=0
+
+echo "ShellCheck (bash scripts)"
+echo "-------------------------"
+shellcheck --severity=warning \
+  "$DOTFILES/fresh.sh" \
+  "$DOTFILES/ssh.sh" \
+  "$DOTFILES/.macos" \
+  "$DOTFILES/apps/format-transcription/build.sh" \
+  "$DOTFILES/bin/rm" \
+  "$DOTFILES/bin/trash" \
+  "$DOTFILES/bin/rm-test" \
+  "$DOTFILES/bin/raycast/strip-padding.sh" \
+  || status=1
+
+echo ""
+echo "Zsh syntax check"
+echo "-----------------"
+for f in \
+  "$DOTFILES/.zshrc" \
+  "$DOTFILES/.zshenv" \
+  "$DOTFILES/functions/dev-tools.zsh" \
+  "$DOTFILES"/bin/cl \
+  "$DOTFILES"/bin/cls \
+  "$DOTFILES"/bin/cr \
+  "$DOTFILES"/bin/cx \
+  "$DOTFILES"/bin/cxs \
+  "$DOTFILES"/bin/gm \
+  "$DOTFILES"/bin/gms \
+  "$DOTFILES"/bin/node; do
+  if zsh -n "$f"; then
+    printf '  OK %s\n' "$(basename "$f")"
+  else
+    printf '  FAIL %s\n' "$(basename "$f")"
+    status=1
+  fi
+done
+
+exit $status

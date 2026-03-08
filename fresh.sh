@@ -86,6 +86,11 @@ ln -sf "$DOTFILES/hushlogin" "$HOME/.hushlogin"
 # Includes: starship, zoxide, btop, fzf, fd, zsh-autosuggestions, coreutils, etc.
 brew bundle --file "$DOTFILES/Brewfile"
 
+# Install git hooks (idempotent - safe to re-run)
+if [[ -d "$DOTFILES/.git" ]]; then
+  lefthook install
+fi
+
 # Install fzf key bindings and completion (no shell rc modifications)
 if [[ -x /opt/homebrew/opt/fzf/install ]]; then
   /opt/homebrew/opt/fzf/install --key-bindings --completion --no-update-rc
@@ -129,5 +134,6 @@ fi
 # Set macOS preferences - we will run this last because this will reload the shell
 # Disable errexit for .macos since many defaults commands exit non-zero on reruns
 set +e
+# shellcheck source=/dev/null
 source "$DOTFILES/.macos"
 set -e
