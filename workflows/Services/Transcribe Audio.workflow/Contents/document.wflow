@@ -86,6 +86,7 @@ if [[ ! -f "$MODEL" ]]; then
     fi
 fi
 
+md_created=false
 for f in "$@"; do
     output="${f%.*}.txt"
 
@@ -97,13 +98,25 @@ for f in "$@"; do
         continue
     fi
 
-    # Transcribe (auto-detects language, no timestamps)
-    /opt/homebrew/bin/whisper-cli -m "$MODEL" -f "$tmpwav" -otxt -of "${output%.txt}" --no-timestamps 2>/dev/null
+    # Transcribe (auto-detect language, preserve original, no timestamps)
+    /opt/homebrew/bin/whisper-cli -m "$MODEL" -f "$tmpwav" -l auto -otxt -of "${output%.txt}" --no-timestamps 2>/dev/null
 
     rm -f "$tmpwav"
+
+    # Format as Markdown using Apple on-device LLM (best-effort, .txt always kept)
+    # Uses a background-only .app wrapper so FoundationModels gets proper TCC access
+    # (bare CLI tools and swift interpreter lack entitlements in Quick Action context)
+    if [[ -f "$output" ]] &amp;&amp; [[ -d "$HOME/Applications/FormatTranscription.app" ]]; then
+        mdoutput="${f%.*}.md"
+        open -W -n -g "$HOME/Applications/FormatTranscription.app" --args "$output" "$mdoutput" 2&gt;/dev/null &amp;&amp; md_created=true || true
+    fi
 done
 
-osascript -e "display notification \"Transcription saved\" with title \"Transcribe Audio\""</string>
+if $md_created; then
+    osascript -e "display notification \"Transcription + Markdown saved\" with title \"Transcribe Audio\""
+else
+    osascript -e "display notification \"Transcription saved\" with title \"Transcribe Audio\""
+fi</string>
 					<key>CheckedForUserDefaultShell</key>
 					<true/>
 					<key>inputMethod</key>

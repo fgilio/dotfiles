@@ -24,6 +24,13 @@ ln -sf "$DOTFILES/.gitconfig" "$HOME/.gitconfig"
 # Ensure dotfiles bin directory scripts are executable
 chmod +x "$DOTFILES/bin/"*
 
+# Install FormatTranscription.app (on-device LLM markdown formatter)
+# Pre-built .app wrapper needed for TCC/FoundationModels access from Quick Actions
+# Rebuild with: apps/format-transcription/build.sh
+mkdir -p "$HOME/Applications"
+rm -rf "$HOME/Applications/FormatTranscription.app"
+cp -R "$DOTFILES/apps/format-transcription/build/FormatTranscription.app" "$HOME/Applications/"
+
 # Symlink Starship config
 mkdir -p "$HOME/.config"
 ln -sf "$DOTFILES/starship.toml" "$HOME/.config/starship.toml"
