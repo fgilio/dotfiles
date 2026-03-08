@@ -98,7 +98,8 @@ for p in "$@"; do
   fi
 
   # Delegate to trash (handles cross-volume detection internally)
-  "$TRASH" "${trash_flags[@]}" -- "$p" || status=1
+  # ${trash_flags[@]+...} avoids unbound variable error on bash 3.2 with set -u
+  "$TRASH" ${trash_flags[@]+"${trash_flags[@]}"} -- "$p" || status=1
 done
 
 exit $status
