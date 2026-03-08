@@ -1,0 +1,9 @@
+pre-commit:
+  commands:
+    lint:
+      run: bin/lint
+
+pre-push:
+  commands:
+    tests:
+      run: bin/rm-test
