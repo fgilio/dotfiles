@@ -99,7 +99,8 @@ cask 'tinkerwell'
 cask 'whatsapp'
 
 # Quicklook
-cask 'quickjson'
+# Unsigned app - requires right-click > Open on first launch to bypass Gatekeeper
+cask 'syntax-highlight'
 cask 'thumbhost3mf'
 
 # Fonts
