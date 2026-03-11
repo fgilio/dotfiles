@@ -90,11 +90,30 @@ for p in "$@"; do
     fi
   fi
 
-  # Skip trash for node_modules (reproducible, large, locks files in Trash)
-  if [[ -d "$p" && ! -L "$p" && "$(basename -- "$p")" == "node_modules" ]]; then
-    [[ $verbose -eq 1 ]] && echo "rm: skipping trash for node_modules: $p" >&2
-    "$REAL_RM" -rf -- "$p" || { status=1; continue; }
-    continue
+  # Skip trash for reproducible/ephemeral content - regenerable, often large,
+  # and clutter Trash when tools recreate them constantly
+  basename="$(basename -- "$p")"
+
+  # Ephemeral directories: package deps, build caches, framework output
+  if [[ -d "$p" && ! -L "$p" ]]; then
+    case "$basename" in
+      node_modules|vendor|__pycache__|.cache|.pytest_cache|.mypy_cache|.ruff_cache|.next|.nuxt|.turbo|.parcel-cache)
+        [[ $verbose -eq 1 ]] && echo "rm: skipping trash for ephemeral dir: $p" >&2
+        "$REAL_RM" -rf -- "$p" || { status=1; continue; }
+        continue
+        ;;
+    esac
+  fi
+
+  # Ephemeral files: linter/tool caches that get recreated constantly
+  if [[ -L "$p" || -f "$p" ]]; then
+    case "$basename" in
+      .yamllint|.phpunit.result.cache|.eslintcache|.php-cs-fixer.cache|.stylelintcache|.prettiercache|.coverage)
+        [[ $verbose -eq 1 ]] && echo "rm: skipping trash for ephemeral file: $p" >&2
+        "$REAL_RM" -f -- "$p" || { status=1; continue; }
+        continue
+        ;;
+    esac
   fi
 
   # Delegate to trash (handles cross-volume detection internally)

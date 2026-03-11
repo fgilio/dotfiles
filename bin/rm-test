@@ -149,6 +149,55 @@ nm="$(mkdir_ node_modules)"
 assert_stderr "rm node_modules (no -r): is a directory" "is a directory" "$RM" "$nm"
 /bin/rm -rf "$nm"
 
+# Ephemeral dir bypass: vendor
+d="$(mkdir_ vendor)"
+touch "$d/autoload.php"
+"$RM" -rf "$d"
+assert_not_exists "rm -rf vendor: removed" "$d"
+assert_not_exists "rm -rf vendor: not in Trash" "$TRASH_DIR/vendor"
+
+# Ephemeral dir bypass: __pycache__
+d="$(mkdir_ __pycache__)"
+touch "$d/mod.pyc"
+"$RM" -rf "$d"
+assert_not_exists "rm -rf __pycache__: removed" "$d"
+assert_not_exists "rm -rf __pycache__: not in Trash" "$TRASH_DIR/__pycache__"
+
+# Ephemeral dir bypass: verbose message
+d="$(mkdir_ .cache)"
+assert_stderr_any "rm -rfv .cache: skip message" "skipping trash for ephemeral dir" "$RM" -rfv "$d"
+
+# Ephemeral file bypass: .yamllint
+f="$(mkfile .yamllint)"
+"$RM" "$f"
+assert_not_exists "rm .yamllint: removed" "$f"
+assert_not_exists "rm .yamllint: not in Trash" "$TRASH_DIR/.yamllint"
+
+# Ephemeral file bypass: .phpunit.result.cache
+f="$(mkfile .phpunit.result.cache)"
+"$RM" "$f"
+assert_not_exists "rm .phpunit.result.cache: removed" "$f"
+assert_not_exists "rm .phpunit.result.cache: not in Trash" "$TRASH_DIR/.phpunit.result.cache"
+
+# Ephemeral file bypass: verbose message
+f="$(mkfile .eslintcache)"
+assert_stderr_any "rm -v .eslintcache: skip message" "skipping trash for ephemeral file" "$RM" -v "$f"
+
+# Symlink named like ephemeral file → bypassed (not followed)
+target="$(mkfile real_config)"
+ln -s "$target" "$sandbox/.yamllint"
+"$RM" "$sandbox/.yamllint"
+assert_not_exists "rm symlink named .yamllint: link removed" "$sandbox/.yamllint"
+assert_exists     "rm symlink named .yamllint: target intact" "$target"
+assert_not_exists "rm symlink named .yamllint: not in Trash" "$TRASH_DIR/.yamllint"
+
+# Symlink named like ephemeral dir → NOT bypassed (symlinks aren't dirs)
+target_dir="$(mkdir_ real_vendor)"
+ln -s "$target_dir" "$sandbox/vendor"
+"$RM" "$sandbox/vendor"
+assert_not_exists "rm symlink named vendor: link removed" "$sandbox/vendor"
+assert_exists     "rm symlink named vendor: target intact" "$target_dir"
+
 # No args → missing operand
 assert_stderr "rm (no args): missing operand" "missing operand" "$RM"
 
