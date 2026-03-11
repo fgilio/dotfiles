@@ -17,6 +17,9 @@ path=("$DOTFILES/bin" $path)
 export EDITOR="zed --wait"
 export VISUAL="$EDITOR"
 
+# Suppress git advice messages (cleaner output for AI agents and scripts)
+export GIT_ADVICE=0
+
 # Herd - PHP binary and configuration
 [[ -d "$HOME/Library/Application Support/Herd/bin" ]] && path+=("$HOME/Library/Application Support/Herd/bin")
 export HERD_PHP_83_INI_SCAN_DIR="/Users/fgilio/Library/Application Support/Herd/config/php/83/"
