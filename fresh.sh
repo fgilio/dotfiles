@@ -131,6 +131,9 @@ if command -v utiluti &> /dev/null; then
   utiluti manage --type-file "$DOTFILES/default-apps.plist" --url-file "$DOTFILES/default-urls.plist"
 fi
 
+# Editor config (VSCode symlinks + shared extension installs)
+source "$DOTFILES/setup/editors.sh"
+
 # Set macOS preferences - we will run this last because this will reload the shell
 # Disable errexit for .macos since many defaults commands exit non-zero on reruns
 set +e

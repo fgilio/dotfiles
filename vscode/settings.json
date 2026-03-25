@@ -1,0 +1,182 @@
+{
+    /**
+    * Better Defaults
+    **/
+    "explorer.confirmDragAndDrop": false,
+    "explorer.confirmDelete": false,
+    "editor.copyWithSyntaxHighlighting": false,
+    "diffEditor.ignoreTrimWhitespace": false,
+    "editor.emptySelectionClipboard": false,
+    "workbench.editor.enablePreview": false,
+    "workbench.tree.indent": 16,
+    "editor.bracketPairColorization.independentColorPoolPerBracketType": true,
+    "editor.guides.bracketPairs": "active",
+    "window.newWindowDimensions": "inherit",
+    "window.nativeTabs": true,
+    "editor.multiCursorModifier": "alt",        // frees Alt/Option for column (box) selection
+    "files.trimTrailingWhitespace": true,
+    "diffEditor.renderSideBySide": false,
+    "diffEditor.diffAlgorithm": "advanced",
+    "diffEditor.experimental.showMoves": true,
+    "editor.snippetSuggestions": "top",
+    "editor.detectIndentation": false,
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    "git.confirmSync": false,
+    "editor.wordSeparators": "`~!@#%^&*()-=+[{]}\\|;:'\",.<>/?",
+    "accessibility.dimUnfocused.enabled": true,
+    "accessibility.dimUnfocused.opacity": 0.64,
+    "breadcrumbs.enabled": true,
+    "workbench.activityBar.orientation": "vertical",
+    "editor.minimap.enabled": false,
+    /**
+    * Silence The Noise
+    */
+    "editor.guides.indentation": false,
+    "workbench.tips.enabled": false,
+    "security.promptForLocalFileProtocolHandling": false,
+    /**
+    * Typography
+    **/
+    "editor.fontFamily": "'MonoLisa Variable'",
+    "editor.fontLigatures": "'calt' on, 'liga' off, 'zero' on, 'ss02' on",
+    "editor.fontSize": 12,
+    "editor.lineHeight": 2.8,
+    "editor.fontWeight": 430,
+    "editor.suggestFontSize": 12,
+    "editor.suggestLineHeight": 28,
+    "terminal.integrated.fontSize": 12,
+    "terminal.integrated.lineHeight": 1.1,
+    // Leaving this here as a reference
+    "editor.tokenColorCustomizations": {
+        "textMateRules": [
+            {
+                "scope": "comment",
+                "settings": {
+                    "fontStyle": "italic"
+                }
+            }
+        ]
+    },
+    /**
+    * Terminal
+    **/
+    "terminal.integrated.scrollback": 10000,
+    "terminal.integrated.copyOnSelection": true,
+    /**
+    * Find
+    **/
+    "search.useIgnoreFiles": false,
+    "search.exclude": {
+        // Hide everything in /vendor, except the "laravel" and "livewire" folder.
+        "**/vendor/{[^l],?[^ai]}*": true,
+        // Hide everything in /public, except "index.php"
+        "**/public/{[^i],?[^n]}*": true,
+        "**/docs/public/**": false,
+        "**/node_modules": true,
+        "**/dist": true,
+        "**/build": true,
+        "**/.next": true,
+        "**/.open-next": true,
+        "**/.wrangler": true,
+        "**/_ide_helper.php": true,
+        "**/_ide_helper_models.php": true,
+        "**/.phpstorm.meta.php": true,
+        "**/composer.lock": true,
+        "**/package-lock.json": true,
+        "**/storage/framework/": true,
+        "**/.phpunit.result.cache": true,
+        ".phpunit.result.cache": true,
+        "**/.phpunit.cache": true,
+        ".phpunit.cache": true,
+        "**/phpstan-baseline.neon": true,
+        "phpstan-baseline.neon": true,
+        // Docusaurus build folder
+        ".docusaurus": true
+    },
+    /**
+    * PHP
+    **/
+    // Auto sort when a file is saved
+    "phpNamespaceHelper.sortOnSave": false,
+    "phpNamespaceHelper.sort": "natural",
+    "phpNamespaceHelper.sortOrder": "ASC",
+    "[dockerfile]": {
+        "editor.defaultFormatter": "redhat.vscode-yaml"
+    },
+    "[dockercompose]": {
+        "editor.defaultFormatter": "redhat.vscode-yaml"
+    },
+    /**
+    * XML Formatting
+    */
+    "[xml]": {
+        "editor.tabSize": 2,
+        "editor.wordWrap": "off",
+        "editor.formatOnSave": false,
+    },
+    "xml.format.maxLineWidth": 0,
+    "xml.format.splitAttributes": "preserve",
+    "xml.format.joinContentLines": false,
+    "xml.format.joinCommentLines": true,
+    "xml.format.preserveEmptyContent": true,
+    /**
+    * Theme
+    */
+    "window.autoDetectColorScheme": true,
+    "workbench.preferredDarkColorTheme": "GitHub Dark",
+    "workbench.preferredLightColorTheme": "GitHub Light Default",
+    "workbench.colorCustomizations": {
+        "tab.activeBorder": "#09e9f1",
+    },
+    "git.autofetch": true,
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.patterns": {
+        "*.ts": "${capture}.js, ${capture}.typegen.ts",
+        "*.js": "${capture}.js.map, ${capture}.min.js, ${capture}.d.ts",
+        "*.jsx": "${capture}.js",
+        "*.tsx": "${capture}.ts, ${capture}.typegen.ts",
+        "tsconfig.json": "tsconfig.*.json",
+        "package.json": "package-lock.json, yarn.lock, pnpm-lock.yaml, bun.lockb",
+        "*.mts": "${capture}.typegen.ts",
+        "*.cts": "${capture}.typegen.ts"
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "biomejs.biome"
+    },
+    "[jsonc]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "[css]": {
+        "editor.defaultFormatter": "biomejs.biome"
+    },
+    "files.associations": {
+        ".dev.vars": "shellscript"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "typescript.updateImportsOnFileMove.enabled": "always",
+    "[html]": {
+        "editor.defaultFormatter": "vscode.html-language-features"
+    },
+    "Laravel.phpEnvironment": "lando",
+    "stringManipulation.telemetry": false,
+    "git.blame.editorDecoration.enabled": true,
+    "workbench.sideBar.location": "right",
+    "[github-actions-workflow]": {
+        "editor.defaultFormatter": "redhat.vscode-yaml"
+    },
+    "claudeCode.selectedModel": "opus",
+    "claudeCode.preferredLocation": "panel",
+    "json.schemaDownload.trustedDomains": {
+        "https://schemastore.azurewebsites.net/": true,
+        "https://raw.githubusercontent.com/microsoft/vscode/": true,
+        "https://raw.githubusercontent.com/devcontainers/spec/": true,
+        "https://www.schemastore.org/": true,
+        "https://json.schemastore.org/": true,
+        "https://json-schema.org/": true,
+        "https://developer.microsoft.com/json-schemas/": true,
+        "https://biomejs.dev": true
+    },
+}
