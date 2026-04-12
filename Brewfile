@@ -64,6 +64,7 @@ cask 'ghostty'
 cask 'krisp'
 cask 'discord'
 cask 'docker'
+cask 'dockdoor' # Window preview on Dock hover
 cask 'github'
 cask 'gitup'
 cask 'handbrake'
