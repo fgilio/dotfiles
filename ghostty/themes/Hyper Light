@@ -1,18 +1,40 @@
+# Hyper Light — WCAG AA-optimized for white backgrounds
+#
+# The original Hyper Light palette reused the dark theme's bright neon ANSI
+# colors, which washed out on white (contrast ratios as low as 2.1:1).
+# Every color here is darkened to pass WCAG AA (4.5:1+) while preserving
+# the original Hyper hue family.
+#
+# Contrast ratios vs #FFFFFF:
+#   0 black      #000000  21.0:1    8 bright black  #3B3D42  11.2:1
+#   1 red        #C51E14   5.9:1    9 bright red    #B71C1C   6.6:1
+#   2 green      #0E7A0E   5.5:1   10 bright green  #157A15   5.5:1
+#   3 yellow     #706500   5.9:1   11 bright yellow  #7D7200   4.9:1
+#   4 blue       #0A2FC4   9.5:1   12 bright blue   #2441B0   8.5:1
+#   5 magenta    #A028A0   6.4:1   13 bright magenta #A032A0   6.1:1
+#   6 cyan       #0E6868   6.6:1   14 bright cyan   #0E7070   5.9:1
+#   7 white      #5C5C5C   6.7:1   15 bright white  #FFFFFF   n/a
+#
+# Slot 7 (secondary text gray) darkened from original #C7C7C7 (1.7:1) to
+# #5C5C5C (6.7:1) for comfortable readability.
+# Slot 8 (dark gray) carries a subtle blue tint (#3B3D42) for an ink-like
+# feel, distinct from the neutral slot 7.
+
 palette = 0=#000000
 palette = 1=#C51E14
-palette = 2=#1DC121
-palette = 3=#A0A21E
+palette = 2=#0E7A0E
+palette = 3=#706500
 palette = 4=#0A2FC4
-palette = 5=#C839C5
-palette = 6=#20C5C6
-palette = 7=#C7C7C7
-palette = 8=#686868
-palette = 9=#FD6F6B
-palette = 10=#67F86F
-palette = 11=#FFFA72
-palette = 12=#6A76FB
-palette = 13=#FD7CFC
-palette = 14=#68FDFE
+palette = 5=#A028A0
+palette = 6=#0E6868
+palette = 7=#5C5C5C
+palette = 8=#3B3D42
+palette = 9=#B71C1C
+palette = 10=#157A15
+palette = 11=#7D7200
+palette = 12=#2441B0
+palette = 13=#A032A0
+palette = 14=#0E7070
 palette = 15=#FFFFFF
 background = #FFFFFF
 foreground = #000000

@@ -1,3 +1,8 @@
+# Hyper Dark — original Hyper palette (unchanged)
+#
+# Bright neon colors designed for dark backgrounds. These have excellent
+# contrast against #000000 and are kept as-is from the upstream Hyper theme.
+
 palette = 0=#000000
 palette = 1=#C51E14
 palette = 2=#1DC121
