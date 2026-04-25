@@ -63,13 +63,13 @@ automator -i ~/Downloads/audio.opus ~/Library/Services/Transcribe\ Audio.workflo
 
 ## Key Decisions
 
-- **`LSBackgroundOnly`** not `LSUIElement` - we're a faceless worker, no UI at all
 - **`open -W -n -g`** - `-W` waits for exit, `-n` forces new instance per run, `-g` prevents focus stealing
 - **Ad-hoc signing** (`codesign --sign -`) - sufficient for TCC. Real signing only needed for distribution
 - **`-O` optimization flag** - faster runtime since the LLM call is the bottleneck anyway
-- **`-target arm64-apple-macos26.0`** - Apple Silicon only, matches dotfiles target
 - **Atomic write** (`atomically: true`) - prevents partial .md files if interrupted
 - **Best-effort** - workflow uses `|| true` so .txt is always kept even if formatting fails
+
+`bin/check` enforces the on-device-only invariants on both the source `Info.plist` and the prebuilt `build/FormatTranscription.app/Contents/Info.plist` (`LSBackgroundOnly`, `LSMinimumSystemVersion=26.0`, `-target arm64-apple-macos26.0`, `import FoundationModels` and no `FoundationNetworking`).
 
 ## Prompt Engineering Notes
 

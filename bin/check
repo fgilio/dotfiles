@@ -1,0 +1,264 @@
+#!/usr/bin/env bash
+# Repo health check for the dotfiles. What's enforced:
+#   - bash files lint and format clean
+#   - zsh files parse
+#   - GitHub Actions workflows lint
+#   - Hammerspoon Lua lints
+#   - no `brew --prefix` at runtime (subprocess startup cost)
+#   - shebanged scripts are executable
+#   - every CLAUDE.md has an AGENTS.md symlink pointing to it
+#   - Hammerspoon modules are wired (require in init.lua + ln -s in fresh.sh)
+#   - Brewfile and ci.yml install the same dev-tool deps (no drift)
+#   - no trailing whitespace / CRLF (workflows/ excluded - Automator XML)
+#   - FormatTranscription stays on-device (source + built bundle Info.plist,
+#     build.sh, main.swift)
+#
+# Run: bin/check  (also runs in lefthook pre-commit and GitHub Actions CI)
+set -uo pipefail
+
+DOTFILES="${DOTFILES:-$(cd "$(dirname "$0")/.." && pwd)}"
+cd "$DOTFILES" || exit 1
+
+status=0
+failures=0 # monotonic counter; sections snapshot it to detect their own failures
+section_start=0
+
+bash_files=(
+  fresh.sh
+  ssh.sh
+  .macos
+  apps/format-transcription/build.sh
+  bin/rm
+  bin/trash
+  bin/rm-test
+  bin/check
+  bin/raycast/strip-padding.sh
+)
+
+# `zsh -n` is the only zsh static analyzer in our toolchain.
+zsh_files=(
+  .zshrc
+  .zshenv
+  functions/dev-tools.zsh
+  bin/cl
+  bin/cls
+  bin/cr
+  bin/cx
+  bin/cxs
+  bin/gm
+  bin/gms
+  bin/node
+)
+
+required_brews=(shellcheck shfmt actionlint luacheck gitleaks)
+
+# Pinned macOS deployment target. Must stay in sync with Info.plist's
+# LSMinimumSystemVersion and build.sh's `-target` flag (this script enforces it).
+MACOS_TARGET="arm64-apple-macos26.0"
+MIN_MACOS_VERSION="${MACOS_TARGET#arm64-apple-macos}"
+
+fail() {
+  status=1
+  failures=$((failures + 1))
+}
+
+section() {
+  echo ""
+  echo "$1"
+  printf '%*s\n' "${#1}" '' | tr ' ' '-'
+  section_start=$failures
+}
+
+section_ok() {
+  [[ $failures -eq $section_start ]] && echo "  OK $1"
+}
+
+is_sourced() {
+  case "$1" in
+    .zshrc | .zshenv | functions/dev-tools.zsh) return 0 ;;
+  esac
+  return 1
+}
+
+has_require() {
+  grep -qE "require[[:space:]]*\(?[[:space:]]*[\"']${1}[\"']" hammerspoon/init.lua
+}
+
+has_symlink_for() {
+  grep -qE "(^|[^[:alnum:]_])ln[[:space:]]+-s[a-zA-Z]*([[:space:]]|$).*hammerspoon/${1}\.lua" fresh.sh
+}
+
+# ---- shellcheck ---------------------------------------------------------
+section "ShellCheck (bash scripts)"
+shellcheck --severity=warning "${bash_files[@]}" || fail
+
+# ---- shfmt --------------------------------------------------------------
+# Run `shfmt -w -i 2 -ci -bn <file>` to auto-fix.
+section "shfmt (bash formatting)"
+shfmt -d -i 2 -ci -bn "${bash_files[@]}" || fail
+
+# ---- whitespace hygiene -------------------------------------------------
+# Excludes workflows/ (Automator-generated XML, not hand-edited).
+section "Whitespace hygiene"
+empty_tree=$(git hash-object -t tree /dev/null 2>/dev/null)
+ws_out=$(git diff --check "$empty_tree" -- . ':!workflows' 2>&1) || true
+if [[ -n "$ws_out" ]]; then
+  printf '%s\n' "$ws_out" | sed 's/^/  /'
+  fail
+fi
+section_ok "no trailing whitespace / CR-at-EOL"
+
+# ---- zsh syntax ---------------------------------------------------------
+section "Zsh syntax check"
+for f in "${zsh_files[@]}"; do
+  if zsh -n "$f"; then
+    printf '  OK %s\n' "$(basename "$f")"
+  else
+    printf '  FAIL %s\n' "$(basename "$f")"
+    fail
+  fi
+done
+
+# ---- brew --prefix invocation ban ---------------------------------------
+# Subprocess adds ~30-50ms to shell startup; /opt/homebrew is hardcoded.
+# Comments are allowed (they document the ban). bin/check excluded - it must
+# contain the pattern in order to detect it.
+section "Brew --prefix invocation ban"
+for f in "${bash_files[@]}" "${zsh_files[@]}"; do
+  [[ "$f" == "bin/check" ]] && continue
+  matches=$(grep -nF 'brew --prefix' "$f" 2>/dev/null \
+    | grep -vE '^[0-9]+:[[:space:]]*#') || true
+  if [[ -n "$matches" ]]; then
+    while IFS= read -r line; do
+      printf '  FAIL %s:%s\n' "$f" "$line"
+    done <<<"$matches"
+    fail
+  fi
+done
+section_ok "no \`brew --prefix\` invocations"
+
+# ---- actionlint ---------------------------------------------------------
+section "actionlint (GitHub Actions)"
+actionlint -color || fail
+
+# ---- luacheck -----------------------------------------------------------
+section "luacheck (Hammerspoon)"
+(cd hammerspoon && luacheck --no-color *.lua) || fail
+
+# ---- executable-bit check -----------------------------------------------
+section "Executable-bit check"
+for f in "${bash_files[@]}" "${zsh_files[@]}"; do
+  is_sourced "$f" && continue
+  [[ -f "$f" ]] || continue
+  read -r -N 2 first_two <"$f" 2>/dev/null || continue
+  [[ "$first_two" == '#!' ]] || continue
+  if [[ ! -x "$f" ]]; then
+    printf '  FAIL %s (has shebang but not executable)\n' "$f"
+    fail
+  fi
+done
+section_ok "all shebanged scripts are executable"
+
+# ---- AGENTS.md <-> CLAUDE.md symlink integrity --------------------------
+# Link target is forced to "CLAUDE.md", so if find located the source the
+# resolved link must exist - no dangling check needed.
+section "AGENTS.md symlink integrity"
+while IFS= read -r claude; do
+  agents="$(dirname "$claude")/AGENTS.md"
+  if [[ ! -L "$agents" ]]; then
+    printf '  FAIL missing AGENTS.md symlink for %s\n' "$claude"
+    fail
+  elif [[ "$(readlink "$agents")" != "CLAUDE.md" ]]; then
+    printf '  FAIL %s does not point to CLAUDE.md (got %s)\n' "$agents" "$(readlink "$agents")"
+    fail
+  fi
+done < <(find . -name CLAUDE.md -not -path './.git/*' -not -path '*/vendor/*' -not -path '*/node_modules/*')
+section_ok "every CLAUDE.md has a valid AGENTS.md symlink"
+
+# ---- Hammerspoon module wiring ------------------------------------------
+# Hammerspoon resolves require() from ~/.hammerspoon, not the dotfiles dir;
+# an unsymlinked module silently fails to load.
+section "Hammerspoon module wiring"
+hs_modules=()
+while IFS= read -r lua; do
+  hs_modules+=("$(basename "$lua" .lua)")
+done < <(find hammerspoon -maxdepth 1 -name '*.lua' -not -name 'init.lua')
+
+if [[ ${#hs_modules[@]} -eq 0 ]]; then
+  section_ok "no extra modules"
+else
+  for mod in "${hs_modules[@]}"; do
+    if ! has_require "$mod"; then
+      printf '  FAIL %s.lua: missing require("%s") in hammerspoon/init.lua\n' "$mod" "$mod"
+      fail
+    fi
+    if ! has_symlink_for "$mod"; then
+      printf '  FAIL %s.lua: missing `ln -sf` line for hammerspoon/%s.lua in fresh.sh\n' "$mod" "$mod"
+      fail
+    fi
+  done
+  if [[ $failures -ne $section_start ]]; then
+    echo "  Adding a Hammerspoon module needs: the .lua file + require() in init.lua + ln -sf in fresh.sh."
+  fi
+  section_ok "${#hs_modules[@]} module(s) wired correctly"
+fi
+
+# ---- Brewfile / CI tool drift -------------------------------------------
+# Tools used by check must be in Brewfile (so `brew bundle` provisions them)
+# AND in ci.yml's install step (so CI mirrors local).
+section "Brewfile / CI tool drift"
+ci_yml=".github/workflows/ci.yml"
+for tool in "${required_brews[@]}"; do
+  if ! grep -qE "^brew '${tool}'" Brewfile; then
+    printf '  FAIL %s used by bin/check but not in Brewfile\n' "$tool"
+    fail
+  fi
+  if ! grep -qE "brew install[^#]*\b${tool}\b" "$ci_yml"; then
+    printf '  FAIL %s in Brewfile but not installed by ci.yml\n' "$tool"
+    fail
+  fi
+done
+section_ok "lint dependencies present in Brewfile and ci.yml"
+
+# ---- FormatTranscription invariants -------------------------------------
+# Both source and built bundle are checked: fresh.sh installs the prebuilt
+# .app committed to the repo, so source/built drift would silently ship.
+section "FormatTranscription invariants"
+ft="apps/format-transcription"
+built_plist="$ft/build/FormatTranscription.app/Contents/Info.plist"
+
+check_plist() {
+  local plist="$1" key="$2" want="$3"
+  local got
+  got="$(plutil -extract "$key" raw -o - "$plist" 2>/dev/null)"
+  if [[ "$got" != "$want" ]]; then
+    printf '  FAIL %s: %s must be %s (got %s)\n' "$plist" "$key" "$want" "${got:-<missing>}"
+    fail
+  fi
+}
+
+if [[ ! -f "$built_plist" ]]; then
+  printf '  FAIL %s missing - run %s/build.sh\n' "$built_plist" "$ft"
+  fail
+fi
+for plist in "$ft/Info.plist" "$built_plist"; do
+  [[ -f "$plist" ]] || continue
+  check_plist "$plist" LSBackgroundOnly true
+  check_plist "$plist" LSMinimumSystemVersion "$MIN_MACOS_VERSION"
+done
+if ! grep -vE '^[[:space:]]*#' "$ft/build.sh" | grep -qF -- "-target $MACOS_TARGET"; then
+  printf '  FAIL build.sh: missing -target %s\n' "$MACOS_TARGET"
+  fail
+fi
+# Match attributed forms like `@preconcurrency import FoundationModels` too.
+if ! grep -qE 'import[[:space:]]+FoundationModels(\b|$)' "$ft/main.swift"; then
+  echo "  FAIL main.swift: must 'import FoundationModels'"
+  fail
+fi
+if grep -qE 'import[[:space:]]+FoundationNetworking(\b|$)' "$ft/main.swift"; then
+  echo "  FAIL main.swift: must NOT 'import FoundationNetworking' (on-device only)"
+  fail
+fi
+section_ok "source and built bundle invariants hold"
+
+exit $status

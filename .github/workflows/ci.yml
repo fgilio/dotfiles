@@ -6,21 +6,32 @@ on:
   pull_request:
     branches: [main]
 
-jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install zsh
-        run: sudo apt-get install -y zsh
-      - name: Lint
-        run: bash bin/lint
+permissions:
+  contents: read
 
-  test:
+jobs:
+  check:
     runs-on: macos-latest
+    env:
+      DOTFILES: ${{ github.workspace }}
     steps:
+      # fetch-depth: 0 is required so `gitleaks detect` scans full history.
+      # Default is shallow (depth 1), which would only see HEAD.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Install only the dev tools needed for check + tests.
+      # The Brewfile is the source of truth for the local env;
+      # bin/check asserts these are listed there so drift is caught.
+      - name: Install dev tools
+        run: brew install shellcheck shfmt actionlint luacheck gitleaks
+
+      - name: Check
+        run: bash bin/check
+
+      - name: Gitleaks
+        run: gitleaks detect --no-banner --redact --config .gitleaks.toml
+
       - name: Tests
-        env:
-          DOTFILES: ${{ github.workspace }}
         run: bash bin/rm-test

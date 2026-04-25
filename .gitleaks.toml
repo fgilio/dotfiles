@@ -1,0 +1,12 @@
+# Gitleaks config - extends defaults with repo-specific allowlists
+[extend]
+useDefault = true
+
+# VS Code keybindings use a "key": "<keybinding>" structure that the
+# generic-api-key rule keeps flagging on entropy. Scoped to that rule
+# only so other rules still cover the file.
+[[rules]]
+id = "generic-api-key"
+[[rules.allowlists]]
+description = "VS Code keybindings - 'key' is a chord, not an API key"
+paths = ['''vscode/keybindings\.json$''']

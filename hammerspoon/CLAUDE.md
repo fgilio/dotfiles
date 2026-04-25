@@ -1,14 +1,12 @@
 # Hammerspoon Config
 
-## Symlink Setup
-
-Only `init.lua` is symlinked by `fresh.sh`. Adding a new module requires **three steps**:
+## Adding a Module
 
 1. Create the `.lua` file in this directory
 2. Add `require("name")` to the end of `init.lua`
 3. Add `ln -sf` for the new file in `fresh.sh`
 
-Hammerspoon resolves `require()` from `~/.hammerspoon/`, not the dotfiles source dir - an unsymlinked module will silently fail to load.
+Hammerspoon resolves `require()` from `~/.hammerspoon/`, not the dotfiles source dir - an unsymlinked module silently fails to load. `bin/check` enforces all three steps.
 
 ## Module Pattern
 

@@ -41,6 +41,10 @@ brew 'zoxide' # Smarter cd command
 brew 'zsh-autosuggestions'
 brew 'lefthook'   # Git hooks manager
 brew 'shellcheck' # Shell script static analysis
+brew 'shfmt'      # Shell script formatter (bash/sh; not zsh)
+brew 'actionlint' # GitHub Actions workflow linter
+brew 'luacheck'   # Lua static analysis (Hammerspoon config)
+brew 'gitleaks'   # Secret scanning (pre-commit + CI)
 
 # Development
 # PHP is managed by Laravel Herd (see cask 'herd' below), not Homebrew

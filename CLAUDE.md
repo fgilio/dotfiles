@@ -3,9 +3,9 @@
 ## Important: Public Repository
 
 This is a **public repository**. Even though it's a personal dotfiles project:
-- Never commit secrets, API keys, or sensitive data
 - Assume all committed content is visible to anyone
 - The `~/.env` file is sourced but intentionally NOT tracked
+- Secret scanning is enforced by `gitleaks` (pre-commit + CI)
 
 ---
 
@@ -73,7 +73,7 @@ source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 | Decision | Rationale |
 |----------|-----------|
-| Hardcoded `/opt/homebrew` | `$(brew --prefix)` adds ~30-50ms |
+| Hardcoded `/opt/homebrew` | `brew --prefix` subprocess adds ~30-50ms; enforced by `bin/check` |
 | NVM lazy-loaded | Saves ~200ms on shell startup |
 | No NVM fallback | Herd always installed on this machine |
 | GNU coreutils for `ls` | Enables `--color=auto` flag |
