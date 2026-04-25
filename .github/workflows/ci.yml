@@ -17,7 +17,7 @@ jobs:
     steps:
       # fetch-depth: 0 is required so `gitleaks detect` scans full history.
       # Default is shallow (depth 1), which would only see HEAD.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
