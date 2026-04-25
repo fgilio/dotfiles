@@ -17,12 +17,12 @@ mkdir -p "$MACOS_DIR"
 cp "$ROOT/Info.plist" "$APP_DIR/Contents/Info.plist"
 
 swiftc \
-    -parse-as-library \
-    -O \
-    -target arm64-apple-macos26.0 \
-    -sdk "$SDK" \
-    "$ROOT/main.swift" \
-    -o "$MACOS_DIR/FormatTranscription"
+  -parse-as-library \
+  -O \
+  -target arm64-apple-macos26.0 \
+  -sdk "$SDK" \
+  "$ROOT/main.swift" \
+  -o "$MACOS_DIR/FormatTranscription"
 
 codesign --force --sign - "$APP_DIR"
 

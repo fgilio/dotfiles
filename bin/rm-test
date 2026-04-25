@@ -17,66 +17,88 @@ cleanup() { /bin/rm -rf -- "$sandbox"; }
 trap cleanup EXIT
 
 assert_pass() {
-  local desc="$1"; shift
+  local desc="$1"
+  shift
   if "$@" >/dev/null 2>&1; then
-    ((pass++)); printf '  \033[32mPASS\033[0m %s\n' "$desc"
+    ((pass++))
+    printf '  \033[32mPASS\033[0m %s\n' "$desc"
   else
-    ((fail++)); printf '  \033[31mFAIL\033[0m %s\n' "$desc"
+    ((fail++))
+    printf '  \033[31mFAIL\033[0m %s\n' "$desc"
   fi
 }
 
 assert_fail() {
-  local desc="$1"; shift
+  local desc="$1"
+  shift
   if "$@" >/dev/null 2>&1; then
-    ((fail++)); printf '  \033[31mFAIL\033[0m %s (expected failure)\n' "$desc"
+    ((fail++))
+    printf '  \033[31mFAIL\033[0m %s (expected failure)\n' "$desc"
   else
-    ((pass++)); printf '  \033[32mPASS\033[0m %s\n' "$desc"
+    ((pass++))
+    printf '  \033[32mPASS\033[0m %s\n' "$desc"
   fi
 }
 
 assert_stderr() {
-  local desc="$1" pattern="$2"; shift 2
+  local desc="$1" pattern="$2"
+  shift 2
   local err rc
   err="$("$@" 2>&1 >/dev/null)" && rc=0 || rc=$?
   if [[ $rc -ne 0 && "$err" == *"$pattern"* ]]; then
-    ((pass++)); printf '  \033[32mPASS\033[0m %s\n' "$desc"
+    ((pass++))
+    printf '  \033[32mPASS\033[0m %s\n' "$desc"
   else
-    ((fail++)); printf '  \033[31mFAIL\033[0m %s (rc=%d, expected "%s" in stderr, got "%s")\n' "$desc" "$rc" "$pattern" "$err"
+    ((fail++))
+    printf '  \033[31mFAIL\033[0m %s (rc=%d, expected "%s" in stderr, got "%s")\n' "$desc" "$rc" "$pattern" "$err"
   fi
 }
 
 # Like assert_stderr but doesn't require non-zero exit (for info/verbose messages)
 assert_stderr_any() {
-  local desc="$1" pattern="$2"; shift 2
+  local desc="$1" pattern="$2"
+  shift 2
   local err
   err="$("$@" 2>&1 >/dev/null)" || true
   if [[ "$err" == *"$pattern"* ]]; then
-    ((pass++)); printf '  \033[32mPASS\033[0m %s\n' "$desc"
+    ((pass++))
+    printf '  \033[32mPASS\033[0m %s\n' "$desc"
   else
-    ((fail++)); printf '  \033[31mFAIL\033[0m %s (expected "%s" in stderr, got "%s")\n' "$desc" "$pattern" "$err"
+    ((fail++))
+    printf '  \033[31mFAIL\033[0m %s (expected "%s" in stderr, got "%s")\n' "$desc" "$pattern" "$err"
   fi
 }
 
 assert_exists() {
   local desc="$1" path="$2"
   if [[ -e "$path" || -L "$path" ]]; then
-    ((pass++)); printf '  \033[32mPASS\033[0m %s\n' "$desc"
+    ((pass++))
+    printf '  \033[32mPASS\033[0m %s\n' "$desc"
   else
-    ((fail++)); printf '  \033[31mFAIL\033[0m %s (not found: %s)\n' "$desc" "$path"
+    ((fail++))
+    printf '  \033[31mFAIL\033[0m %s (not found: %s)\n' "$desc" "$path"
   fi
 }
 
 assert_not_exists() {
   local desc="$1" path="$2"
   if [[ ! -e "$path" && ! -L "$path" ]]; then
-    ((pass++)); printf '  \033[32mPASS\033[0m %s\n' "$desc"
+    ((pass++))
+    printf '  \033[32mPASS\033[0m %s\n' "$desc"
   else
-    ((fail++)); printf '  \033[31mFAIL\033[0m %s (should not exist: %s)\n' "$desc" "$path"
+    ((fail++))
+    printf '  \033[31mFAIL\033[0m %s (should not exist: %s)\n' "$desc" "$path"
   fi
 }
 
-mkfile() { touch "$sandbox/$1"; echo "$sandbox/$1"; }
-mkdir_() { mkdir -p "$sandbox/$1"; echo "$sandbox/$1"; }
+mkfile() {
+  touch "$sandbox/$1"
+  echo "$sandbox/$1"
+}
+mkdir_() {
+  mkdir -p "$sandbox/$1"
+  echo "$sandbox/$1"
+}
 
 echo "rm wrapper"
 echo "----------"
@@ -85,7 +107,7 @@ echo "----------"
 f="$(mkfile test1)"
 "$RM" "$f"
 assert_not_exists "rm file: removed from original" "$f"
-assert_exists     "rm file: appears in Trash" "$TRASH_DIR/test1"
+assert_exists "rm file: appears in Trash" "$TRASH_DIR/test1"
 
 # rm -f nonexistent → exit 0
 assert_pass "rm -f nonexistent: exit 0" "$RM" -f "$sandbox/nope"
@@ -113,7 +135,7 @@ d="$(mkdir_ testdir_rf)"
 touch "$d/file"
 "$RM" -rf "$d"
 assert_not_exists "rm -rf dir: removed" "$d"
-assert_exists     "rm -rf dir: appears in Trash" "$TRASH_DIR/testdir_rf"
+assert_exists "rm -rf dir: appears in Trash" "$TRASH_DIR/testdir_rf"
 
 # rm -d dir → allowed (empty dir)
 d="$(mkdir_ testdir_dflag)"
@@ -188,7 +210,7 @@ target="$(mkfile real_config)"
 ln -s "$target" "$sandbox/.yamllint"
 "$RM" "$sandbox/.yamllint"
 assert_not_exists "rm symlink named .yamllint: link removed" "$sandbox/.yamllint"
-assert_exists     "rm symlink named .yamllint: target intact" "$target"
+assert_exists "rm symlink named .yamllint: target intact" "$target"
 assert_not_exists "rm symlink named .yamllint: not in Trash" "$TRASH_DIR/.yamllint"
 
 # Symlink named like ephemeral dir → NOT bypassed (symlinks aren't dirs)
@@ -196,7 +218,7 @@ target_dir="$(mkdir_ real_vendor)"
 ln -s "$target_dir" "$sandbox/vendor"
 "$RM" "$sandbox/vendor"
 assert_not_exists "rm symlink named vendor: link removed" "$sandbox/vendor"
-assert_exists     "rm symlink named vendor: target intact" "$target_dir"
+assert_exists "rm symlink named vendor: target intact" "$target_dir"
 
 # No args → missing operand
 assert_stderr "rm (no args): missing operand" "missing operand" "$RM"
@@ -205,21 +227,21 @@ assert_stderr "rm (no args): missing operand" "missing operand" "$RM"
 touch -- "$sandbox/-dashfile"
 "$RM" -- "$sandbox/-dashfile"
 assert_not_exists "rm -- -dashfile: removed" "$sandbox/-dashfile"
-assert_exists     "rm -- -dashfile: in Trash" "$TRASH_DIR/-dashfile"
+assert_exists "rm -- -dashfile: in Trash" "$TRASH_DIR/-dashfile"
 
 # Symlink to file → trashed (not followed)
 target="$(mkfile symtarget)"
 ln -s "$target" "$sandbox/symlink_file"
 "$RM" "$sandbox/symlink_file"
 assert_not_exists "rm symlink to file: link removed" "$sandbox/symlink_file"
-assert_exists     "rm symlink to file: target intact" "$target"
+assert_exists "rm symlink to file: target intact" "$target"
 
 # Symlink to dir → trashed without -r (symlinks aren't dirs)
 target_dir="$(mkdir_ symtarget_dir)"
 ln -s "$target_dir" "$sandbox/symlink_dir"
 "$RM" "$sandbox/symlink_dir"
 assert_not_exists "rm symlink to dir: link removed (no -r needed)" "$sandbox/symlink_dir"
-assert_exists     "rm symlink to dir: target intact" "$target_dir"
+assert_exists "rm symlink to dir: target intact" "$target_dir"
 
 echo ""
 echo "trash script"
@@ -229,7 +251,7 @@ echo "------------"
 f="$(mkfile test_trash)"
 "$TRASH_CMD" "$f"
 assert_not_exists "trash file: removed from original" "$f"
-assert_exists     "trash file: appears in Trash" "$TRASH_DIR/test_trash"
+assert_exists "trash file: appears in Trash" "$TRASH_DIR/test_trash"
 
 # trash -f nonexistent → exit 0
 assert_pass "trash -f nonexistent: exit 0" "$TRASH_CMD" -f "$sandbox/nope"
@@ -257,9 +279,11 @@ f2="$(mkfile decon)"
 assert_exists "deconflict: original in Trash" "$TRASH_DIR/decon"
 suffixed="$(ls "$TRASH_DIR"/decon.* 2>/dev/null | head -1)"
 if [[ -n "$suffixed" ]]; then
-  ((pass++)); printf '  \033[32mPASS\033[0m deconflict: second file has timestamp suffix\n'
+  ((pass++))
+  printf '  \033[32mPASS\033[0m deconflict: second file has timestamp suffix\n'
 else
-  ((fail++)); printf '  \033[31mFAIL\033[0m deconflict: no suffixed file found\n'
+  ((fail++))
+  printf '  \033[31mFAIL\033[0m deconflict: no suffixed file found\n'
 fi
 
 echo ""

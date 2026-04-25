@@ -36,7 +36,7 @@ chmod 600 "$HOME/.ssh/config"
 
 # Only add config if not already present
 if ! grep -q "IdentityFile ~/.ssh/id_ed25519" "$HOME/.ssh/config"; then
-  cat >> "$HOME/.ssh/config" << 'EOF'
+  cat >>"$HOME/.ssh/config" <<'EOF'
 
 Host *
   AddKeysToAgent yes

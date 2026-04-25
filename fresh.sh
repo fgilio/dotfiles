@@ -6,12 +6,12 @@ DOTFILES="$HOME/.dotfiles"
 echo "Setting up your Mac..."
 
 # Check for Homebrew and install if we don't have it
-if ! command -v brew &> /dev/null; then
+if ! command -v brew &>/dev/null; then
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
   # Only add if not already present (idempotent)
   if ! grep -q 'brew shellenv' "$HOME/.zprofile" 2>/dev/null; then
-    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> "$HOME/.zprofile"
+    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >>"$HOME/.zprofile"
   fi
   eval "$(/opt/homebrew/bin/brew shellenv)"
 fi
@@ -49,10 +49,10 @@ mkdir -p "$HOME/tmp"
 # Pre-download whisper model for Transcribe Audio Quick Action (~466MB)
 WHISPER_MODEL="$HOME/.local/share/whisper-cpp/ggml-small.bin"
 if [[ ! -f "$WHISPER_MODEL" ]]; then
-    mkdir -p "$(dirname "$WHISPER_MODEL")"
-    curl -fL --retry 3 --retry-delay 2 \
-        "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin" \
-        -o "$WHISPER_MODEL.tmp" && mv "$WHISPER_MODEL.tmp" "$WHISPER_MODEL"
+  mkdir -p "$(dirname "$WHISPER_MODEL")"
+  curl -fL --retry 3 --retry-delay 2 \
+    "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin" \
+    -o "$WHISPER_MODEL.tmp" && mv "$WHISPER_MODEL.tmp" "$WHISPER_MODEL"
 fi
 
 # Install Automator workflows (Quick Actions and Folder Actions)
@@ -109,7 +109,7 @@ fi
 # Herd handles PHP and extensions
 
 # Install global Composer packages
-if command -v composer &> /dev/null; then
+if command -v composer &>/dev/null; then
   composer global require laravel/installer beyondcode/expose ymirapp/cli
 fi
 
@@ -118,7 +118,7 @@ ln -sf "$DOTFILES/.mackup.cfg" "$HOME/.mackup.cfg"
 
 # Install utiluti for managing default apps (not in Homebrew)
 # https://github.com/scriptingosx/utiluti - signed and notarized pkg
-if ! command -v utiluti &> /dev/null; then
+if ! command -v utiluti &>/dev/null; then
   UTILUTI_VERSION="1.3"
   UTILUTI_PKG="/tmp/utiluti-${UTILUTI_VERSION}.pkg"
   curl -fsSL "https://github.com/scriptingosx/utiluti/releases/download/v${UTILUTI_VERSION}/utiluti-${UTILUTI_VERSION}.pkg" -o "$UTILUTI_PKG"
@@ -127,7 +127,7 @@ if ! command -v utiluti &> /dev/null; then
 fi
 
 # Set default apps using utiluti (Zed for text/code, VLC for video, etc.)
-if command -v utiluti &> /dev/null; then
+if command -v utiluti &>/dev/null; then
   utiluti manage --type-file "$DOTFILES/default-apps.plist" --url-file "$DOTFILES/default-urls.plist"
 fi
 

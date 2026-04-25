@@ -21,10 +21,10 @@ is_dangerous_path() {
   local resolved
   resolved="$(cd "$(dirname -- "$p")" 2>/dev/null && pwd -P)/$(basename -- "$p")" 2>/dev/null || resolved="$p"
   case "$resolved" in
-    /|/.|/..|//..|//.) return 0 ;;
+    / | /. | /.. | //.. | //.) return 0 ;;
   esac
   case "$p" in
-    /|.|..|""|./|../|/./*|/../*) return 0 ;;
+    / | . | .. | "" | ./ | ../ | /./* | /../*) return 0 ;;
   esac
   return 1
 }
@@ -41,7 +41,10 @@ while getopts ":fv" opt; do
 done
 shift $((OPTIND - 1))
 
-[[ $# -eq 0 ]] && { echo "trash: missing operand" >&2; exit 1; }
+[[ $# -eq 0 ]] && {
+  echo "trash: missing operand" >&2
+  exit 1
+}
 
 mkdir -p -- "$trash_dir"
 status=0
@@ -73,9 +76,15 @@ for src in "$@"; do
     # External volume: use real rm (standard Unix behavior)
     [[ $verbose -eq 1 ]] && echo "trash: external volume, permanently deleting: $src" >&2
     if [[ -d "$src" && ! -L "$src" ]]; then
-      "$REAL_RM" -rf -- "$src" || { echo "trash: failed to delete: $src" >&2; status=1; }
+      "$REAL_RM" -rf -- "$src" || {
+        echo "trash: failed to delete: $src" >&2
+        status=1
+      }
     else
-      "$REAL_RM" -f -- "$src" || { echo "trash: failed to delete: $src" >&2; status=1; }
+      "$REAL_RM" -f -- "$src" || {
+        echo "trash: failed to delete: $src" >&2
+        status=1
+      }
     fi
     continue
   fi
@@ -96,7 +105,10 @@ for src in "$@"; do
   fi
 
   [[ $verbose -eq 1 ]] && printf 'trash: %s -> %s\n' "$src" "$dest" >&2
-  command mv -- "$src" "$dest" || { echo "trash: failed: $src" >&2; status=1; }
+  command mv -- "$src" "$dest" || {
+    echo "trash: failed: $src" >&2
+    status=1
+  }
 done
 
 exit $status

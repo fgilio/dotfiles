@@ -13,7 +13,10 @@ TRASH="$(dirname -- "$0")/trash"
 [[ "${RM_DEBUG:-0}" == "1" ]] && set -x
 
 # Ensure trash is available
-[[ -x "$TRASH" ]] || { echo "rm: trash not found at $TRASH" >&2; exit 127; }
+[[ -x "$TRASH" ]] || {
+  echo "rm: trash not found at $TRASH" >&2
+  exit 127
+}
 
 # Normalize path and check for dangerous targets
 is_dangerous_path() {
@@ -23,13 +26,13 @@ is_dangerous_path() {
   resolved="$(cd "$(dirname -- "$p")" 2>/dev/null && pwd -P)/$(basename -- "$p")" 2>/dev/null || resolved="$p"
   # Check if it resolves to root, current dir parent, or is empty
   case "$resolved" in
-    /|/.|/..|//..|//.) return 0 ;;  # dangerous
+    / | /. | /.. | //.. | //.) return 0 ;; # dangerous
   esac
   # Check raw input for obvious dangerous patterns
   case "$p" in
-    /|.|..|""|./|../|/./*|/../*) return 0 ;;  # dangerous
+    / | . | .. | "" | ./ | ../ | /./* | /../*) return 0 ;; # dangerous
   esac
-  return 1  # safe
+  return 1 # safe
 }
 
 force=0 allow_dirs=0 verbose=0
@@ -37,19 +40,25 @@ force=0 allow_dirs=0 verbose=0
 # Parse rm-like options (supports combined flags like -rf)
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --) shift; break ;;
+    --)
+      shift
+      break
+      ;;
     -*)
       [[ "$1" == "-" ]] && break
       opts="${1#-}"
-      for ((i=0; i<${#opts}; i++)); do
+      for ((i = 0; i < ${#opts}; i++)); do
         c="${opts:i:1}"
         case "$c" in
           f) force=1 ;;
-          r|R) allow_dirs=1 ;;
+          r | R) allow_dirs=1 ;;
           d) allow_dirs=1 ;;
-          i|I) : ;;  # ignore interactive flags (agents need non-interactive)
+          i | I) : ;; # ignore interactive flags (agents need non-interactive)
           v) verbose=1 ;;
-          *) echo "rm: illegal option -- $c" >&2; exit 2 ;;
+          *)
+            echo "rm: illegal option -- $c" >&2
+            exit 2
+            ;;
         esac
       done
       shift
@@ -58,7 +67,10 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-[[ $# -eq 0 ]] && { echo "rm: missing operand" >&2; exit 1; }
+[[ $# -eq 0 ]] && {
+  echo "rm: missing operand" >&2
+  exit 1
+}
 
 status=0
 trash_flags=()
@@ -97,9 +109,12 @@ for p in "$@"; do
   # Ephemeral directories: package deps, build caches, framework output
   if [[ -d "$p" && ! -L "$p" ]]; then
     case "$basename" in
-      node_modules|vendor|__pycache__|.cache|.pytest_cache|.mypy_cache|.ruff_cache|.next|.nuxt|.turbo|.parcel-cache)
+      node_modules | vendor | __pycache__ | .cache | .pytest_cache | .mypy_cache | .ruff_cache | .next | .nuxt | .turbo | .parcel-cache)
         [[ $verbose -eq 1 ]] && echo "rm: skipping trash for ephemeral dir: $p" >&2
-        "$REAL_RM" -rf -- "$p" || { status=1; continue; }
+        "$REAL_RM" -rf -- "$p" || {
+          status=1
+          continue
+        }
         continue
         ;;
     esac
@@ -108,9 +123,12 @@ for p in "$@"; do
   # Ephemeral files: linter/tool caches that get recreated constantly
   if [[ -L "$p" || -f "$p" ]]; then
     case "$basename" in
-      .yamllint|.phpunit.result.cache|.eslintcache|.php-cs-fixer.cache|.stylelintcache|.prettiercache|.coverage)
+      .yamllint | .phpunit.result.cache | .eslintcache | .php-cs-fixer.cache | .stylelintcache | .prettiercache | .coverage)
         [[ $verbose -eq 1 ]] && echo "rm: skipping trash for ephemeral file: $p" >&2
-        "$REAL_RM" -f -- "$p" || { status=1; continue; }
+        "$REAL_RM" -f -- "$p" || {
+          status=1
+          continue
+        }
         continue
         ;;
     esac
