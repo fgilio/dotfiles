@@ -41,3 +41,6 @@ Thumbs.db
 
 # Ignore Gemini CLI
 GEMINI.md
+
+# Claude Code: per-project scheduled-tasks coordination lock (runtime state)
+**/.claude/scheduled_tasks.lock
