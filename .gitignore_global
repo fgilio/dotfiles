@@ -44,3 +44,6 @@ GEMINI.md
 
 # Claude Code: per-project scheduled-tasks coordination lock (runtime state)
 **/.claude/scheduled_tasks.lock
+
+# Personal per-project notes for Claude (gitignored everywhere by convention)
+CLAUDE.local.md
