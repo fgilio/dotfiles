@@ -3,9 +3,7 @@
 # Sandbox config in ~/.codex/config.toml (sandbox_mode = "danger-full-access")
 
 if [ $# -eq 0 ]; then
-    # Interactive: high reasoning for deeper exploration
-    exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-5.5 --config model_reasoning_effort="high"
+    exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-5.5 --config model_reasoning_effort="medium"
 else
-    # Non-interactive: medium reasoning for faster responses
     exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-5.5 --config model_reasoning_effort="medium" exec --skip-git-repo-check "$@"
 fi
