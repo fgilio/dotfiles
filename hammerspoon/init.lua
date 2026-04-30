@@ -79,3 +79,9 @@ hs.hotkey.bind({"ctrl", "alt", "cmd", "shift"}, "g", function()
   ghosttyScreen.lastScreenName = nil
   handleScreenChange()
 end)
+
+-- Cmd+Shift+J: Open Telegram on Jarvis bot chat
+-- Deep link launches Telegram if not running and navigates to the chat
+hs.hotkey.bind({"cmd", "shift"}, "j", function()
+  hs.urlevent.openURL("tg://resolve?domain=fgilio_jarvis_bot")
+end)
