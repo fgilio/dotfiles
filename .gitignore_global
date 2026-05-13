@@ -47,3 +47,6 @@ GEMINI.md
 
 # Personal per-project notes for Claude (gitignored everywhere by convention)
 CLAUDE.local.md
+
+# gstack: per-project local state (sessions, analytics, learnings)
+.gstack/
