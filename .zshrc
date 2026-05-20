@@ -29,7 +29,8 @@ bindkey '^[[B' history-beginning-search-forward-end   # Down arrow for forward h
 # Completion System
 #####################
 # Ensure completion cache directory exists
-[[ -d ~/.zsh/cache ]] || mkdir -p ~/.zsh/cache
+_zsh_cache_dir="$HOME/.zsh/cache"
+[[ -d "$_zsh_cache_dir" ]] || mkdir -p "$_zsh_cache_dir"
 
 # Required for glob qualifiers in compinit cache check
 setopt extended_glob
@@ -39,10 +40,14 @@ setopt extended_glob
 
 autoload -Uz compinit
 # Only regenerate completion dump once per day (check if older than 24h)
-if [[ -n ~/.zsh/cache/zcompdump(#qN.mh+24) ]]; then
-  compinit -d ~/.zsh/cache/zcompdump
+if [[ -n "$_zsh_cache_dir/zcompdump"(#qN.mh+24) ]]; then
+  compinit -d "$_zsh_cache_dir/zcompdump"
 else
-  compinit -C -d ~/.zsh/cache/zcompdump  # -C skips security check for speed
+  compinit -C -d "$_zsh_cache_dir/zcompdump"  # -C skips security check for speed
+fi
+
+if [[ -s "$_zsh_cache_dir/zcompdump" && ( ! -s "$_zsh_cache_dir/zcompdump.zwc" || "$_zsh_cache_dir/zcompdump" -nt "$_zsh_cache_dir/zcompdump.zwc" ) ]]; then
+  zcompile "$_zsh_cache_dir/zcompdump"
 fi
 
 # Basic completion behavior
@@ -150,6 +155,36 @@ alias ocr='screencapture -i ~/tmp/screenshot.png && tesseract ~/tmp/screenshot.p
 #####################
 # Custom Functions
 #####################
+_source_generated_init() {
+  local command_name="$1"
+  local cache_file="$2"
+  local command_path
+
+  shift 2
+
+  (( $+commands[$command_name] )) || return 0
+  command_path="${commands[$command_name]}"
+
+  if [[ ! -s "$cache_file" || "$command_path" -nt "$cache_file" ]]; then
+    local cache_tmp="${cache_file}.$$"
+    local log_tmp="${cache_file}.log.$$"
+
+    if "$command_name" "$@" >| "$cache_tmp" 2>| "$log_tmp"; then
+      command mv -f "$cache_tmp" "$cache_file"
+      command rm -f "$log_tmp" "$cache_file.log"
+    else
+      command rm -f "$cache_tmp"
+      if [[ -s "$log_tmp" ]]; then
+        command mv -f "$log_tmp" "$cache_file.log"
+      else
+        command rm -f "$log_tmp"
+      fi
+    fi
+  fi
+
+  [[ -s "$cache_file" ]] && source "$cache_file"
+}
+
 # Development functions are loaded from the dotfiles directory
 # This includes: r, edit, gnah, gdesktop, git-open
 source "$DOTFILES/functions/dev-tools.zsh"
@@ -161,7 +196,7 @@ source "$DOTFILES/functions/dev-tools.zsh"
 # Starship configuration
 export STARSHIP_COMMAND_TIMEOUT=1000            # 1 second timeout (default 500ms is too aggressive)
 # Initialize Starship prompt
-eval "$(starship init zsh)"
+_source_generated_init starship "$_zsh_cache_dir/starship-init.zsh" init zsh
 
 # Enable ZSH autosuggestions
 # Hardcoded path intentional - $(brew --prefix) adds ~30-50ms subprocess overhead
@@ -170,7 +205,7 @@ eval "$(starship init zsh)"
   source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 # Initialize Zoxide (smart cd command)
-eval "$(zoxide init zsh)"
+_source_generated_init zoxide "$_zsh_cache_dir/zoxide-init.zsh" init zsh
 
 #####################
 # Fzf / fd integration
