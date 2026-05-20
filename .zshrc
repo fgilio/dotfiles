@@ -34,6 +34,9 @@ bindkey '^[[B' history-beginning-search-forward-end   # Down arrow for forward h
 # Required for glob qualifiers in compinit cache check
 setopt extended_glob
 
+# Homebrew completions must be available before compinit builds or reads its cache.
+[[ -d /opt/homebrew/share/zsh/site-functions ]] && fpath=(/opt/homebrew/share/zsh/site-functions $fpath)
+
 autoload -Uz compinit
 # Only regenerate completion dump once per day (check if older than 24h)
 if [[ -n ~/.zsh/cache/zcompdump(#qN.mh+24) ]]; then
@@ -206,17 +209,3 @@ alias zsetup-hooks="$HOME/pla/zoo/bin/zsetup-hooks"
 # Herd Shell Integration (interactive-only, env vars are in .zshenv)
 ################################################################################
 [[ -f "/Applications/Herd.app/Contents/Resources/config/shell/zshrc.zsh" ]] && builtin source "/Applications/Herd.app/Contents/Resources/config/shell/zshrc.zsh"
-
-
-# Herd injected PHP 8.4 configuration.
-export HERD_PHP_84_INI_SCAN_DIR="/Users/fgilio/Library/Application Support/Herd/config/php/84/"
-
-
-# Herd injected PHP 8.3 configuration.
-export HERD_PHP_83_INI_SCAN_DIR="/Users/fgilio/Library/Application Support/Herd/config/php/83/"
-
-
-# Herd injected PHP 8.5 configuration.
-export HERD_PHP_85_INI_SCAN_DIR="/Users/fgilio/Library/Application Support/Herd/config/php/85/"
-fpath=(/opt/homebrew/share/zsh/site-functions $fpath)
-autoload -Uz compinit && compinit

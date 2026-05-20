@@ -25,8 +25,9 @@ export CLAUDE_CODE_NO_FLICKER=1
 
 # Herd - PHP binary and configuration
 [[ -d "$HOME/Library/Application Support/Herd/bin" ]] && path+=("$HOME/Library/Application Support/Herd/bin")
-export HERD_PHP_83_INI_SCAN_DIR="/Users/fgilio/Library/Application Support/Herd/config/php/83/"
-export HERD_PHP_84_INI_SCAN_DIR="/Users/fgilio/Library/Application Support/Herd/config/php/84/"
+export HERD_PHP_83_INI_SCAN_DIR="$HOME/Library/Application Support/Herd/config/php/83/"
+export HERD_PHP_84_INI_SCAN_DIR="$HOME/Library/Application Support/Herd/config/php/84/"
+export HERD_PHP_85_INI_SCAN_DIR="$HOME/Library/Application Support/Herd/config/php/85/"
 
 # NVM configuration (lazy-loaded for ~200ms faster shell startup)
 export NVM_DIR="$HOME/Library/Application Support/Herd/config/nvm"
