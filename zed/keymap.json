@@ -1,0 +1,83 @@
+// Zed keymap
+//
+// For information on binding keys, see the Zed
+// documentation: https://zed.dev/docs/key-bindings
+//
+// To see the default key bindings run `zed: open default keymap`
+// from the command palette.
+[
+  {
+    "context": "Workspace",
+    "bindings": {
+      // Panels
+      "cmd-e": "workspace::ActivateNextPane",
+      "ctrl-alt-shift-cmd-s": "project_panel::ToggleFocus",
+      "ctrl-alt-shift-cmd-t": "terminal_panel::ToggleFocus",
+      "ctrl-alt-shift-cmd-f": "project_search::ToggleFocus",
+      "ctrl-alt-shift-cmd-r": "project_search::ToggleFocus"
+    }
+  },
+  {
+    "context": "Editor",
+    "bindings": {
+      // Fold/Unfold
+      "shift-cmd-[": "editor::Fold",
+      "shift-cmd-]": "editor::UnfoldLines",
+
+      // Line Manipulation
+      "cmd-l": "editor::SelectLine",
+      "cmd-shift-d": "editor::DuplicateLineDown",
+      "cmd-shift-k": "editor::DeleteLine",
+      "ctrl-cmd-up": "editor::MoveLineUp",
+      "ctrl-cmd-down": "editor::MoveLineDown",
+
+      // Multi-Cursor
+      // "cmd-backspace": "editor::SelectPreviousWordMatch",
+      // "cmd-d": "editor::SelectNextWordMatch",
+      "cmd-right": "editor::SelectToEndOfLine",
+      "ctrl-shift-up": "editor::AddSelectionAbove",
+      "ctrl-shift-down": "editor::AddSelectionBelow",
+
+      // Go to Declaration
+      "alt-enter": "editor::GoToDefinition",
+
+      // Formatting
+      "alt-cmd-l": "editor::Format"
+    }
+  },
+  {
+    "context": "ProjectPanel",
+    "bindings": {
+      // File Explorer
+      "cmd-n": "project_panel::NewFile",
+      "shift-cmd-n": "project_panel::NewDirectory"
+    }
+  },
+  {
+    "context": "Terminal",
+    "bindings": {
+      // Terminal Split Panel
+      "cmd-d": "pane::SplitRight",
+      // "alt-tab": "terminal::ActivateNextTerminal",
+      "cmd-w": "pane::CloseActiveItem"
+    }
+  },
+  {
+    "context": "Workspace",
+    "bindings": {
+      "ctrl-alt-cmd-shift-d": "workspace::ToggleRightDock"
+    }
+  },
+  {
+    "context": "(Editor && extension == md)",
+    "bindings": {
+      "cmd-shift-v": null
+    }
+  },
+  {
+    "context": "(Editor && extension == svg)",
+    "bindings": {
+      "cmd-shift-v": null
+    }
+  }
+]

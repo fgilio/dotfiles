@@ -1,0 +1,95 @@
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default settings without changing your
+// custom settings, run `zed: open default settings` from the
+// command palette (cmd-shift-p / ctrl-shift-p)
+{
+  /* Duplicated key auto-commented: "agent": {
+    "always_allow_tool_actions": true,
+    "model_parameters": []
+  }, */
+  "use_smartcase_search": false,
+  "auto_update": false,
+  "agent_ui_font_size": 16.0,
+  "git_panel": {
+    "dock": "right",
+  },
+  "base_keymap": "Cursor",
+  "collaboration_panel": {
+    "dock": "right",
+  },
+  "outline_panel": {
+    "dock": "right",
+  },
+  "project_panel": {
+    "dock": "right",
+  },
+  "agent": {
+    "tool_permissions": {
+      "default": "allow",
+    },
+    "play_sound_when_agent_done": true,
+    "default_model": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-latest",
+    },
+  },
+  "ui_font_size": 16,
+  "buffer_font_size": 16,
+  "theme": {
+    "mode": "system",
+    "light": "Catppuccin Latte",
+    "dark": "Catppuccin Macchiato",
+  },
+  // Mirror of VSCode `search.useIgnoreFiles: false` — search git-ignored files too.
+  "search": {
+    "include_ignored": true,
+  },
+  // Port of VSCode `search.exclude`. NOTE: Zed has no search-only exclude, so these
+  // also hide paths from the project tree + file finder (more aggressive than VSCode).
+  // Specifying this key REPLACES Zed's defaults, so the defaults are re-listed first.
+  "file_scan_exclusions": [
+    // --- Zed defaults (must be re-declared since we override the key) ---
+    "**/.git",
+    "**/.svn",
+    "**/.hg",
+    "**/.jj",
+    "**/CVS",
+    "**/.DS_Store",
+    "**/Thumbs.db",
+    "**/.classpath",
+    "**/.settings",
+    // --- vendor: hide everything except the "laravel" and "livewire" folders.
+    // VSCode used {[^l],?[^ai]}*; globset uses [!x] negation, no `false` re-include,
+    // so the brace alternation is split into two patterns.
+    "**/vendor/[!l]*",
+    "**/vendor/?[!ai]*",
+    // --- public: hide everything except "index.php". Root-scoped (no **/) on purpose
+    // so it only touches the app's root public/ and leaves docs/public/ visible.
+    "public/[!i]*",
+    "public/?[!n]*",
+    // --- build output / dependencies ---
+    "**/node_modules",
+    "**/dist",
+    "**/build",
+    "**/.next",
+    "**/.open-next",
+    "**/.wrangler",
+    "**/.docusaurus",
+    // --- generated / IDE helper files ---
+    "**/_ide_helper.php",
+    "**/_ide_helper_models.php",
+    "**/.phpstorm.meta.php",
+    // --- lockfiles ---
+    "**/composer.lock",
+    "**/package-lock.json",
+    // --- Laravel framework cache + tooling caches (**/ also matches at root) ---
+    "**/storage/framework",
+    "**/.phpunit.result.cache",
+    "**/.phpunit.cache",
+    "**/phpstan-baseline.neon",
+  ],
+}
