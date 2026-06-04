@@ -74,6 +74,7 @@ cask 'handbrake'
 cask 'imageoptim'
 cask 'google-drive'
 cask 'google-chrome'
+cask 'gcloud-cli' # Google Cloud CLI (gcloud, gsutil, bq)
 cask 'firefox@developer-edition'
 cask 'slack'
 cask 'sublime-text'
