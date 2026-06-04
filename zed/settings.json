@@ -11,6 +11,7 @@
     "always_allow_tool_actions": true,
     "model_parameters": []
   }, */
+  "cli_default_open_behavior": "existing_window",
   "use_smartcase_search": false,
   "auto_update": false,
   "agent_ui_font_size": 16.0,
@@ -28,6 +29,7 @@
     "dock": "right",
   },
   "agent": {
+    "dock": "left",
     "tool_permissions": {
       "default": "allow",
     },
