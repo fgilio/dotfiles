@@ -164,9 +164,11 @@ while IFS= read -r entry; do
     workflows/*) continue ;; # Automator-generated bundles, never executed directly
   esac
   [[ -f "$f" ]] || continue
-  first_two=""
-  read -r -N 2 first_two <"$f" 2>/dev/null || true
-  if [[ "$first_two" == '#!' ]]; then
+  # First line only (a shebang is always line 1). `read -N` would be cleaner but
+  # is bash 4+, and CI runs the system bash 3.2, where it errors out silently.
+  first_line=""
+  IFS= read -r first_line <"$f" 2>/dev/null || true
+  if [[ "$first_line" == '#!'* ]]; then
     if [[ "$mode" != "100755" ]] && ! is_sourced "$f"; then
       printf '  FAIL %s: shebang but tracked mode %s (chmod 755 + git add)\n' "$f" "$mode"
       fail
