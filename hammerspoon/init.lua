@@ -27,7 +27,7 @@ end)
 local function getTargetFontSize()
   local mainScreen = hs.screen.mainScreen()
   local frame = mainScreen:frame()
-  -- 4K monitor is larger; MacBook screen is smaller
+  -- 4K monitor gets the larger size, MacBook screen the smaller one
   if frame.w >= 3840 or frame.h >= 2160 then
     return 16, "4K"
   else

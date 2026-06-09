@@ -31,27 +31,29 @@ After backing up your old Mac you may now follow these install instructions to s
    curl https://raw.githubusercontent.com/fgilio/dotfiles/HEAD/ssh.sh | bash -s "<your-email-address>"
    ```
 
-3. Clone this repo to `~/.dotfiles` with:
+3. [Add the new key to your GitHub account](https://github.com/settings/keys) (`pbcopy < ~/.ssh/id_ed25519.pub`), otherwise the SSH clone below fails with `Permission denied`
+
+4. Clone this repo to `~/.dotfiles` with:
 
     ```zsh
-    git clone --recursive git@github.com:fgilio/dotfiles.git ~/.dotfiles
+    git clone git@github.com:fgilio/dotfiles.git ~/.dotfiles
     ```
 
-4. Sign into the App Store (required for `mas` apps in Brewfile)
+5. Sign into the App Store (required for `mas` apps in Brewfile)
 
-5. Run the installation with:
+6. Run the installation with:
 
     ```zsh
     chmod +x ~/.dotfiles/fresh.sh
     ~/.dotfiles/fresh.sh
     ```
 
-6. After mackup is synced with your cloud storage, restore preferences by running `mackup restore`
-7. Restart your computer to finalize the process
+7. After mackup is synced with your cloud storage, restore preferences by running `mackup restore`
+8. Restart your computer to finalize the process
 
 Your Mac is now ready to use!
 
-> You can use a different location than `~/.dotfiles` if you want. Make sure you also update the reference in the [`.zshrc`](./.zshrc) file.
+> You can use a different location than `~/.dotfiles` if you want. Make sure you also update the references in [`.zshenv`](./.zshenv) (`DOTFILES`), [`fresh.sh`](./fresh.sh), and [`.gitconfig`](./.gitconfig) (`excludesfile`).
 
 ### Cleaning your old Mac (optionally)
 
@@ -61,7 +63,7 @@ After you've set up your new Mac you may want to wipe and clean install your old
 
 | File/Directory | Purpose |
 |----------------|---------|
-| `.zshrc` | Main shell config (~60ms startup) |
+| `.zshrc` | Main shell config (~30-40ms startup) |
 | `.zshenv` | Environment variables and PATH |
 | `Brewfile` | All packages and casks |
 | `fresh.sh` | New machine setup script |

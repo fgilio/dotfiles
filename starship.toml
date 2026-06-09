@@ -1,5 +1,5 @@
 # Minimal Starship configuration
-# Clean single-line prompt with only essential information
+# Two-line prompt: context (dir, git, duration) on top, input character below
 
 format = """
 $directory$git_branch$git_status$cmd_duration
@@ -30,14 +30,14 @@ deleted = "✘"
 min_time = 500
 format = "[$duration]($style) "
 
-# Disable version displays
+# Language version modules disabled: each one runs file detection on every
+# prompt, and the versions are never useful here (Herd/asdf pin them anyway)
 [nodejs]
 disabled = true
 
 [php]
 disabled = true
 
-# Also disable other common version displays
 [python]
 disabled = true
 
@@ -56,7 +56,6 @@ disabled = true
 [package]
 disabled = true
 
-# Character shows different symbol based on last command status
 [character]
 success_symbol = "[❯](bold green)"
 error_symbol = "[❯](bold red)"
