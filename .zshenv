@@ -1,5 +1,5 @@
 #!/bin/zsh
-# .zshenv - Loaded for ALL zsh sessions (interactive and non-interactive)
+# .zshenv: loaded for ALL zsh sessions (interactive and non-interactive)
 # Keep this minimal for performance
 
 # Global dotfiles directory reference
@@ -23,7 +23,7 @@ export GIT_ADVICE=0
 # Flicker-free alt-screen rendering with virtualized scrollback
 export CLAUDE_CODE_NO_FLICKER=1
 
-# Herd - PHP binary and configuration
+# Herd: PHP binary and configuration
 [[ -d "$HOME/Library/Application Support/Herd/bin" ]] && path+=("$HOME/Library/Application Support/Herd/bin")
 export HERD_PHP_83_INI_SCAN_DIR="$HOME/Library/Application Support/Herd/config/php/83/"
 export HERD_PHP_84_INI_SCAN_DIR="$HOME/Library/Application Support/Herd/config/php/84/"
@@ -32,11 +32,13 @@ export HERD_PHP_85_INI_SCAN_DIR="$HOME/Library/Application Support/Herd/config/p
 # NVM configuration (lazy-loaded for ~200ms faster shell startup)
 export NVM_DIR="$HOME/Library/Application Support/Herd/config/nvm"
 # Lazy-load NVM on first use of node/npm/npx/nvm.
-# May return non-zero if nvm.sh is missing - callers use ; not && to handle this.
+# May return non-zero if nvm.sh is missing, so callers use ; not && to handle this.
 _nvm_lazy_load() {
   unset -f node npm npx nvm nvm_find_nvmrc 2>/dev/null
   [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 }
+# Stub keeps Herd's .nvmrc auto-switch chpwd hook inert if its zshrc.zsh ever
+# gets sourced or re-injected: auto-switch forks nvm subshells on every cd
 nvm_find_nvmrc() { echo ""; }
 # Use ; instead of && so the command runs even if NVM is unavailable,
 # falling back to any system-installed binary
