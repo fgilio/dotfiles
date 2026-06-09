@@ -1,37 +1,40 @@
 #!/usr/bin/env bash
-# Safe rm wrapper - moves to Trash instead of permanently deleting
+# Safe rm wrapper: moves to Trash instead of permanently deleting
 # Only affects files on the same volume as ~/.Trash (internal disk)
 # External volumes: uses real rm (standard Unix behavior)
 # To permanently delete: /bin/rm or command -p rm
 set -euo pipefail
 
 REAL_RM="/bin/rm"
-# Sibling trash script - avoids resolving to /usr/bin/trash (macOS native)
+# Sibling trash script: avoids resolving to /usr/bin/trash (macOS native)
 TRASH="$(dirname -- "$0")/trash"
 
 # Debug mode: RM_DEBUG=1 rm file
 [[ "${RM_DEBUG:-0}" == "1" ]] && set -x
 
-# Ensure trash is available
 [[ -x "$TRASH" ]] || {
   echo "rm: trash not found at $TRASH" >&2
   exit 127
 }
 
-# Normalize path and check for dangerous targets
 is_dangerous_path() {
   local p="$1"
-  # Resolve to absolute path, handle missing files gracefully
-  local resolved
-  resolved="$(cd "$(dirname -- "$p")" 2>/dev/null && pwd -P)/$(basename -- "$p")" 2>/dev/null || resolved="$p"
-  # Check if it resolves to root, current dir parent, or is empty
-  case "$resolved" in
-    / | /. | /.. | //.. | //.) return 0 ;; # dangerous
-  esac
-  # Check raw input for obvious dangerous patterns
+  # Obvious dangerous raw forms, no forking needed
   case "$p" in
     / | . | .. | "" | ./ | ../ | /./* | /../*) return 0 ;; # dangerous
   esac
+  # All-slash paths ("//") are root in disguise
+  local stripped="${p%"${p##*[!/]}"}"
+  [[ -z "$stripped" ]] && return 0 # dangerous
+  # Resolve through the filesystem only when the final component is "." or ".."
+  # (only those can normalize to /, e.g. "/usr/.."); skipping the resolution
+  # for plain names is what keeps this wrapper from forking per file
+  local base="${stripped##*/}"
+  if [[ "$base" == "." || "$base" == ".." ]]; then
+    local resolved
+    resolved="$(cd -- "$p" 2>/dev/null && pwd -P)" || resolved=""
+    [[ "$resolved" == "/" ]] && return 0 # dangerous
+  fi
   return 1 # safe
 }
 
@@ -76,6 +79,8 @@ status=0
 trash_flags=()
 [[ $verbose -eq 1 ]] && trash_flags+=("-v")
 [[ $force -eq 1 ]] && trash_flags+=("-f")
+# Initialized empty so ${#to_trash[@]} is safe under set -u on bash 3.2
+to_trash=()
 
 for p in "$@"; do
   # Refuse dangerous paths
@@ -93,50 +98,48 @@ for p in "$@"; do
     continue
   fi
 
-  # Directory checks
-  if [[ -d "$p" && ! -L "$p" ]]; then
-    if [[ $allow_dirs -eq 0 ]]; then
-      echo "rm: $p: is a directory" >&2
-      status=1
-      continue
-    fi
+  if [[ -d "$p" && ! -L "$p" && $allow_dirs -eq 0 ]]; then
+    echo "rm: $p: is a directory" >&2
+    status=1
+    continue
   fi
 
-  # Skip trash for reproducible/ephemeral content - regenerable, often large,
-  # and clutter Trash when tools recreate them constantly
-  basename="$(basename -- "$p")"
+  # Pure-bash basename: a $(basename) fork per file is part of what made
+  # large deletes hundreds of times slower than /bin/rm
+  base="${p%"${p##*[!/]}"}"
+  base="${base##*/}"
 
-  # Ephemeral directories: package deps, build caches, framework output
+  # Skip trash for reproducible/ephemeral content: regenerable, often large,
+  # and clutter Trash when tools recreate them constantly
   if [[ -d "$p" && ! -L "$p" ]]; then
-    case "$basename" in
+    # Ephemeral directories: package deps, build caches, framework output
+    case "$base" in
       node_modules | vendor | __pycache__ | .cache | .pytest_cache | .mypy_cache | .ruff_cache | .next | .nuxt | .turbo | .parcel-cache)
         [[ $verbose -eq 1 ]] && echo "rm: skipping trash for ephemeral dir: $p" >&2
-        "$REAL_RM" -rf -- "$p" || {
-          status=1
-          continue
-        }
+        "$REAL_RM" -rf -- "$p" || status=1
         continue
         ;;
     esac
-  fi
-
-  # Ephemeral files: linter/tool caches that get recreated constantly
-  if [[ -L "$p" || -f "$p" ]]; then
-    case "$basename" in
+  elif [[ -L "$p" || -f "$p" ]]; then
+    # Ephemeral files: linter/tool caches that get recreated constantly
+    case "$base" in
       .yamllint | .phpunit.result.cache | .eslintcache | .php-cs-fixer.cache | .stylelintcache | .prettiercache | .coverage)
         [[ $verbose -eq 1 ]] && echo "rm: skipping trash for ephemeral file: $p" >&2
-        "$REAL_RM" -f -- "$p" || {
-          status=1
-          continue
-        }
+        "$REAL_RM" -f -- "$p" || status=1
         continue
         ;;
     esac
   fi
 
-  # Delegate to trash (handles cross-volume detection internally)
-  # ${trash_flags[@]+...} avoids unbound variable error on bash 3.2 with set -u
-  "$TRASH" ${trash_flags[@]+"${trash_flags[@]}"} -- "$p" || status=1
+  to_trash+=("$p")
 done
+
+# One batched trash call for everything that survived the checks: trash handles
+# per-file existence and cross-volume detection itself, and one process per rm
+# invocation (vs one per file) is what keeps 200-file deletes off the seconds scale
+# ${to_trash[@]+...} avoids unbound variable errors on bash 3.2 with set -u
+if [[ ${#to_trash[@]} -gt 0 ]]; then
+  "$TRASH" ${trash_flags[@]+"${trash_flags[@]}"} -- "${to_trash[@]}" || status=1
+fi
 
 exit $status

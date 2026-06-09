@@ -10,23 +10,29 @@ trash_dir="${TRASH_DIR:-$HOME/.Trash}"
 # Debug mode: RM_DEBUG=1 trash file
 [[ "${RM_DEBUG:-0}" == "1" ]] && set -x
 
-# Get device ID for a path
 get_device() {
   stat -f '%d' "$1" 2>/dev/null || echo ""
 }
 
-# Normalize path and check for dangerous targets
 is_dangerous_path() {
   local p="$1"
-  local resolved
-  resolved="$(cd "$(dirname -- "$p")" 2>/dev/null && pwd -P)/$(basename -- "$p")" 2>/dev/null || resolved="$p"
-  case "$resolved" in
-    / | /. | /.. | //.. | //.) return 0 ;;
-  esac
+  # Obvious dangerous raw forms, no forking needed
   case "$p" in
-    / | . | .. | "" | ./ | ../ | /./* | /../*) return 0 ;;
+    / | . | .. | "" | ./ | ../ | /./* | /../*) return 0 ;; # dangerous
   esac
-  return 1
+  # All-slash paths ("//") are root in disguise
+  local stripped="${p%"${p##*[!/]}"}"
+  [[ -z "$stripped" ]] && return 0 # dangerous
+  # Resolve through the filesystem only when the final component is "." or ".."
+  # (only those can normalize to /, e.g. "/usr/.."); skipping the resolution
+  # for plain names is what keeps this script from forking per file
+  local base="${stripped##*/}"
+  if [[ "$base" == "." || "$base" == ".." ]]; then
+    local resolved
+    resolved="$(cd -- "$p" 2>/dev/null && pwd -P)" || resolved=""
+    [[ "$resolved" == "/" ]] && return 0 # dangerous
+  fi
+  return 1 # safe
 }
 
 force=0
@@ -36,7 +42,10 @@ while getopts ":fv" opt; do
   case "$opt" in
     f) force=1 ;;
     v) verbose=1 ;;
-    *) exit 2 ;;
+    \?)
+      echo "trash: illegal option -- $OPTARG" >&2
+      exit 2
+      ;;
   esac
 done
 shift $((OPTIND - 1))
@@ -46,16 +55,23 @@ shift $((OPTIND - 1))
   exit 1
 }
 
-mkdir -p -- "$trash_dir"
+[[ -d "$trash_dir" ]] || mkdir -p -- "$trash_dir"
 status=0
-ts="$(date +%Y%m%d-%H%M%S)"
+# Timestamp for deconflict names, computed only when a collision happens
+ts=""
 counter=0
 
-# Get device ID of trash directory (internal disk)
 trash_device="$(get_device "$trash_dir")"
 
 for src in "$@"; do
-  # Check existence first
+  # Dangerous-path check before existence so `trash -f ''` fails loudly like
+  # `rm -f ''` does; -f must only forgive missing files
+  if is_dangerous_path "$src"; then
+    echo "trash: refusing dangerous path: '$src'" >&2
+    status=1
+    continue
+  fi
+
   if [[ ! -e "$src" && ! -L "$src" ]]; then
     [[ $force -eq 1 ]] && continue
     echo "trash: $src: No such file or directory" >&2
@@ -63,17 +79,9 @@ for src in "$@"; do
     continue
   fi
 
-  # Refuse dangerous paths
-  if is_dangerous_path "$src"; then
-    echo "trash: refusing dangerous path: '$src'" >&2
-    status=1
-    continue
-  fi
-
-  # Check if file is on same volume as Trash
+  # External volume: use real rm (standard Unix behavior)
   src_device="$(get_device "$src")"
   if [[ -n "$trash_device" && -n "$src_device" && "$src_device" != "$trash_device" ]]; then
-    # External volume: use real rm (standard Unix behavior)
     [[ $verbose -eq 1 ]] && echo "trash: external volume, permanently deleting: $src" >&2
     if [[ -d "$src" && ! -L "$src" ]]; then
       "$REAL_RM" -rf -- "$src" || {
@@ -90,11 +98,14 @@ for src in "$@"; do
   fi
 
   # Same volume: move to Trash
-  base="$(basename -- "$src")"
+  # Pure-bash basename: $(basename) forks add up across many files
+  base="${src%"${src##*[!/]}"}"
+  base="${base##*/}"
   dest="$trash_dir/$base"
 
   # Deconflict: timestamp.PID.counter
   if [[ -e "$dest" || -L "$dest" ]]; then
+    [[ -n "$ts" ]] || ts="$(date +%Y%m%d-%H%M%S)"
     counter=$((counter + 1))
     dest="$trash_dir/$base.$ts.$$.$counter"
     # If still exists (unlikely), keep incrementing
