@@ -11,6 +11,14 @@
     "always_allow_tool_actions": true,
     "model_parameters": []
   }, */
+  "languages": {
+    "PHP": {
+      // Intelephense is painfully slow and eats CPU/RAM. Disabling the language
+      // server entirely (vs "language_servers": ["!intelephense"]) also stops Zed
+      // from spinning up the extension's fallbacks (phpactor, phptools) instead.
+      "enable_language_server": false
+    }
+  },
   "cli_default_open_behavior": "existing_window",
   "use_smartcase_search": false,
   "auto_update": false,
