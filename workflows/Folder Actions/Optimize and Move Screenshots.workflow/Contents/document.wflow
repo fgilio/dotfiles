@@ -82,10 +82,15 @@ do
         # mktemp instead of a predictable /tmp name that another process could
         # pre-create as a symlink to redirect the write
         TMP_DIR="$(mktemp -d)"
-        /opt/homebrew/opt/vips/bin/vips resize "$f" "$TMP_DIR/$FILENAME.jpg" 0.5
-        /opt/homebrew/opt/mozjpeg/bin/cjpeg -quality 94 -outfile "/Users/fgilio/Library/CloudStorage/GoogleDrive-franco.gilio@gmail.com/My Drive/Screenshots/sss/$FILENAME.jpg" "$TMP_DIR/$FILENAME.jpg"
+        # Trash the original only if both encode steps succeed, matching the mov
+        # branch; a failed resize/compress must not delete the source
+        if /opt/homebrew/opt/vips/bin/vips resize "$f" "$TMP_DIR/$FILENAME.jpg" 0.5 \
+            &amp;&amp; /opt/homebrew/opt/mozjpeg/bin/cjpeg -quality 94 -outfile "/Users/fgilio/Library/CloudStorage/GoogleDrive-franco.gilio@gmail.com/My Drive/Screenshots/sss/$FILENAME.jpg" "$TMP_DIR/$FILENAME.jpg"; then
+            trash_via_finder "$f"
+        else
+            echo "Error encoding image: $f" &gt;&amp;2
+        fi
         rm -rf "$TMP_DIR"
-        trash_via_finder "$f"
 
     elif [ "$FILE_EXTENSION" == "mov" ]; then
         echo "Encoding video: $f" &gt;&amp;2

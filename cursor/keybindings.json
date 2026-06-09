@@ -173,7 +173,8 @@
         "command": "workbench.action.gotoSymbol"
     },
     {
-        // alt+enter mirrors the Zed keymap's GoToDefinition binding
+        // alt+enter mirrors the Zed keymap's GoToDefinition binding;
+        // editor.action.goToDeclaration is VS Code's alias for Go to Definition
         "key": "alt+enter",
         "command": "editor.action.goToDeclaration",
         "when": "editorTextFocus"
