@@ -35,9 +35,11 @@ cp -R "$DOTFILES/apps/format-transcription/build/FormatTranscription.app" "$HOME
 mkdir -p "$HOME/.config"
 ln -sf "$DOTFILES/starship.toml" "$HOME/.config/starship.toml"
 
-# Symlink Ghostty config
+# Symlink Ghostty config and themes (ghostty.config references themes by name,
+# so without the themes dir a fresh machine can't resolve "Hyper Light"/"Hyper")
 mkdir -p "$HOME/.config/ghostty"
 ln -sf "$DOTFILES/ghostty.config" "$HOME/.config/ghostty/config"
+ln -sfn "$DOTFILES/ghostty/themes" "$HOME/.config/ghostty/themes"
 
 # Symlink Hammerspoon config
 mkdir -p "$HOME/.hammerspoon"
