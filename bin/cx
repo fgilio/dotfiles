@@ -3,7 +3,7 @@
 # Sandbox config in ~/.codex/config.toml (sandbox_mode = "danger-full-access")
 
 if [ $# -eq 0 ]; then
-    exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-5.5 --config model_reasoning_effort="medium"
+    exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-5.5 --config model_reasoning_effort="xhigh"
 else
     exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-5.5 --config model_reasoning_effort="medium" exec --skip-git-repo-check "$@"
 fi

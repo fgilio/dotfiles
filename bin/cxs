@@ -3,7 +3,7 @@
 # -s read-only overrides config's danger-full-access
 
 if [ $# -eq 0 ]; then
-    exec codex --search -s read-only --model gpt-5.5 --config model_reasoning_effort="medium"
+    exec codex --search -s read-only --model gpt-5.5 --config model_reasoning_effort="xhigh"
 else
     exec codex --search -s read-only --model gpt-5.5 --config model_reasoning_effort="medium" exec --skip-git-repo-check "$@"
 fi
