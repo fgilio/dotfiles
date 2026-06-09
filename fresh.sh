@@ -150,9 +150,6 @@ fi
 # Editor config (VSCode symlinks + shared extension installs)
 source "$DOTFILES/setup/editors.sh"
 
-# xdr-boost (XDR display brightness booster)
-source "$DOTFILES/setup/xdr-boost.sh"
-
 # Set macOS preferences last because this reloads the shell
 # Disable errexit for .macos since many defaults commands exit non-zero on reruns
 set +e
