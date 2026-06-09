@@ -1,10 +1,10 @@
 #!/usr/bin/env zsh
-# Cursor Agent wrapper - works in any shell context
+# Cursor Agent wrapper: works in any shell context
 
-if [ $# -eq 0 ]; then
-    # Interactive: use default model, skip permissions
-    exec cursor-agent -f
+if [[ $# -eq 0 || "$1" == -* ]]; then
+    # Interactive: no args, or flags (--resume, etc.), default model, skip permissions
+    exec cursor-agent -f "$@"
 else
-    # Non-interactive: use default model, skip permissions
+    # Non-interactive: default model, skip permissions
     exec cursor-agent -p --output-format=text -f "$@"
 fi

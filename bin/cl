@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
-# Claude Code - trusted mode (no permission prompts)
+# Claude Code: trusted mode (no permission prompts)
 
 if [[ $# -eq 0 || "$1" == -* ]]; then
     # Interactive: no args, or flags (--resume, --continue, etc.)
@@ -7,7 +7,7 @@ if [[ $# -eq 0 || "$1" == -* ]]; then
     exec claude "$@"
 else
     # Non-interactive: one-off query, pinned to Opus
-    # ANTHROPIC_API_KEY="" forces CLI auth instead of env key, which bills to API
-    # instead of Max subscription in --print mode (issues #3040, #1932)
+    # ANTHROPIC_API_KEY="" forces CLI auth instead of the env key, so --print
+    # bills the Max subscription instead of the API
     ANTHROPIC_API_KEY="" exec claude --print --output-format=text --tools default --no-session-persistence --model opus "$@"
 fi
