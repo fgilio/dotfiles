@@ -32,9 +32,10 @@
       "ctrl-cmd-down": "editor::MoveLineDown",
 
       // Multi-Cursor
-      // "cmd-backspace": "editor::SelectPreviousWordMatch",
-      // "cmd-d": "editor::SelectNextWordMatch",
-      "cmd-right": "editor::SelectToEndOfLine",
+      // No cmd-right override: Zed has no has-selection key context, so binding
+      // it here would hijack plain end-of-line movement. Use the built-in
+      // cmd-shift-l (SplitSelectionIntoLines) for the Cursor-style
+      // cursor-at-end-of-each-selected-line workflow.
       "ctrl-shift-up": "editor::AddSelectionAbove",
       "ctrl-shift-down": "editor::AddSelectionBelow",
 

@@ -1,16 +1,17 @@
 # Shared extensions for VSCode and Cursor
 # openai.chatgpt excluded (Cursor marketplace only)
+# DevSense is the single PHP language server. intelephense + phpactor removed:
+# three language servers indexing at once is the same CPU/RAM drain Zed had.
+# apc-extension + vscode-custom-css removed: they patch VS Code internals,
+# breaking the install signature and re-breaking on every update.
 anthropic.claude-code
-be5invis.vscode-custom-css
 biomejs.biome
-bmewburn.vscode-intelephense-client
 cha0ran.deletecurrentfile
 devsense.composer-php-vscode
 devsense.intelli-php-vscode
 devsense.phptools-vscode
 devsense.profiler-php-vscode
 dbaeumer.vscode-eslint
-drcika.apc-extension
 earshinov.permute-lines
 ginfuru.ginfuru-better-solarized-dark-theme
 github.github-vscode-theme
@@ -25,7 +26,6 @@ ms-vscode-remote.remote-containers
 ms-vscode.live-server
 mubaidr.minimal-mist
 nemesv.copy-file-name
-phpactor.vscode-phpactor
 pshershov.blueberry-banana
 redhat.vscode-xml
 redhat.vscode-yaml
