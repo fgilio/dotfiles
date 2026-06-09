@@ -25,8 +25,10 @@ ln -sf "$DOTFILES/.gitconfig" "$HOME/.gitconfig"
 chmod +x "$DOTFILES/bin/"*
 
 # Install FormatTranscription.app (on-device LLM markdown formatter)
-# Pre-built .app wrapper needed for TCC/FoundationModels access from Quick Actions
-# Rebuild with: apps/format-transcription/build.sh
+# .app wrapper needed for TCC/FoundationModels access from Quick Actions.
+# Built from source instead of shipping a committed Mach-O nobody can verify;
+# swiftc comes with the Xcode CLT, which the Homebrew installer already set up
+"$DOTFILES/apps/format-transcription/build.sh"
 mkdir -p "$HOME/Applications"
 rm -rf "$HOME/Applications/FormatTranscription.app"
 cp -R "$DOTFILES/apps/format-transcription/build/FormatTranscription.app" "$HOME/Applications/"
