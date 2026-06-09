@@ -3,13 +3,15 @@
 # Uses isolated TRASH_DIR for deterministic, self-cleaning runs
 set -uo pipefail
 
-DOTFILES="${DOTFILES:-$HOME/.dotfiles}"
+# Derived from the script's own location so a worktree or secondary clone
+# tests its own bin/rm, not whatever ~/.dotfiles happens to contain
+DOTFILES="$(cd "$(dirname "$0")/.." && pwd)"
 RM="$DOTFILES/bin/rm"
 TRASH_CMD="$DOTFILES/bin/trash"
 
 pass=0 fail=0
 sandbox="$(mktemp -d)"
-# Isolated trash dir - no interference with real ~/.Trash
+# Isolated trash dir, no interference with real ~/.Trash
 export TRASH_DIR="$sandbox/.Trash"
 mkdir -p "$TRASH_DIR"
 

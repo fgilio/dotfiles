@@ -5,22 +5,24 @@
 #   - GitHub Actions workflows lint
 #   - Hammerspoon Lua lints
 #   - no `brew --prefix` at runtime (subprocess startup cost)
-#   - shebanged scripts are executable
+#   - tracked file modes match content (shebang means 755, data means 644)
 #   - every CLAUDE.md has an AGENTS.md symlink pointing to it
 #   - Hammerspoon modules are wired (require in init.lua + ln -s in fresh.sh)
 #   - Brewfile and ci.yml install the same dev-tool deps (no drift)
-#   - no trailing whitespace / CRLF (workflows/ excluded - Automator XML)
-#   - FormatTranscription stays on-device (source + built bundle Info.plist,
-#     build.sh, main.swift)
+#   - no trailing whitespace / CRLF (workflows/ excluded: Automator XML)
+#   - FormatTranscription stays on-device (Info.plist, build.sh, main.swift,
+#     plus the locally built bundle when present)
 #
 # Run: bin/check  (also runs in lefthook pre-commit and GitHub Actions CI)
 set -uo pipefail
 
-DOTFILES="${DOTFILES:-$(cd "$(dirname "$0")/.." && pwd)}"
+# Derived from the script's own location so a worktree or secondary clone
+# validates itself, not whatever ~/.dotfiles happens to contain
+DOTFILES="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$DOTFILES" || exit 1
 
 status=0
-failures=0 # monotonic counter; sections snapshot it to detect their own failures
+failures=0 # monotonic counter, snapshotted by sections to detect their own failures
 section_start=0
 
 bash_files=(
@@ -28,6 +30,7 @@ bash_files=(
   ssh.sh
   .macos
   apps/format-transcription/build.sh
+  setup/editors.sh
   bin/rm
   bin/trash
   bin/rm-test
@@ -120,21 +123,23 @@ for f in "${zsh_files[@]}"; do
 done
 
 # ---- brew --prefix invocation ban ---------------------------------------
-# Subprocess adds ~30-50ms to shell startup; /opt/homebrew is hardcoded.
-# Comments are allowed (they document the ban). bin/check excluded - it must
-# contain the pattern in order to detect it.
+# Subprocess adds ~30-50ms to shell startup, so /opt/homebrew is hardcoded.
+# Comments are allowed (they document the ban). bin/check is excluded because
+# it must contain the pattern in order to detect it.
 section "Brew --prefix invocation ban"
+ban_files=()
 for f in "${bash_files[@]}" "${zsh_files[@]}"; do
-  [[ "$f" == "bin/check" ]] && continue
-  matches=$(grep -nF 'brew --prefix' "$f" 2>/dev/null \
-    | grep -vE '^[0-9]+:[[:space:]]*#') || true
-  if [[ -n "$matches" ]]; then
-    while IFS= read -r line; do
-      printf '  FAIL %s:%s\n' "$f" "$line"
-    done <<<"$matches"
-    fail
-  fi
+  [[ "$f" == "bin/check" ]] || ban_files+=("$f")
 done
+# One grep pass over every file (two processes total, not two per file)
+matches=$(grep -nF 'brew --prefix' "${ban_files[@]}" 2>/dev/null \
+  | grep -vE '^[^:]+:[0-9]+:[[:space:]]*#') || true
+if [[ -n "$matches" ]]; then
+  while IFS= read -r line; do
+    printf '  FAIL %s\n' "$line"
+  done <<<"$matches"
+  fail
+fi
 section_ok "no \`brew --prefix\` invocations"
 
 # ---- actionlint ---------------------------------------------------------
@@ -145,23 +150,37 @@ actionlint -color || fail
 section "luacheck (Hammerspoon)"
 (cd hammerspoon && luacheck --no-color *.lua) || fail
 
-# ---- executable-bit check -----------------------------------------------
-section "Executable-bit check"
-for f in "${bash_files[@]}" "${zsh_files[@]}"; do
-  is_sourced "$f" && continue
+# ---- tracked file mode check ----------------------------------------------
+# Index-driven and bidirectional: every tracked file with a shebang must be
+# committed 755 and every file without one 644, so neither a forgotten chmod
+# nor a stray executable bit on a data file can reach main. Sourced-only zsh
+# configs keep their shebang (editor syntax detection) without the bit.
+section "Tracked file mode check"
+while IFS= read -r entry; do
+  mode="${entry%% *}"
+  f="${entry#*$'\t'}"
+  [[ "$mode" == "100644" || "$mode" == "100755" ]] || continue # skip symlinks
+  case "$f" in
+    workflows/*) continue ;; # Automator-generated bundles, never executed directly
+  esac
   [[ -f "$f" ]] || continue
-  read -r -N 2 first_two <"$f" 2>/dev/null || continue
-  [[ "$first_two" == '#!' ]] || continue
-  if [[ ! -x "$f" ]]; then
-    printf '  FAIL %s (has shebang but not executable)\n' "$f"
+  first_two=""
+  read -r -N 2 first_two <"$f" 2>/dev/null || true
+  if [[ "$first_two" == '#!' ]]; then
+    if [[ "$mode" != "100755" ]] && ! is_sourced "$f"; then
+      printf '  FAIL %s: shebang but tracked mode %s (chmod 755 + git add)\n' "$f" "$mode"
+      fail
+    fi
+  elif [[ "$mode" == "100755" ]]; then
+    printf '  FAIL %s: executable but no shebang (chmod 644 + git add)\n' "$f"
     fail
   fi
-done
-section_ok "all shebanged scripts are executable"
+done < <(git ls-files -s)
+section_ok "tracked modes match shebangs"
 
 # ---- AGENTS.md <-> CLAUDE.md symlink integrity --------------------------
 # Link target is forced to "CLAUDE.md", so if find located the source the
-# resolved link must exist - no dangling check needed.
+# resolved link must exist and no dangling check is needed.
 section "AGENTS.md symlink integrity"
 while IFS= read -r claude; do
   agents="$(dirname "$claude")/AGENTS.md"
@@ -176,8 +195,8 @@ done < <(find . -name CLAUDE.md -not -path './.git/*' -not -path '*/vendor/*' -n
 section_ok "every CLAUDE.md has a valid AGENTS.md symlink"
 
 # ---- Hammerspoon module wiring ------------------------------------------
-# Hammerspoon resolves require() from ~/.hammerspoon, not the dotfiles dir;
-# an unsymlinked module silently fails to load.
+# Hammerspoon resolves require() from ~/.hammerspoon, not the dotfiles dir,
+# so an unsymlinked module silently fails to load.
 section "Hammerspoon module wiring"
 hs_modules=()
 while IFS= read -r lua; do
@@ -221,8 +240,9 @@ done
 section_ok "lint dependencies present in Brewfile and ci.yml"
 
 # ---- FormatTranscription invariants -------------------------------------
-# Both source and built bundle are checked: fresh.sh installs the prebuilt
-# .app committed to the repo, so source/built drift would silently ship.
+# The built bundle is not committed (fresh.sh runs build.sh from source), so
+# the source files carry the invariants. A locally built bundle, when present,
+# is checked too so source/built drift is caught before install.
 section "FormatTranscription invariants"
 ft="apps/format-transcription"
 built_plist="$ft/build/FormatTranscription.app/Contents/Info.plist"
@@ -237,10 +257,6 @@ check_plist() {
   fi
 }
 
-if [[ ! -f "$built_plist" ]]; then
-  printf '  FAIL %s missing - run %s/build.sh\n' "$built_plist" "$ft"
-  fail
-fi
 for plist in "$ft/Info.plist" "$built_plist"; do
   [[ -f "$plist" ]] || continue
   check_plist "$plist" LSBackgroundOnly true
