@@ -1,9 +1,12 @@
 #!/usr/bin/env zsh
-# Codex wrapper - works in any shell context
+# Codex wrapper: works in any shell context
 # Sandbox config in ~/.codex/config.toml (sandbox_mode = "danger-full-access")
 
-if [ $# -eq 0 ]; then
-    exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-5.5 --config model_reasoning_effort="xhigh"
+if [[ $# -eq 0 || "$1" == -* ]]; then
+    # Interactive: no args, or flags (--resume, etc.). xhigh reasoning because
+    # a long-lived session favors answer quality over latency
+    exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-5.5 --config model_reasoning_effort="xhigh" "$@"
 else
+    # Non-interactive one-shot: medium reasoning, latency matters more here
     exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-5.5 --config model_reasoning_effort="medium" exec --skip-git-repo-check "$@"
 fi

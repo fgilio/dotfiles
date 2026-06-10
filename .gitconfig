@@ -45,6 +45,9 @@
         updateRefs = true
 [merge]
     conflictstyle = zdiff3
+# The empty `helper =` lines are intentional: they reset the helper list so
+# system-level helpers (osxkeychain) are skipped and only gh supplies
+# GitHub credentials
 [credential "https://github.com"]
 	helper =
 	helper = !/opt/homebrew/bin/gh auth git-credential

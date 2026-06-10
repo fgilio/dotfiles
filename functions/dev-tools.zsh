@@ -1,13 +1,11 @@
 #!/bin/zsh
-# Development utility functions that are useful in both interactive and non-interactive shells
+# Custom shell functions and aliases, sourced by .zshrc
 
-# Change to home directory and clear screen
 r() {
     cd ~
     clear
 }
 
-# Open in Zed
 edit() {
     if [ -z "$1" ]; then
         zed "."
@@ -16,13 +14,12 @@ edit() {
     fi
 }
 
-# Git Reset and Clean
+# Throw away all uncommitted work, no confirmation (intentional ergonomic shortcut)
 gnah() {
     git reset --hard
     git clean -df
 }
 
-# Open GitHub Desktop
 gdesktop() {
     open -a 'GitHub Desktop' .
 }

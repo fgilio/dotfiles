@@ -51,7 +51,6 @@ if [[ -s "$_zsh_cache_dir/zcompdump" && ( ! -s "$_zsh_cache_dir/zcompdump.zwc" |
 fi
 
 # Basic completion behavior
-zstyle ':completion:*' menu select      # Enable menu-style completion
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'  # Case-insensitive + substring matching
 
 # Colored completions
@@ -66,7 +65,7 @@ zstyle ':completion:*' group-name ''
 zstyle ':completion:*:*:-command-:*:*' group-order builtins commands functions
 zstyle ':completion:*' list-dirs-first true
 
-# Recent directories first (using zoxide's frecency when available)
+# cd completion order: local directories before the directory stack and cdpath dirs
 zstyle ':completion:*:cd:*' tag-order 'local-directories directory-stack path-directories'
 zstyle ':completion:*:*:cd:*:directory-stack' menu yes select
 
@@ -80,8 +79,7 @@ zstyle ':completion::complete:*' cache-path ~/.zsh/cache
 #####################
 # Path Configuration
 #####################
-# Function to add path only if not already present
-# Path additions using zsh path array (deduplication handled by typeset -U in .zshenv)
+# Path additions use the zsh path array (deduplication handled by typeset -U in .zshenv)
 # MySQL client
 [[ -d "/opt/homebrew/opt/mysql-client@8.4/bin" ]] && path+=("/opt/homebrew/opt/mysql-client@8.4/bin")
 
@@ -95,19 +93,22 @@ zstyle ':completion::complete:*' cache-path ~/.zsh/cache
 #####################
 # Bun Configuration
 #####################
-[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"  # Bun completions
-# PATH for dotfiles/bin is already set in .zshenv
+# Bun completions, zcompiled once: parsing the 1000-line source costs ~1.8ms per shell
+if [[ -s "$HOME/.bun/_bun" ]]; then
+  [[ ! -s "$HOME/.bun/_bun.zwc" || "$HOME/.bun/_bun" -nt "$HOME/.bun/_bun.zwc" ]] && zcompile "$HOME/.bun/_bun"
+  source "$HOME/.bun/_bun"
+fi
 [[ -d "$HOME/.bun/bin" ]] && path+=("$HOME/.bun/bin")
 
 #####################
 # Aliases
 #####################
 # Basic shortcuts
-alias h="history"          # Show command history
-alias c="clear"            # Clear terminal
-alias f="open ./"          # Open current directory in Finder
-alias ..="cd .."           # Change to parent directory
-alias ...="cd ../.."       # Change to parent directory twice
+alias h="history"
+alias c="clear"
+alias f="open ./"   # Open current directory in Finder
+alias ..="cd .."
+alias ...="cd ../.."
 
 # File operations
 # Enable colors for common commands
@@ -116,7 +117,7 @@ export LSCOLORS=ExGxBxDxCxEgEdxbxgxcxd  # Customize ls colors
 
 alias ls="ls -G"                    # Colorized ls output
 alias ll="gls -alth --color=auto"   # GNU coreutils ls (gls) for --color support
-# No alias needed - ~/bin/rm intercepts and moves to Trash instead of deleting
+# No rm alias needed: dotfiles/bin/rm intercepts and moves to Trash instead of deleting
 alias cp="cp -iv"                   # Interactive and verbose copy
 alias mv="mv -iv"                   # Interactive and verbose move
 alias mkdir="mkdir -pv"             # Create parent dirs as needed, verbose
@@ -149,12 +150,17 @@ alias dfiles-h='defaults write com.apple.finder AppleShowAllFiles NO; killall Fi
 alias php-srv="open http://localhost:4444 && php -S localhost:4444"
 
 # Clipboard operations
-alias copy-ssh="cat ~/.ssh/id_ed25519.pub | pbcopy"  # Updated to use Ed25519 key
+alias copy-ssh="cat ~/.ssh/id_ed25519.pub | pbcopy"
+# /bin/rm on purpose: the screenshot is throwaway, keep it out of the Trash wrapper
 alias ocr='screencapture -i ~/tmp/screenshot.png && tesseract ~/tmp/screenshot.png stdout | pbcopy && /bin/rm -f ~/tmp/screenshot.png'
 
 #####################
 # Custom Functions
 #####################
+# Cache `<command> init zsh` output to a file and source it, skipping the init
+# fork on every startup. Regenerates when the binary is newer than the cache
+# (i.e. after upgrades). On generation failure the old cache stays in place and
+# stderr lands in <cache>.log for debugging.
 _source_generated_init() {
   local command_name="$1"
   local cache_file="$2"
@@ -185,8 +191,7 @@ _source_generated_init() {
   [[ -s "$cache_file" ]] && source "$cache_file"
 }
 
-# Development functions are loaded from the dotfiles directory
-# This includes: r, edit, gnah, gdesktop, git-open
+# Custom functions and aliases: r, edit, gnah, gdesktop, gopen/gop, clskills
 source "$DOTFILES/functions/dev-tools.zsh"
 
 
@@ -197,9 +202,27 @@ source "$DOTFILES/functions/dev-tools.zsh"
 export STARSHIP_COMMAND_TIMEOUT=1000            # 1 second timeout (default 500ms is too aggressive)
 # Initialize Starship prompt
 _source_generated_init starship "$_zsh_cache_dir/starship-init.zsh" init zsh
+# Bake the continuation prompt into the cache: the generated init forks
+# `starship prompt --continuation` synchronously on every shell (~7-20ms, the
+# top startup cost) for output that only changes with starship.toml. Sourcing
+# above already paid that fork and set PROMPT2, so write the literal back into
+# the cache; every later shell skips the fork. The content check below is a
+# pure-zsh file read (no fork) and only matches right after a regeneration.
+# After changing continuation_prompt in starship.toml: rm the cache file.
+_starship_cache="$_zsh_cache_dir/starship-init.zsh"
+if (( $+commands[starship] )) && [[ -s "$_starship_cache" && "$(<"$_starship_cache")" == *"starship prompt --continuation"* ]]; then
+  _baked=()
+  while IFS= read -r _line; do
+    [[ "$_line" == PROMPT2=* ]] && _line="PROMPT2=${(qq)PROMPT2}"
+    _baked+=("$_line")
+  done < "$_starship_cache"
+  print -rl -- "${_baked[@]}" >| "$_starship_cache"
+  unset _baked _line
+fi
+unset _starship_cache
 
 # Enable ZSH autosuggestions
-# Hardcoded path intentional - $(brew --prefix) adds ~30-50ms subprocess overhead
+# Hardcoded path intentional: $(brew --prefix) adds ~30-50ms subprocess overhead
 # Guard with file check to prevent startup errors if package missing
 [[ -f /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]] && \
   source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
@@ -222,12 +245,7 @@ fi
 [[ -f /opt/homebrew/opt/fzf/shell/completion.zsh ]] && \
   source /opt/homebrew/opt/fzf/shell/completion.zsh
 
-# Zoo Shell Integration (currently commented out)
-# if [[ -f ~/pla/zoo/zoo_shell_integration.zsh ]]; then
-#     source ~/pla/zoo/zoo_shell_integration.zsh
-# fi
-
-# Added by LM Studio CLI (lms)
+# LM Studio CLI (lms)
 [[ -d "$HOME/.cache/lm-studio/bin" ]] && path+=("$HOME/.cache/lm-studio/bin")
 
 # Source environment variables only on login shells (avoid re-reading in subshells)
@@ -241,10 +259,16 @@ alias zsetup-hooks="$HOME/pla/zoo/bin/zsetup-hooks"
 [[ -d "$HOME/.local/bin" ]] && path+=("$HOME/.local/bin")
 
 ################################################################################
-# Herd Shell Integration (interactive-only, env vars are in .zshenv)
+# Herd
 ################################################################################
-[[ -f "/Applications/Herd.app/Contents/Resources/config/shell/zshrc.zsh" ]] && builtin source "/Applications/Herd.app/Contents/Resources/config/shell/zshrc.zsh"
+# Herd's zshrc.zsh is intentionally NOT sourced: its only content is the .nvmrc
+# auto-switch chpwd hook, which forks nvm subshells on every cd and which the
+# nvm_find_nvmrc stub in .zshenv disables anyway.
 
+# The export blocks below duplicate .zshenv on purpose: Herd re-injects them
+# into .zshrc on updates when it doesn't find its own marker comments, so they
+# stay verbatim (hardcoded /Users/fgilio path included) to keep updates from
+# dirtying the tree. .zshenv stays the canonical copy for non-interactive shells.
 
 # Herd injected PHP 8.4 configuration.
 export HERD_PHP_84_INI_SCAN_DIR="/Users/fgilio/Library/Application Support/Herd/config/php/84/"

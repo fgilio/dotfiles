@@ -17,12 +17,12 @@ Finder Quick Action (right-click audio file)
 
 ## Why a .app wrapper instead of a CLI tool?
 
-Finder Quick Actions run under Automator's XPC runner (WorkflowServiceRunner), which is a sandboxed context with restricted TCC entitlements. We discovered through extensive testing that:
+Finder Quick Actions run under Automator's XPC runner (WorkflowServiceRunner), which is a sandboxed context with restricted TCC entitlements. Every non-.app approach fails there:
 
-1. **Compiled CLI binary** (`swiftc` output) - FoundationModels silently fails (exit 1) in the Quick Action XPC context
-2. **`swift` interpreter** - TCC denies file access to `~/Downloads` for child processes spawned by Automator
-3. **`launchctl submit`** - Same TCC denial on `~/Downloads`
-4. **`osascript -e 'do shell script "..."'`** - Doesn't escape the parent process sandbox
+1. **Compiled CLI binary** (`swiftc` output): FoundationModels silently fails (exit 1) in the Quick Action XPC context
+2. **`swift` interpreter**: TCC denies file access to `~/Downloads` for child processes spawned by Automator
+3. **`launchctl submit`**: same TCC denial on `~/Downloads`
+4. **`osascript -e 'do shell script "..."'`**: doesn't escape the parent process sandbox
 
 A proper `.app` bundle (even background-only, ad-hoc signed) gets its own TCC identity. On first run, macOS prompts the user to allow Downloads access, and FoundationModels works because the app has proper process attribution.
 
@@ -32,10 +32,10 @@ Key: Terminal.app has `com.apple.private.tcc.allow-prompting` for `kTCCServiceAl
 
 | File | Purpose |
 |------|---------|
-| `main.swift` | App entry point - reads input file, calls LLM, writes output |
-| `Info.plist` | Bundle config - `LSBackgroundOnly`, bundle ID, min macOS version |
+| `main.swift` | App entry point: reads input file, calls LLM, writes output |
+| `Info.plist` | Bundle config: `LSBackgroundOnly`, bundle ID, min macOS version |
 | `build.sh` | Compiles with `swiftc` + `codesign`, no Xcode needed |
-| `build/` | Pre-built .app committed to repo (88KB, reproducible from source) |
+| `build/` | Local build output, gitignored (an unverifiable Mach-O has no place in a public repo) |
 
 ## Build & Install
 
@@ -47,7 +47,7 @@ Key: Terminal.app has `com.apple.private.tcc.allow-prompting` for `kTCCServiceAl
 cp -R build/FormatTranscription.app ~/Applications/
 ```
 
-`fresh.sh` does this automatically during machine setup.
+`fresh.sh` runs both steps (build from source, then install) automatically during machine setup.
 
 ## Manual Test
 
@@ -63,23 +63,23 @@ automator -i ~/Downloads/audio.opus ~/Library/Services/Transcribe\ Audio.workflo
 
 ## Key Decisions
 
-- **`open -W -n -g`** - `-W` waits for exit, `-n` forces new instance per run, `-g` prevents focus stealing
-- **Ad-hoc signing** (`codesign --sign -`) - sufficient for TCC. Real signing only needed for distribution
-- **`-O` optimization flag** - faster runtime since the LLM call is the bottleneck anyway
-- **Atomic write** (`atomically: true`) - prevents partial .md files if interrupted
-- **Best-effort** - workflow uses `|| true` so .txt is always kept even if formatting fails
+- **`open -W -n -g`**: `-W` waits for exit, `-n` forces new instance per run, `-g` prevents focus stealing
+- **Ad-hoc signing** (`codesign --sign -`): sufficient for TCC. Real signing only needed for distribution
+- **`-O` optimization flag**: faster runtime since the LLM call is the bottleneck anyway
+- **Atomic write** (`atomically: true`): prevents partial .md files if interrupted
+- **Best-effort**: workflow uses `|| true` so .txt is always kept even if formatting fails
 
-`bin/check` enforces the on-device-only invariants on both the source `Info.plist` and the prebuilt `build/FormatTranscription.app/Contents/Info.plist` (`LSBackgroundOnly`, `LSMinimumSystemVersion=26.0`, `-target arm64-apple-macos26.0`, `import FoundationModels` and no `FoundationNetworking`).
+`bin/check` enforces the on-device-only invariants on the source `Info.plist`, `build.sh`, and `main.swift`, plus the locally built bundle's Info.plist when one exists (`LSBackgroundOnly`, `LSMinimumSystemVersion=26.0`, `-target arm64-apple-macos26.0`, `import FoundationModels` and no `FoundationNetworking`).
 
 ## Prompt Engineering Notes
 
-- "Keep the ORIGINAL LANGUAGE" is critical - without it, the ~3B model translates everything to English
-- "without wrapping it in code fences" - the model tends to wrap output in ```markdown blocks
+- "Keep the ORIGINAL LANGUAGE" is critical: without it, the ~3B model translates everything to English
+- "without wrapping it in code fences": the model tends to wrap output in ```markdown blocks
 - The model handles paragraph breaks and headers well but occasionally invents section titles
 
 ## Gotchas
 
 - **First run after install**: macOS will prompt for Downloads folder access. The TCC grant persists for the bundle ID (`com.fgilio.format-transcription`)
 - **After rebuild**: if the bundle ID stays the same, TCC grants carry over. If you change it, the user gets prompted again
-- **Model availability**: check `SystemLanguageModel.default.availability` - can be `.unavailable(.deviceNotEligible)`, `.unavailable(.appleIntelligenceNotEnabled)`, or `.unavailable(.modelNotReady)`
+- **Model availability**: check `SystemLanguageModel.default.availability`, which can be `.unavailable(.deviceNotEligible)`, `.unavailable(.appleIntelligenceNotEnabled)`, or `.unavailable(.modelNotReady)`
 - **Whisper language**: the workflow uses `-l auto` for whisper-cli. Default is `-l en` which forces English transcription (translation, not transcription)

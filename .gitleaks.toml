@@ -1,12 +1,16 @@
-# Gitleaks config - extends defaults with repo-specific allowlists
+# Gitleaks config: extends defaults with repo-specific allowlists
 [extend]
 useDefault = true
 
 # VS Code / Cursor keybindings use a "key": "<keybinding>" structure that
 # the generic-api-key rule keeps flagging on entropy. Scoped to that rule
-# only so other rules still cover the files.
+# only, and (condition = "AND") only to lines that set a chord, so any other
+# secret-looking content in these files still gets flagged.
 [[rules]]
 id = "generic-api-key"
 [[rules.allowlists]]
-description = "VS Code / Cursor keybindings - 'key' is a chord, not an API key"
+description = "VS Code / Cursor keybindings: 'key' is a chord, not an API key"
+condition = "AND"
 paths = ['''vscode/keybindings\.json$''', '''cursor/keybindings\.json$''']
+regexTarget = "line"
+regexes = ['''"key":''']

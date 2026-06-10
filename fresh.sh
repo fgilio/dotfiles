@@ -25,8 +25,10 @@ ln -sf "$DOTFILES/.gitconfig" "$HOME/.gitconfig"
 chmod +x "$DOTFILES/bin/"*
 
 # Install FormatTranscription.app (on-device LLM markdown formatter)
-# Pre-built .app wrapper needed for TCC/FoundationModels access from Quick Actions
-# Rebuild with: apps/format-transcription/build.sh
+# .app wrapper needed for TCC/FoundationModels access from Quick Actions.
+# Built from source instead of shipping a committed Mach-O nobody can verify;
+# swiftc comes with the Xcode CLT, which the Homebrew installer already set up
+"$DOTFILES/apps/format-transcription/build.sh"
 mkdir -p "$HOME/Applications"
 rm -rf "$HOME/Applications/FormatTranscription.app"
 cp -R "$DOTFILES/apps/format-transcription/build/FormatTranscription.app" "$HOME/Applications/"
@@ -35,9 +37,11 @@ cp -R "$DOTFILES/apps/format-transcription/build/FormatTranscription.app" "$HOME
 mkdir -p "$HOME/.config"
 ln -sf "$DOTFILES/starship.toml" "$HOME/.config/starship.toml"
 
-# Symlink Ghostty config
+# Symlink Ghostty config and themes (ghostty.config references themes by name,
+# so without the themes dir a fresh machine can't resolve "Hyper Light"/"Hyper")
 mkdir -p "$HOME/.config/ghostty"
 ln -sf "$DOTFILES/ghostty.config" "$HOME/.config/ghostty/config"
+ln -sfn "$DOTFILES/ghostty/themes" "$HOME/.config/ghostty/themes"
 
 # Symlink Hammerspoon config
 mkdir -p "$HOME/.hammerspoon"
@@ -48,11 +52,16 @@ mkdir -p "$HOME/tmp"
 
 # Pre-download whisper model for Transcribe Audio Quick Action (~466MB)
 WHISPER_MODEL="$HOME/.local/share/whisper-cpp/ggml-small.bin"
+# Pinned huggingface LFS hash; fail closed (errexit) on mismatch so a tampered
+# or truncated download never gets installed
+WHISPER_MODEL_SHA256="1be3a9b2063867b937e64e2ec7483364a79917e157fa98c5d94b5c1fffea987b"
 if [[ ! -f "$WHISPER_MODEL" ]]; then
   mkdir -p "$(dirname "$WHISPER_MODEL")"
   curl -fL --retry 3 --retry-delay 2 \
     "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin" \
-    -o "$WHISPER_MODEL.tmp" && mv "$WHISPER_MODEL.tmp" "$WHISPER_MODEL"
+    -o "$WHISPER_MODEL.tmp"
+  echo "$WHISPER_MODEL_SHA256  $WHISPER_MODEL.tmp" | shasum -a 256 -c -
+  mv "$WHISPER_MODEL.tmp" "$WHISPER_MODEL"
 fi
 
 # Install Automator workflows (Quick Actions and Folder Actions)
@@ -86,7 +95,7 @@ ln -sf "$DOTFILES/hushlogin" "$HOME/.hushlogin"
 # Includes: starship, zoxide, btop, fzf, fd, zsh-autosuggestions, coreutils, etc.
 brew bundle --file "$DOTFILES/Brewfile"
 
-# Install git hooks (idempotent - safe to re-run)
+# Install git hooks (idempotent, safe to re-run)
 if [[ -d "$DOTFILES/.git" ]]; then
   lefthook install
 fi
@@ -118,13 +127,19 @@ fi
 ln -sf "$DOTFILES/.mackup.cfg" "$HOME/.mackup.cfg"
 
 # Install utiluti for managing default apps (not in Homebrew)
-# https://github.com/scriptingosx/utiluti - signed and notarized pkg
+# https://github.com/scriptingosx/utiluti (signed and notarized pkg)
 if ! command -v utiluti &>/dev/null; then
   UTILUTI_VERSION="1.3"
-  UTILUTI_PKG="/tmp/utiluti-${UTILUTI_VERSION}.pkg"
+  # Pinned release hash, verified before handing the pkg to `sudo installer`;
+  # mktemp avoids a predictable /tmp path another local process could swap
+  # between download and install
+  UTILUTI_SHA256="f79d904b3af70bb255d3c095c82b1cdfc31c6884b83bbc9d2bcafd53c5cdf9ea"
+  UTILUTI_DIR="$(mktemp -d)"
+  UTILUTI_PKG="$UTILUTI_DIR/utiluti-${UTILUTI_VERSION}.pkg"
   curl -fsSL "https://github.com/scriptingosx/utiluti/releases/download/v${UTILUTI_VERSION}/utiluti-${UTILUTI_VERSION}.pkg" -o "$UTILUTI_PKG"
+  echo "$UTILUTI_SHA256  $UTILUTI_PKG" | shasum -a 256 -c -
   sudo installer -pkg "$UTILUTI_PKG" -target /
-  rm "$UTILUTI_PKG"
+  rm -rf "$UTILUTI_DIR"
 fi
 
 # Set default apps using utiluti (Zed for text/code, VLC for video, etc.)
@@ -135,10 +150,7 @@ fi
 # Editor config (VSCode symlinks + shared extension installs)
 source "$DOTFILES/setup/editors.sh"
 
-# xdr-boost (XDR display brightness booster)
-source "$DOTFILES/setup/xdr-boost.sh"
-
-# Set macOS preferences - we will run this last because this will reload the shell
+# Set macOS preferences last because this reloads the shell
 # Disable errexit for .macos since many defaults commands exit non-zero on reruns
 set +e
 # shellcheck source=/dev/null

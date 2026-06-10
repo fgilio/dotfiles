@@ -11,18 +11,18 @@ This is a **public repository**. Even though it's a personal dotfiles project:
 
 ## Target Environment
 
-- **macOS only** - No Linux, no Windows, no WSL
-- **Apple Silicon only** - No Intel Mac support needed
-- **Homebrew at `/opt/homebrew`** - Always this path, never dynamic
-- **Herd always installed** - Manages PHP and Node (via NVM)
+- **macOS only**: no Linux, no Windows, no WSL
+- **Apple Silicon only**: no Intel Mac support needed
+- **Homebrew at `/opt/homebrew`**: always this path, never dynamic
+- **Herd always installed**: manages PHP and Node (via NVM)
 
 ---
 
 ## Core Values (Priority Order)
 
-1. **Speed** - Shell startup must stay under 100ms. Every millisecond counts.
-2. **Simplicity** - No over-engineering. No abstractions for one-time operations.
-3. **Developer Experience** - Ergonomic aliases, sensible defaults, minimal friction.
+1. **Speed**: shell startup must stay under 100ms. Every millisecond counts.
+2. **Simplicity**: no over-engineering. No abstractions for one-time operations.
+3. **Developer Experience**: ergonomic aliases, sensible defaults, minimal friction.
 
 ---
 
@@ -38,7 +38,7 @@ Always add comments explaining **why** a decision was made, especially for:
 
 ```zsh
 # Good: explains WHY
-# Hardcoded path intentional - $(brew --prefix) adds ~30-50ms subprocess overhead
+# Hardcoded path intentional: $(brew --prefix) adds ~30-50ms subprocess overhead
 source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 # Bad: explains WHAT (the code already shows this)
@@ -48,10 +48,10 @@ source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 ### What NOT to Do
 
-- **No cross-platform fallbacks** - This is macOS Apple Silicon only
-- **No defensive coding for impossible scenarios** - If Herd is always installed, don't handle "what if NVM is missing"
-- **No abstractions for single-use code** - Three similar lines > premature helper function
-- **No compatibility shims** - If something is unused, delete it completely
+- **No cross-platform fallbacks**: this is macOS Apple Silicon only
+- **No defensive coding for impossible scenarios**: if Herd is always installed, don't handle "what if NVM is missing"
+- **No abstractions for single-use code**: three similar lines > premature helper function
+- **No compatibility shims**: if something is unused, delete it completely
 
 ---
 
@@ -59,7 +59,7 @@ source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 | File | Purpose | Notes |
 |------|---------|-------|
-| `.zshrc` | Main shell config | Optimized for ~60ms startup |
+| `.zshrc` | Main shell config | Optimized for ~30-40ms startup |
 | `.zshenv` | Environment variables, PATH | Minimal, runs for all shells |
 | `Brewfile` | All packages and casks | Single source of truth |
 | `fresh.sh` | New machine setup | Run once after cloning |
@@ -73,8 +73,8 @@ source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 | Decision | Rationale |
 |----------|-----------|
-| Hardcoded `/opt/homebrew` | `brew --prefix` subprocess adds ~30-50ms; enforced by `bin/check` |
+| Hardcoded `/opt/homebrew` | `brew --prefix` subprocess adds ~30-50ms (enforced by `bin/check`) |
 | NVM lazy-loaded | Saves ~200ms on shell startup |
 | No NVM fallback | Herd always installed on this machine |
-| GNU coreutils for `ls` | Enables `--color=auto` flag |
+| GNU coreutils `gls` for `ll` | Enables `--color=auto` flag (plain `ls` stays BSD `ls -G`) |
 | `alias top=btop` | Intentional replacement, not shadowing |

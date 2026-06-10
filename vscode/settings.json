@@ -34,7 +34,6 @@
     */
     "editor.guides.indentation": false,
     "workbench.tips.enabled": false,
-    "security.promptForLocalFileProtocolHandling": false,
     /**
     * Typography
     **/
@@ -47,7 +46,6 @@
     "editor.suggestLineHeight": 28,
     "terminal.integrated.fontSize": 12,
     "terminal.integrated.lineHeight": 1.1,
-    // Leaving this here as a reference
     "editor.tokenColorCustomizations": {
         "textMateRules": [
             {
@@ -97,7 +95,6 @@
     /**
     * PHP
     **/
-    // Auto sort when a file is saved
     "phpNamespaceHelper.sortOnSave": false,
     "phpNamespaceHelper.sort": "natural",
     "phpNamespaceHelper.sortOrder": "ASC",
@@ -160,7 +157,7 @@
     "[html]": {
         "editor.defaultFormatter": "vscode.html-language-features"
     },
-    "Laravel.phpEnvironment": "lando",
+    "Laravel.phpEnvironment": "herd",
     "stringManipulation.telemetry": false,
     "git.blame.editorDecoration.enabled": true,
     "workbench.sideBar.location": "right",

@@ -50,3 +50,7 @@ CLAUDE.local.md
 
 # gstack: per-project local state (sessions, analytics, learnings)
 .gstack/
+
+# Env files: ~/.env is sourced by .zshrc but must never be committed anywhere
+.env
+*.env

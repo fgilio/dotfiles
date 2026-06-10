@@ -64,21 +64,37 @@
 # This script processes image and video files, resizing and compressing them,
 # then moves the original files to trash. Optimized for M2 Mac.
 
+# Trash via argv, never by interpolating the filename into the AppleScript
+# source: a crafted filename containing a quote could otherwise inject
+# arbitrary AppleScript, and folder actions run on anything dropped here
+trash_via_finder() {
+    /usr/bin/osascript -e 'on run argv' \
+        -e 'tell application "Finder" to move (POSIX file (item 1 of argv) as alias) to trash' \
+        -e 'end run' "$1"
+}
+
 for f in "$@"
 do
     FILE_EXTENSION="${f##*.}"
     FILENAME=$(basename "$f" ".$FILE_EXTENSION")
-    
+
     if [ "$FILE_EXTENSION" == "jpg" ]; then
-        # Image processing remains the same
-        /opt/homebrew/opt/vips/bin/vips resize "$f" "/tmp/$FILENAME.jpg" 0.5
-        /opt/homebrew/opt/mozjpeg/bin/cjpeg -quality 94 -outfile "/Users/fgilio/Library/CloudStorage/GoogleDrive-franco.gilio@gmail.com/My Drive/Screenshots/sss/$FILENAME.jpg" "/tmp/$FILENAME.jpg"
-        rm "/tmp/$FILENAME.jpg"
-        osascript -e "tell application \"Finder\" to move POSIX file \"$f\" to trash"
-    
+        # mktemp instead of a predictable /tmp name that another process could
+        # pre-create as a symlink to redirect the write
+        TMP_DIR="$(mktemp -d)"
+        # Trash the original only if both encode steps succeed, matching the mov
+        # branch; a failed resize/compress must not delete the source
+        if /opt/homebrew/opt/vips/bin/vips resize "$f" "$TMP_DIR/$FILENAME.jpg" 0.5 \
+            &amp;&amp; /opt/homebrew/opt/mozjpeg/bin/cjpeg -quality 94 -outfile "/Users/fgilio/Library/CloudStorage/GoogleDrive-franco.gilio@gmail.com/My Drive/Screenshots/sss/$FILENAME.jpg" "$TMP_DIR/$FILENAME.jpg"; then
+            trash_via_finder "$f"
+        else
+            echo "Error encoding image: $f" &gt;&amp;2
+        fi
+        rm -rf "$TMP_DIR"
+
     elif [ "$FILE_EXTENSION" == "mov" ]; then
         echo "Encoding video: $f" &gt;&amp;2
-        
+
         # Convert video with optimized settings for M2 Mac
         /opt/homebrew/opt/ffmpeg/bin/ffmpeg -i "$f" \
             -c:v h264_videotoolbox \
@@ -92,12 +108,12 @@ do
             -preset fast \
             -threads 0 \
             "/Users/fgilio/Library/CloudStorage/GoogleDrive-franco.gilio@gmail.com/My Drive/Screenshots/sss/$FILENAME.mp4" &gt;&amp;2
-        
+
         FFMPEG_EXIT_CODE=$?
         echo "ffmpeg exit code: $FFMPEG_EXIT_CODE" &gt;&amp;2
-        
+
         if [ $FFMPEG_EXIT_CODE -eq 0 ]; then
-            osascript -e "tell application \"Finder\" to move POSIX file \"$f\" to trash"
+            trash_via_finder "$f"
         else
             echo "Error encoding video: $f" &gt;&amp;2
         fi

@@ -1,6 +1,10 @@
 # Ignore macOS system files
 .DS_Store
 
+# Built locally by fresh.sh (apps/format-transcription/build.sh); an
+# unverifiable Mach-O has no place in a public repo
+apps/format-transcription/build/
+
 # Temporary planning files
 terminal-setup-plan.md
 DOTFILES-AUDIT-REPORT.md

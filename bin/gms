@@ -1,11 +1,10 @@
 #!/usr/bin/env zsh
-# Gemini CLI wrapper - secure mode (prompts for approval)
+# Gemini CLI wrapper: secure mode (prompts for approval)
 
-if [ $# -eq 0 ]; then
-    # Interactive: Gemini 3 Pro
-    exec gemini -m gemini-3-pro-preview
+if [[ $# -eq 0 || "$1" == -* ]]; then
+    # Interactive: no args, or flags (--resume, etc.), Gemini 3 Pro
+    exec gemini -m gemini-3-pro-preview "$@"
 else
-    # Non-interactive/headless: Gemini 3 Flash
-    # -p enables headless mode with tool execution
+    # Non-interactive: -p is what makes Gemini headless, Gemini 3 Flash
     exec gemini -m gemini-3-flash-preview -p "$@"
 fi

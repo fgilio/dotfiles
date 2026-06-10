@@ -54,10 +54,6 @@ brew 'cloudflared' # Cloudflare tunnel
 # Composer is bundled with Herd
 brew 'imagemagick'
 
-# Taps
-tap 'steipete/tap'
-tap 'tw93/tap'
-
 # Apps
 # TODO: Switch to stable `jordanbaird-ice` once 0.11.13 is released
 cask 'jordanbaird-ice@beta' # Menu bar manager (beta for macOS Tahoe fixes)
@@ -80,6 +76,10 @@ cask 'slack'
 cask 'sublime-text'
 cask 'zed'
 cask 'cursor'
+# Agent CLIs exec'd by bin/cl, bin/cls, bin/cx, bin/cxs, bin/cr
+cask 'claude-code'
+cask 'codex'
+cask 'cursor-cli'
 cask 'tableplus'
 cask 'cyberduck'
 cask 'postman'
@@ -123,5 +123,4 @@ mas "Compare Folders", id: 816042486
 mas "Dato", id: 1470584107
 mas "Keynote", id: 409183694
 mas "Lungo", id: 1263070803
-mas "Pocket", id: 568494494
 mas "Xcode", id: 497799835

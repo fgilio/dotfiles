@@ -214,7 +214,7 @@
     "[html]": {
         "editor.defaultFormatter": "vscode.html-language-features"
     },
-    "Laravel.phpEnvironment": "lando",
+    "Laravel.phpEnvironment": "herd",
     "taskMaster.cliPath": "",
     "taskMaster.enableLogging": false,
     "stringManipulation.telemetry": false,
@@ -225,6 +225,4 @@
     },
     "claudeCode.selectedModel": "opus",
     "claudeCode.preferredLocation": "panel",
-    // Laravel
-    // "Laravel.phpCommand": "ZOO_DOCKER_INTERACTIVE=0 /Users/fgilio/pla/zoo/zex.sh farfalla php",
 }

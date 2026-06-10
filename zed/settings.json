@@ -7,10 +7,6 @@
 // custom settings, run `zed: open default settings` from the
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
-  /* Duplicated key auto-commented: "agent": {
-    "always_allow_tool_actions": true,
-    "model_parameters": []
-  }, */
   "languages": {
     "PHP": {
       // Intelephense is painfully slow and eats CPU/RAM. Disabling the language
@@ -39,12 +35,17 @@
   "agent": {
     "dock": "left",
     "tool_permissions": {
-      "default": "allow",
+      // "allow" auto-approved every agent action (terminal, file writes, MCP)
+      // with only Zed's hardcoded blocklist as backstop, so prompt injection in
+      // any file/page the agent reads became unconfirmed command execution.
+      // This file is public and copied; keep the safe default.
+      "default": "confirm",
     },
     "play_sound_when_agent_done": true,
     "default_model": {
       "provider": "anthropic",
-      "model": "claude-sonnet-4-latest",
+      // claude-sonnet-4-latest is not a valid Anthropic alias; pin the real model
+      "model": "claude-sonnet-4-6",
     },
   },
   "ui_font_size": 16,

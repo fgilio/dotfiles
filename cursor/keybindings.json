@@ -22,10 +22,6 @@
         "key": "ctrl+alt+shift+cmd+g",
         "command": "workbench.view.scm"
     },
-    // {
-    //     "key": "ctrl+alt+shift+cmd+d",
-    //     "command": "workbench.view.debug"
-    // },
     {
         "key": "ctrl+alt+shift+cmd+t",
         "command": "workbench.action.terminal.toggleTerminal"
@@ -113,11 +109,6 @@
         "command": "editor.action.addSelectionToNextFindMatch",
         "when": "editorFocus"
     },
-    // {
-    //     "key": "...+d",
-    //     "command": "editor.action.moveSelectionToNextFindMatch",
-    //     "when": "editorFocus && editorHasMultipleSelections"
-    // },
     {
         "key": "cmd+right",
         "command": "editor.action.insertCursorAtEndOfEachLineSelected",
@@ -146,26 +137,6 @@
     /**
     * Split Panels
     **/
-    // {
-    //     "key": "ctrl+w",
-    //     "command": "workbench.action.joinAllGroups",
-    //     "when": "editorFocus"
-    // },
-    // {
-    //     "key": "ctrl+n",
-    //     "command": "workbench.action.splitEditor",
-    //     "when": "editorFocus"
-    // },
-    // {
-    //     "key": "ctrl+l",
-    //     "command": "workbench.action.navigateRight",
-    //     "when": "editorFocus"
-    // },
-    // {
-    //     "key": "ctrl+h",
-    //     "command": "workbench.action.navigateLeft",
-    //     "when": "editorFocus"
-    // },
     {
         "key": "ctrl+=",
         "command": "workbench.action.increaseViewSize",
@@ -194,44 +165,6 @@
         "command": "workbench.action.terminal.kill",
         "when": "terminalFocus"
     },
-    // /**
-    // * Emmet
-    // **/
-    // {
-    //     "key": "cmd+m cmd+i",
-    //     "command": "editor.emmet.action.balanceIn",
-    //     "when": "editorTextFocus"
-    // },
-    // {
-    //     "key": "cmd+m cmd+o",
-    //     "command": "editor.emmet.action.balanceOut",
-    //     "when": "editorTextFocus"
-    // },
-    // {
-    //     "key": "cmd+m cmd+w",
-    //     "command": "editor.emmet.action.wrapWithAbbreviation",
-    //     "when": "editorTextFocus"
-    // },
-    // {
-    //     "key": "cmd+m cmd+m",
-    //     "command": "editor.emmet.action.matchTag",
-    //     "when": "editorTextFocus"
-    // },
-    // {
-    //     "key": "cmd+m cmd+e",
-    //     "command": "editor.action.smartSelect.expand",
-    //     "when": "editorTextFocus"
-    // },
-    // {
-    //     "key": "cmd+m cmd+r",
-    //     "command": "editor.emmet.action.updateTag",
-    //     "when": "editorTextFocus"
-    // },
-    // {
-    //     "key": "cmd+m cmd+backspace",
-    //     "command": "editor.emmet.action.removeTag",
-    //     "when": "editorTextFocus"
-    // },
     /**
     * IntelliSense
     **/
@@ -239,19 +172,13 @@
         "key": "cmd+r",
         "command": "workbench.action.gotoSymbol"
     },
-    // {
-    //     "key": "cmd+shift+r",
-    //     "command": "workbench.action.showAllSymbols"
-    // },
     {
-        "key": "...+enter",
+        // alt+enter mirrors the Zed keymap's GoToDefinition binding;
+        // editor.action.goToDeclaration is VS Code's alias for Go to Definition
+        "key": "alt+enter",
         "command": "editor.action.goToDeclaration",
         "when": "editorTextFocus"
     },
-    // {
-    //     "key": "...+i",
-    //     "command": "phpNamespaceHelper.import"
-    // },
     /**
     * Hide Toaster Notifications
     **/
