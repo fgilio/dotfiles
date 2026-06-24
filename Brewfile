@@ -125,8 +125,8 @@ cask 'font-open-sans'
 cask 'font-roboto'
 cask 'font-jetbrains-mono'
 cask 'font-source-code-pro'
-cask 'font-source-sans-pro'
-cask 'font-source-serif-pro'
+cask 'font-source-sans-3'  # renamed from font-source-sans-pro
+cask 'font-source-serif-4' # renamed from font-source-serif-pro
 
 # Mac App Store
 mas "Battery Indicator", id: 1206020918
