@@ -1,6 +1,8 @@
 # Taps
 # Homebrew now requires explicit trust for third-party taps (see fresh.sh).
-tap 'laravel/moat'        # moat (security posture auditing)
+# laravel/moat repo has no `homebrew-` prefix, so the short form resolves to a
+# 404; the explicit URL is required (matches Moat's own install instructions).
+tap 'laravel/moat', 'https://github.com/laravel/moat' # moat (security auditing)
 tap 'steipete/tap'        # codexbar
 tap 'teamookla/speedtest' # official Ookla speedtest CLI
 
@@ -68,6 +70,7 @@ cask '1password'
 brew '1password-cli'
 cask 'ghostty'
 cask 'krisp'
+cask 'cloudflare-warp' # Cloudflare WARP VPN (1.1.1.1)
 cask 'discord'
 cask 'orbstack' # Docker/Linux VMs (replaces Docker Desktop; provides docker CLI)
 cask 'dockdoor' # Window preview on Dock hover
