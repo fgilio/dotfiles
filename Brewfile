@@ -1,3 +1,9 @@
+# Taps
+# Homebrew now requires explicit trust for third-party taps (see fresh.sh).
+tap 'laravel/moat'        # moat (security posture auditing)
+tap 'steipete/tap'        # codexbar
+tap 'teamookla/speedtest' # official Ookla speedtest CLI
+
 # Binaries
 brew 'awscli'
 brew 'bash' # Latest Bash version
@@ -30,7 +36,7 @@ brew 'pkg-config' # https://github.com/driesvints/dotfiles/issues/20
 brew 'prettyping'
 brew 'qpdf'
 brew 'ripgrep' # Fast grep alternative
-brew 'speedtest-cli'
+brew 'speedtest' # Official Ookla CLI (replaced deprecated speedtest-cli)
 brew 'starship' # Shell prompt
 brew 'tesseract'
 brew 'tree'
@@ -45,6 +51,7 @@ brew 'shfmt'      # Shell script formatter (bash/sh; not zsh)
 brew 'actionlint' # GitHub Actions workflow linter
 brew 'luacheck'   # Lua static analysis (Hammerspoon config)
 brew 'gitleaks'   # Secret scanning (pre-commit + CI)
+brew 'moat'       # Security posture auditing for GitHub orgs/repos (laravel/moat)
 
 # Development
 # PHP is managed by Laravel Herd (see cask 'herd' below), not Homebrew
@@ -62,11 +69,11 @@ brew '1password-cli'
 cask 'ghostty'
 cask 'krisp'
 cask 'discord'
-cask 'docker'
+cask 'orbstack' # Docker/Linux VMs (replaces Docker Desktop; provides docker CLI)
 cask 'dockdoor' # Window preview on Dock hover
 cask 'github'
-cask 'gitup'
-cask 'handbrake'
+cask 'gitup-app'
+cask 'handbrake-app'
 cask 'imageoptim'
 cask 'google-drive'
 cask 'google-chrome'
@@ -79,6 +86,7 @@ cask 'cursor'
 # Agent CLIs exec'd by bin/cl, bin/cls, bin/cx, bin/cxs, bin/cr
 cask 'claude-code'
 cask 'codex'
+cask 'codexbar' # Codex menu-bar companion (steipete/tap)
 cask 'cursor-cli'
 cask 'tableplus'
 cask 'cyberduck'
@@ -88,7 +96,7 @@ cask 'calibre'
 cask 'grandperspective'
 cask 'hammerspoon' # macOS automation via Lua scripts
 cask 'exodus'
-cask 'mouse-fix'
+cask 'mac-mouse-fix'
 cask 'namechanger'
 cask 'nightowl'
 cask 'rectangle'
