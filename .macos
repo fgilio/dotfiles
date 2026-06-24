@@ -75,6 +75,26 @@ defaults write NSGlobalDomain NSAutomaticPeriodSubstitutionEnabled -bool false
 defaults write NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false
 
 ###############################################################################
+# Security & Authentication                                                   #
+###############################################################################
+
+# Enable Touch ID for sudo in the terminal.
+# Write /etc/pam.d/sudo_local (the OS-provided include) rather than editing
+# /etc/pam.d/sudo directly, because sudo_local survives macOS updates while edits
+# to sudo itself get reverted on every upgrade. Idempotent: skip if pam_tid is
+# already active. Never clobber an existing sudo_local — it may hold pam_reattach
+# (Touch ID inside tmux), so we only append the pam_tid line, which must come last.
+if ! grep -q '^auth.*pam_tid' /etc/pam.d/sudo_local 2>/dev/null; then
+  if [[ -f /etc/pam.d/sudo_local ]]; then
+    printf 'auth       sufficient     pam_tid.so\n' | sudo tee -a /etc/pam.d/sudo_local >/dev/null
+  elif [[ -f /etc/pam.d/sudo_local.template ]]; then
+    # Fresh machine: seed from the template (pam_tid uncommented), 0444 like Apple ships it.
+    sed 's/^#auth/auth/' /etc/pam.d/sudo_local.template | sudo tee /etc/pam.d/sudo_local >/dev/null
+    sudo chmod 0444 /etc/pam.d/sudo_local
+  fi
+fi
+
+###############################################################################
 # Trackpad, mouse, keyboard, Bluetooth accessories, and input                 #
 ###############################################################################
 
