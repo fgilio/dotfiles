@@ -18,6 +18,17 @@
   "cli_default_open_behavior": "existing_window",
   "use_smartcase_search": false,
   "auto_update": false,
+  // Reopen the previous session's windows on launch. This is Zed's default, but
+  // pinned explicitly so an update that changes defaults can't silently disable it.
+  "restore_on_startup": "last_session",
+  // Autosave titled buffers ~1s after edits so an abrupt restart (update, crash,
+  // OS reboot) can never lose written-to-disk work. NOTE: does not cover *untitled*
+  // scratch buffers — give those a filename to make them update-proof.
+  "autosave": {
+    "after_delay": {
+      "milliseconds": 1000,
+    },
+  },
   "agent_ui_font_size": 16.0,
   "git_panel": {
     "dock": "right",
