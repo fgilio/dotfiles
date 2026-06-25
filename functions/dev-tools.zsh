@@ -28,6 +28,24 @@ gdesktop() {
 alias gopen='git-open'
 alias gop='git-open'
 
+# mkdir + cd in one step
+take() {
+    mkdir -p "$1" && cd "$1"
+}
+
+# Launch yazi and cd to wherever you quit it (the official wrapper). Plain `yazi`
+# can't change the parent shell's dir; this reads its --cwd-file on exit.
+# `command rm/cat` bypass the Trash-wrapping rm alias and the bat `cat` alias.
+y() {
+    local tmp cwd
+    tmp="$(mktemp -t yazi-cwd.XXXXXX)"
+    yazi "$@" --cwd-file="$tmp"
+    if cwd="$(command cat -- "$tmp")" && [[ -n "$cwd" && "$cwd" != "$PWD" ]]; then
+        builtin cd -- "$cwd"
+    fi
+    command rm -f -- "$tmp"
+}
+
 # List Claude Code skills
 clskills() {
     local names=()

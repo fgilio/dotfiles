@@ -6,9 +6,9 @@
 #####################
 # History Configuration
 #####################
-HISTSIZE=5000               # Maximum events for internal history
+HISTSIZE=50000              # Maximum events for internal history
 HISTFILE=~/.zsh_history     # History file location
-SAVEHIST=5000              # Maximum events in history file
+SAVEHIST=50000             # Maximum events in history file (dedup opts keep file small)
 setopt appendhistory       # Append history to the history file (no overwriting)
 setopt incappendhistory    # Add commands to the history immediately
 setopt sharehistory        # Share history across ZSH sessions
@@ -24,6 +24,14 @@ zle -N history-beginning-search-forward-end history-search-end
 # Substring history search with arrow keys
 bindkey '^[[A' history-beginning-search-backward-end  # Up arrow for backward history search
 bindkey '^[[B' history-beginning-search-forward-end   # Down arrow for forward history search
+
+#####################
+# Directory Navigation
+#####################
+setopt auto_cd            # Type a directory name alone to cd into it
+setopt auto_pushd         # cd pushes onto the dir stack, so `cd -<TAB>` lists visited dirs
+setopt pushd_ignore_dups  # Don't pile duplicate dirs onto the stack
+setopt pushd_silent       # Don't print the stack on every pushd/popd
 
 #####################
 # Completion System
@@ -114,9 +122,16 @@ alias ...="cd ../.."
 # Enable colors for common commands
 export CLICOLOR=1                   # Enable colors in ls and other commands
 export LSCOLORS=ExGxBxDxCxEgEdxbxgxcxd  # Customize ls colors
+# Colorized, syntax-highlighted man pages via bat (col strips backspace overstrike)
+export MANPAGER="sh -c 'col -bx | bat -l man -p'"
+export MANROFFOPT="-c"              # Avoid bat rendering garbled groff escapes
 
 alias ls="ls -G"                    # Colorized ls output
 alias ll="gls -alth --color=auto"   # GNU coreutils ls (gls) for --color support
+# bat as cat: --style=plain keeps it cat-like (no line numbers/borders) but adds
+# syntax color; bat auto-passes through raw bytes when piped, so | pbcopy etc. are
+# unaffected. Use `command cat` for true raw output.
+alias cat="bat --paging=never --style=plain"
 # No rm alias needed: dotfiles/bin/rm intercepts and moves to Trash instead of deleting
 alias cp="cp -iv"                   # Interactive and verbose copy
 alias mv="mv -iv"                   # Interactive and verbose move
@@ -221,17 +236,6 @@ if (( $+commands[starship] )) && [[ -s "$_starship_cache" && "$(<"$_starship_cac
 fi
 unset _starship_cache
 
-# Enable ZSH autosuggestions
-# Hardcoded path intentional: $(brew --prefix) adds ~30-50ms subprocess overhead
-# Guard with file check to prevent startup errors if package missing
-# Suggestion color. Both themes (theme=light:Hyper Light,dark:Hyper) share ONE
-# palette and only swap bg/fg black<->white. #2e6df5 sits at ~4.5:1 against BOTH
-# white and black, so Ghostty's minimum-contrast=4.5 leaves it untouched in either
-# mode (a paler blue gets darkened to near-black on white). italic needs zsh>=5.8.
-ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#2e6df5,italic'
-[[ -f /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]] && \
-  source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-
 # Initialize Zoxide (smart cd command)
 _source_generated_init zoxide "$_zsh_cache_dir/zoxide-init.zsh" init zsh
 
@@ -244,11 +248,37 @@ if command -v fd >/dev/null; then
   export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 fi
 
+# Global layout, plus preview windows for the two file/dir pickers:
+# ctrl-t previews file contents with bat, alt-c previews dir trees with tree.
+# These are env strings (no fork) read by the widgets sourced just below.
+export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border'
+export FZF_CTRL_T_OPTS="--preview 'bat --color=always --style=numbers --line-range=:500 {}'"
+export FZF_ALT_C_OPTS="--preview 'tree -C {} | head -200'"
+
 # Load fzf key bindings and completion (ctrl-r / ctrl-t / alt-c)
 [[ -f /opt/homebrew/opt/fzf/shell/key-bindings.zsh ]] && \
   source /opt/homebrew/opt/fzf/shell/key-bindings.zsh
 [[ -f /opt/homebrew/opt/fzf/shell/completion.zsh ]] && \
   source /opt/homebrew/opt/fzf/shell/completion.zsh
+
+#####################
+# Syntax highlighting + autosuggestions (load order is mandatory)
+#####################
+# Both plugins wrap ZLE widgets, so they must be sourced AFTER everything that
+# defines widgets (compinit, fzf key-bindings above). Per the plugins' own
+# READMEs the order between them is fixed: zsh-syntax-highlighting first, then
+# zsh-autosuggestions last of all, or the suggestion highlight gets clobbered.
+# Hardcoded paths intentional: $(brew --prefix) adds ~30-50ms subprocess overhead.
+[[ -f /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] && \
+  source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+# Suggestion color. Both themes (theme=light:Hyper Light,dark:Hyper) share ONE
+# palette and only swap bg/fg black<->white. #2e6df5 sits at ~4.5:1 against BOTH
+# white and black, so Ghostty's minimum-contrast=4.5 leaves it untouched in either
+# mode (a paler blue gets darkened to near-black on white). italic needs zsh>=5.8.
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#2e6df5,italic'
+[[ -f /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]] && \
+  source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 # LM Studio CLI (lms)
 [[ -d "$HOME/.cache/lm-studio/bin" ]] && path+=("$HOME/.cache/lm-studio/bin")
