@@ -22,8 +22,24 @@ zle -N history-beginning-search-backward-end history-search-end
 zle -N history-beginning-search-forward-end history-search-end
 
 # Substring history search with arrow keys
-bindkey '^[[A' history-beginning-search-backward-end  # Up arrow for backward history search
 bindkey '^[[B' history-beginning-search-forward-end   # Down arrow for forward history search
+
+# Up arrow does backward history search, but after a run of consecutive presses
+# it flashes a hint to use ctrl-r instead. $LASTWIDGET tracks consecutiveness:
+# any other key resets the count, so a few normal taps stay silent. zle -M shows
+# the message below the prompt and the next keystroke clears it (non-destructive).
+_up_arrow_nudge() {
+  if [[ "$LASTWIDGET" == _up_arrow_nudge ]]; then
+    (( _up_arrow_count++ ))
+  else
+    _up_arrow_count=1
+  fi
+  zle history-beginning-search-backward-end
+  (( _up_arrow_count >= 6 )) && \
+    zle -M "💡 Spamming ↑? Press ctrl-r to fuzzy-search your history instead."
+}
+zle -N _up_arrow_nudge
+bindkey '^[[A' _up_arrow_nudge                        # Up arrow (with ctrl-r nudge)
 
 #####################
 # Directory Navigation
