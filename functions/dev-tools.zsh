@@ -41,6 +41,17 @@ y() {
     command rm -f -- "$tmp"
 }
 
+# Copy the current dir to the clipboard (the 99% reason you type `pwd`).
+# Deliberately NOT an override of `pwd`: copying on every `pwd` would spawn
+# pbcopy on a builtin (perf tax) and silently clobber the clipboard on glances.
+# `printf %s` avoids a trailing newline so the pasted path won't auto-execute.
+# `$PWD` is a free var read; `$(pwd)` would fork a subshell.
+cpwd() {
+    printf %s "$PWD" | pbcopy
+    print -r -- "$PWD"
+    print -P "%F{8}↑ copied to clipboard%f"
+}
+
 # List Claude Code skills
 clskills() {
     local names=()
