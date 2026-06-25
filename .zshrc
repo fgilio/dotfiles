@@ -34,7 +34,28 @@ _up_arrow_nudge() {
   else
     _up_arrow_count=1
   fi
-  zle history-beginning-search-backward-end
+  # Inline history-search-end's body instead of `zle history-beginning-search-backward-end`.
+  # A nested `zle <widget>` call does NOT update $WIDGET, so history-search-end would read
+  # $WIDGET=_up_arrow_nudge, compute `.${WIDGET%-end}` = `._up_arrow_nudge`, and error with
+  # "No such widget" on every press. Driving the builtin directly sidesteps that; the
+  # MARK/CURSOR dance (keyed to our own widget via $LASTWIDGET) preserves incremental
+  # same-prefix search across consecutive ↑ presses, exactly like the -end widget would.
+  integer cursor=$CURSOR mark=$MARK
+  # Continue the same search session (reuse the stored prefix via $MARK) when the
+  # previous widget was us OR the down-arrow search-forward widget — matching stock
+  # history-search-end's own `$LASTWIDGET = history-beginning-search-*-end` check, so
+  # reversing Down→Up keeps the original prefix instead of restarting from the line end.
+  if [[ $LASTWIDGET == _up_arrow_nudge || $LASTWIDGET == history-beginning-search-*-end ]]; then
+    CURSOR=$MARK
+  else
+    MARK=$CURSOR
+  fi
+  if zle .history-beginning-search-backward; then
+    zle .end-of-line
+  else
+    CURSOR=$cursor
+    MARK=$mark
+  fi
   (( _up_arrow_count >= 6 )) && \
     zle -M "💡 Spamming ↑? Press ctrl-r to fuzzy-search your history instead."
 }
