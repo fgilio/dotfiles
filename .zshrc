@@ -224,6 +224,11 @@ unset _starship_cache
 # Enable ZSH autosuggestions
 # Hardcoded path intentional: $(brew --prefix) adds ~30-50ms subprocess overhead
 # Guard with file check to prevent startup errors if package missing
+# Suggestion color. Both themes (theme=light:Hyper Light,dark:Hyper) share ONE
+# palette and only swap bg/fg black<->white. #2e6df5 sits at ~4.5:1 against BOTH
+# white and black, so Ghostty's minimum-contrast=4.5 leaves it untouched in either
+# mode (a paler blue gets darkened to near-black on white). italic needs zsh>=5.8.
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#2e6df5,italic'
 [[ -f /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]] && \
   source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
