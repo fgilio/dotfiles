@@ -28,6 +28,20 @@ gdesktop() {
 alias gopen='git-open'
 alias gop='git-open'
 
+# Two of the most-typed git commands. `gpl` over `gl` to avoid the common
+# `gl`=git-log expectation.
+alias gpl='git pull'
+
+# Checkout the repo's actual default branch. My repos are split between `main`
+# and `master`, so a literal `git checkout main` breaks half the time.
+# Read origin/HEAD (set by `git remote set-head`/clone) and strip to the branch
+# name; fall back to main then master if origin/HEAD isn't populated locally.
+gcm() {
+    local def
+    def=$(git symbolic-ref --quiet refs/remotes/origin/HEAD 2>/dev/null)
+    git checkout "${def##*/}" 2>/dev/null || git checkout main 2>/dev/null || git checkout master
+}
+
 # Launch yazi and cd to wherever you quit it (the official wrapper). Plain `yazi`
 # can't change the parent shell's dir; this reads its --cwd-file on exit.
 # `command rm/cat` bypass the Trash-wrapping rm alias and the bat `cat` alias.
@@ -90,6 +104,45 @@ _cpwd_preexec() {
     fi
 }
 add-zsh-hook preexec _cpwd_preexec
+
+# Habit nudges toward the `gpl` / `gcm` aliases, same mechanism as the cpwd nudge
+# above: count uses of the long form in a rolling 48h window, fire the hint once
+# the threshold is hit, then reset so it self-spaces instead of nagging. Adopting
+# the alias makes the nudge go quiet on its own — the alias expands to a different
+# command string, so it never trips the match.
+_GIT_NUDGE_THRESHOLD=3
+_GIT_NUDGE_WINDOW=$(( 48 * 3600 ))
+# Bump one nudge's rolling window; fire+reset its hint at the threshold. Mirrors
+# _cpwd_preexec's bookkeeping (datetime/add-zsh-hook already loaded above).
+_git_nudge_bump() {                            # $1=cache filename  $2=hint (print -P fmt)
+    local file="$_zsh_cache_dir/$1" cutoff=$(( EPOCHSECONDS - _GIT_NUDGE_WINDOW ))
+    local -a stamps kept; local t
+    [[ -f "$file" ]] && stamps=( ${(f)"$(<$file)"} )
+    for t in $stamps; do (( t >= cutoff )) && kept+=( $t ); done   # drop stale entries
+    kept+=( $EPOCHSECONDS )
+    if (( $#kept >= _GIT_NUDGE_THRESHOLD )); then
+        : >| "$file"                           # fired → reset the window
+        # Print from preexec, not precmd — see the Ghostty OSC 133 note above.
+        print -P "$2"
+    else
+        print -l -- $kept >| "$file"
+    fi
+}
+_git_alias_preexec() {
+    # (z) splits like the shell would, collapsing any whitespace runs; rejoining
+    # with $[w] gives a single-spaced form for exact matching, so `git pull origin
+    # x` (which gpl doesn't replace) won't trip the bare-`git pull` nudge.
+    local -a w=( ${(z)1} ); local cmd="${w[*]}"
+    case "$cmd" in
+        'git pull')
+            _git_nudge_bump git-pull-nudge \
+                "%F{8}💡 You keep typing 'git pull' — 'gpl' is the alias.%f" ;;
+        'git checkout main'|'git checkout master'|'git switch main'|'git switch master')
+            _git_nudge_bump git-checkout-main-nudge \
+                "%F{8}💡 You keep checking out the default branch — 'gcm' does it (and picks main vs master for you).%f" ;;
+    esac
+}
+add-zsh-hook preexec _git_alias_preexec
 
 # List Claude Code skills
 clskills() {
