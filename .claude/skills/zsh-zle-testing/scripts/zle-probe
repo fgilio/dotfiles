@@ -1,0 +1,68 @@
+#!/usr/bin/env zsh
+# zle-probe — run a snippet inside a REAL interactive zsh (your ~/.zshrc loaded,
+# plugins + widgets bound) and print its output. This is the only reliable way to
+# verify ZLE / widget / keybinding / prompt / autosuggestion changes: `zsh -n`
+# checks syntax, never runtime line-editor behavior.
+#
+# Usage:   zle-probe '<zsh code that prints what you want to inspect>'
+# Example: zle-probe 'print -r -- "${widgets[up-arrow-nudge]}"; bindkey "^[[A"'
+#
+# The snippet runs in a precmd hook on the first prompt — i.e. AFTER zsh-autosuggestions'
+# own precmd has wrapped every widget — so widget state reflects the live shell. From
+# there you can read $widgets, bindkey output, setopt state, $ZSH_AUTOSUGGEST_*, $path,
+# any var. (precmd is not a zle context, so you cannot drive the line with `zle <widget>`
+# here — and you should not need to; prefer deterministic state checks. See SKILL.md.)
+#
+# No `set -e`: zpty's non-blocking read and zselect's timeout both return non-zero by
+# design (no data / timed out), and the polling loops below depend on exactly that.
+zmodload zsh/zpty
+zmodload zsh/zselect
+
+[[ -n $1 ]] || { print -u2 -- 'usage: zle-probe <zsh-snippet>'; exit 1 }
+
+local work; work=$(mktemp -d)
+# No `trap ... EXIT` for cleanup: zpty forks a copy of this shell that inherits the
+# trap, so the trap fires when the zpty CHILD exits — mid-run — wiping $work before we
+# read the result. Clean up explicitly instead (see _cleanup + both exit paths).
+_cleanup() { command rm -rf "$work" }
+# Signal cleanup is safe here in a way EXIT is not: INT/TERM only fire on real
+# delivery (Ctrl-C / kill), never when the zpty child merely exits — so this tidies
+# up an interrupted run without firing mid-run. (SIGKILL/parent-death can't be
+# trapped; the OS reaps the temp dir.)
+trap '_cleanup; exit 130' INT TERM
+export ZDOTDIR=$work TERM=${TERM:-xterm-256color}
+export PROBE_CODE=$1 PROBE_OUT=$work/out PROBE_READY=$work/ready
+
+# A custom ZDOTDIR loads your real config; `-d` (below) skips the global /etc rc files.
+# The quoted heredoc keeps $PROBE_* literal so the CHILD reads them from the environment.
+command cat >| "$work/.zshrc" <<'RC'
+source "${HOME}/.zshrc"
+_zle_probe() {
+  eval "$PROBE_CODE" >| "$PROBE_OUT" 2>&1
+  print -r -- ready >| "$PROBE_READY"
+  precmd_functions=(${precmd_functions:#_zle_probe})   # run exactly once
+}
+precmd_functions+=(_zle_probe)
+RC
+
+# A real interactive shell needs a tty: zpty supplies one, and `-i` forces interactive
+# so ZLE and the plugins actually initialize (a piped/`-c` shell disables ZLE entirely).
+zpty zp zsh -d -i
+
+# Blocking pty reads hang on an idle shell, and the prompt bytes are unpredictable
+# (starship). So never sync on prompt output: pump the pty non-blocking and poll the
+# ready FILE, spacing polls with zselect — `sleep` is unavailable in scripts here.
+local c; integer i=0
+while (( i++ < 400 )); do
+  while zpty -r -t zp c; do :; done
+  [[ -e $PROBE_READY ]] && break
+  zselect -t 5            # 50ms
+done
+[[ -e $PROBE_READY ]] || { print -u2 -- 'zle-probe: shell never reached the prompt'; zpty -d zp; _cleanup; exit 1 }
+
+zpty -w zp 'exit'
+while zpty -r zp c; do :; done   # drain to EOF
+zpty -d zp
+
+command cat "$PROBE_OUT"
+_cleanup

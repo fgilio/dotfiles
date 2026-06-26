@@ -8,4 +8,7 @@ apps/format-transcription/build/
 # Temporary planning files
 terminal-setup-plan.md
 DOTFILES-AUDIT-REPORT.md
-.claude/
+# Keep checked-in Claude Code skills in the repo; everything else under
+# .claude/ (plans, local settings) stays machine-local.
+.claude/*
+!.claude/skills/
