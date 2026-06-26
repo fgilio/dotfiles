@@ -28,15 +28,22 @@ bindkey '^[[B' history-beginning-search-forward-end   # Down arrow for forward h
 # it flashes a hint to use ctrl-r instead. $LASTWIDGET tracks consecutiveness:
 # any other key resets the count, so a few normal taps stay silent. zle -M shows
 # the message below the prompt and the next keystroke clears it (non-destructive).
-_up_arrow_nudge() {
-  if [[ "$LASTWIDGET" == _up_arrow_nudge ]]; then
+#
+# Widget name has NO leading underscore ON PURPOSE. zsh-autosuggestions' bind loop
+# skips every widget matching `_*` (its ignore list, see zsh-autosuggestions.zsh),
+# so a `_`-prefixed widget is never wrapped — meaning it can't clear/refresh the
+# suggestion. A `_up_arrow_nudge` left the gray suggestion stranded on the recalled
+# line (e.g. `php84 artisan native:run` + a stale `4 artisan native:run …` tail).
+# Naming it `up-arrow-nudge` lets the plugin wrap it; see ZSH_AUTOSUGGEST_CLEAR_WIDGETS below.
+up-arrow-nudge() {
+  if [[ "$LASTWIDGET" == up-arrow-nudge ]]; then
     (( _up_arrow_count++ ))
   else
     _up_arrow_count=1
   fi
   # Inline history-search-end's body instead of `zle history-beginning-search-backward-end`.
   # A nested `zle <widget>` call does NOT update $WIDGET, so history-search-end would read
-  # $WIDGET=_up_arrow_nudge, compute `.${WIDGET%-end}` = `._up_arrow_nudge`, and error with
+  # $WIDGET=up-arrow-nudge, compute `.${WIDGET%-end}` = `.up-arrow-nudge`, and error with
   # "No such widget" on every press. Driving the builtin directly sidesteps that; the
   # MARK/CURSOR dance (keyed to our own widget via $LASTWIDGET) preserves incremental
   # same-prefix search across consecutive ↑ presses, exactly like the -end widget would.
@@ -45,7 +52,7 @@ _up_arrow_nudge() {
   # previous widget was us OR the down-arrow search-forward widget — matching stock
   # history-search-end's own `$LASTWIDGET = history-beginning-search-*-end` check, so
   # reversing Down→Up keeps the original prefix instead of restarting from the line end.
-  if [[ $LASTWIDGET == _up_arrow_nudge || $LASTWIDGET == history-beginning-search-*-end ]]; then
+  if [[ $LASTWIDGET == up-arrow-nudge || $LASTWIDGET == history-beginning-search-*-end ]]; then
     CURSOR=$MARK
   else
     MARK=$CURSOR
@@ -59,8 +66,8 @@ _up_arrow_nudge() {
   (( _up_arrow_count >= 6 )) && \
     zle -M "💡 Spamming ↑? Press ctrl-r to fuzzy-search your history instead."
 }
-zle -N _up_arrow_nudge
-bindkey '^[[A' _up_arrow_nudge                        # Up arrow (with ctrl-r nudge)
+zle -N up-arrow-nudge
+bindkey '^[[A' up-arrow-nudge                         # Up arrow (with ctrl-r nudge)
 
 #####################
 # Directory Navigation
@@ -316,6 +323,15 @@ export FZF_ALT_C_OPTS="--preview 'tree -C {} | head -200'"
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#2e6df5,italic'
 [[ -f /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]] && \
   source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+
+# Register our up-arrow widget so the suggestion clears on recall, matching how the
+# plugin already treats the (default-listed) down-arrow *-end widgets. up-arrow-nudge
+# rewrites $BUFFER on every press; without clearing, the prior suggestion's gray text
+# is left stranded on the recalled line. The non-underscore name (see the widget above)
+# is what lets the plugin wrap it at all. Append AFTER sourcing: the plugin seeds the
+# default list only when the var is unset, so pre-setting would clobber the defaults;
+# widget binding happens at first precmd, after .zshrc finishes.
+ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(up-arrow-nudge)
 
 # LM Studio CLI (lms)
 [[ -d "$HOME/.cache/lm-studio/bin" ]] && path+=("$HOME/.cache/lm-studio/bin")
