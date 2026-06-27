@@ -26,6 +26,10 @@
         followTags = true
 [pull]
     rebase = true
+[checkout]
+        # DWIM on (git's default): `git switch foo` auto-creates a
+        # tracking branch from origin/foo when it's unambiguous.
+        guess = true
 [fetch]
         prune = true
         pruneTags = true
