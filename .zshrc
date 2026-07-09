@@ -94,6 +94,10 @@ autoload -Uz compinit
 # Only regenerate completion dump once per day (check if older than 24h)
 if [[ -n "$_zsh_cache_dir/zcompdump"(#qN.mh+24) ]]; then
   compinit -d "$_zsh_cache_dir/zcompdump"
+  # compinit only rewrites the dump when it's stale, so a still-valid dump keeps
+  # its old mtime — without the touch, every shell after the first 24h would take
+  # this slow path (compaudit re-scans fpath, ~6ms+) instead of once per day.
+  touch "$_zsh_cache_dir/zcompdump"
 else
   compinit -C -d "$_zsh_cache_dir/zcompdump"  # -C skips security check for speed
 fi
