@@ -47,7 +47,7 @@ brew 'yazi' # Terminal file manager
 brew 'yt-dlp' # YouTube downloader (replaces youtube-dl)
 brew 'zoxide' # Smarter cd command
 brew 'zsh-autosuggestions'
-brew 'zsh-syntax-highlighting' # Live command coloring; must source after autosuggestions
+brew 'zsh-syntax-highlighting' # Live command coloring; sourced BEFORE autosuggestions (order rationale in .zshrc)
 brew 'lefthook'   # Git hooks manager
 brew 'shellcheck' # Shell script static analysis
 brew 'shfmt'      # Shell script formatter (bash/sh; not zsh)
