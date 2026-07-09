@@ -6,8 +6,11 @@
 set -euo pipefail
 
 REAL_RM="/bin/rm"
-# Sibling trash script: avoids resolving to /usr/bin/trash (macOS native)
-TRASH="$(dirname -- "$0")/trash"
+# Sibling trash script: avoids resolving to /usr/bin/trash (macOS native).
+# ${0%/*} instead of $(dirname): this wrapper runs constantly and the dirname
+# subshell+exec costs ~1-3ms per invocation. $0 always contains a slash here
+# (PATH lookup or explicit path), and the -x check below fails loudly if not.
+TRASH="${0%/*}/trash"
 
 # Debug mode: RM_DEBUG=1 rm file
 [[ "${RM_DEBUG:-0}" == "1" ]] && set -x
@@ -54,8 +57,7 @@ while [[ $# -gt 0 ]]; do
         c="${opts:i:1}"
         case "$c" in
           f) force=1 ;;
-          r | R) allow_dirs=1 ;;
-          d) allow_dirs=1 ;;
+          r | R | d) allow_dirs=1 ;;
           i | I) : ;; # ignore interactive flags (agents need non-interactive)
           v) verbose=1 ;;
           *)
