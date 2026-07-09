@@ -110,6 +110,12 @@ fi
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'  # Case-insensitive + substring matching
 
 # Colored completions
+# LS_COLORS is the GNU-format twin of LSCOLORS (set in the Aliases section) and
+# was previously never defined, so the zstyle below expanded to nothing and file
+# completions rendered with zsh's plain defaults. It also drives gls in the `ll`
+# alias, keeping listings and completion menus on one palette. Hardcoded because
+# `gdircolors` would fork on every startup.
+export LS_COLORS='di=01;34:ln=01;36:so=01;31:pi=01;33:ex=01;32:bd=01;34;46:cd=01;34;43:su=00;41:sg=00;46:tw=00;42:ow=00;43'
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 zstyle ':completion:*:*:*:*:descriptions' format '%F{green}-- %d --%f'
 zstyle ':completion:*:*:*:*:corrections' format '%F{yellow}!- %d (errors: %e) -!%f'
@@ -169,7 +175,7 @@ alias ...="cd ../.."
 # File operations
 # Enable colors for common commands
 export CLICOLOR=1                   # Enable colors in ls and other commands
-export LSCOLORS=ExGxBxDxCxEgEdxbxgxcxd  # Customize ls colors
+export LSCOLORS=ExGxBxDxCxEgEdxbxgxcxd  # BSD ls colors (GNU twin LS_COLORS lives in the Completion section)
 # Colorized, syntax-highlighted man pages via bat (col strips backspace overstrike)
 export MANPAGER="sh -c 'col -bx | bat -l man -p'"
 export MANROFFOPT="-c"              # Avoid bat rendering garbled groff escapes
