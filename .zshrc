@@ -72,6 +72,14 @@ zle -N up-arrow-nudge
 bindkey '^[[A' up-arrow-nudge                         # Up arrow (with ctrl-r nudge)
 
 #####################
+# Paste Safety
+#####################
+# Off by default in interactive zsh: a pasted line starting with `#` errors with
+# "command not found: #" and an inline ` # comment` becomes literal arguments.
+# Snippets copied from docs/AI output carry comments all the time.
+setopt interactive_comments
+
+#####################
 # Directory Navigation
 #####################
 setopt auto_cd            # Type a directory name alone to cd into it
