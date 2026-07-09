@@ -46,6 +46,10 @@ counter=0
 
 trash_device="$(get_device "$trash_dir")"
 
+# Pass 1: validate arguments. Survivors get their device looked up in ONE
+# batched stat below — a stat fork per file made 200-file deletes pay ~0.5s
+# in stat alone (fork+exec is the dominant per-file cost on macOS).
+survivors=()
 for src in "$@"; do
   # Dangerous-path check before existence so `trash -f ''` fails loudly like
   # `rm -f ''` does; -f must only forgive missing files
@@ -62,8 +66,33 @@ for src in "$@"; do
     continue
   fi
 
+  survivors+=("$src")
+done
+
+# One stat for all survivors (same flags as get_device, so a symlink still
+# reports the link itself, not its target). Routing between Trash and
+# permanent deletion must never ride on misaligned output: if the line count
+# doesn't match the input count (a path vanished mid-run), devices is cleared
+# and the loop below falls back to one get_device per file.
+devices=()
+if [[ ${#survivors[@]} -gt 0 ]]; then
+  while IFS= read -r line; do
+    devices+=("$line")
+  done < <(stat -f '%d' -- "${survivors[@]}" 2>/dev/null || true)
+  [[ ${#devices[@]} -eq ${#survivors[@]} ]] || devices=()
+fi
+
+# Pass 2: route each survivor to Trash or (cross-volume) real rm
+i=0
+for src in ${survivors[@]+"${survivors[@]}"}; do
+  if [[ ${#devices[@]} -gt 0 ]]; then
+    src_device="${devices[i]}"
+  else
+    src_device="$(get_device "$src")"
+  fi
+  i=$((i + 1))
+
   # External volume: use real rm (standard Unix behavior)
-  src_device="$(get_device "$src")"
   if [[ -n "$trash_device" && -n "$src_device" && "$src_device" != "$trash_device" ]]; then
     [[ $verbose -eq 1 ]] && echo "trash: external volume, permanently deleting: $src" >&2
     if [[ -d "$src" && ! -L "$src" ]]; then
