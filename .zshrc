@@ -146,7 +146,7 @@ zstyle ':completion:*' menu select=1
 
 # Performance: Use cache for expensive completions
 zstyle ':completion::complete:*' use-cache true
-zstyle ':completion::complete:*' cache-path ~/.zsh/cache
+zstyle ':completion::complete:*' cache-path "$_zsh_cache_dir"
 
 #####################
 # Path Configuration
@@ -309,7 +309,8 @@ _source_generated_init zoxide "$_zsh_cache_dir/zoxide-init.zsh" init zsh
 # Fzf / fd integration
 #####################
 # Use fd as the default source for fzf (fast, honors .gitignore)
-if command -v fd >/dev/null; then
+# $+commands hash lookup, matching the rest of this file (no PATH scan)
+if (( $+commands[fd] )); then
   export FZF_DEFAULT_COMMAND='fd --type f --hidden --exclude .git'
   export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 fi

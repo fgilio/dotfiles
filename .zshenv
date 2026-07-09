@@ -45,6 +45,7 @@ nvm_find_nvmrc() { echo ""; }
 for cmd in node npm npx nvm; do
   eval "$cmd() { _nvm_lazy_load; $cmd \"\$@\" }"
 done
+unset cmd  # Don't leak the loop variable into every shell
 
 # Antigravity CLI
 [[ -d "$HOME/.antigravity/antigravity/bin" ]] && path=("$HOME/.antigravity/antigravity/bin" $path)
