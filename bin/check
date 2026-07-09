@@ -33,6 +33,7 @@ bash_files=(
   setup/editors.sh
   bin/rm
   bin/trash
+  bin/lib/dangerous-path.sh
   bin/rm-test
   bin/check
   bin/raycast/strip-padding.sh
@@ -78,7 +79,7 @@ section_ok() {
 
 is_sourced() {
   case "$1" in
-    .zshrc | .zshenv | functions/dev-tools.zsh) return 0 ;;
+    .zshrc | .zshenv | functions/dev-tools.zsh | bin/lib/*) return 0 ;;
   esac
   return 1
 }

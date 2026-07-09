@@ -14,26 +14,9 @@ get_device() {
   stat -f '%d' "$1" 2>/dev/null || echo ""
 }
 
-is_dangerous_path() {
-  local p="$1"
-  # Obvious dangerous raw forms, no forking needed
-  case "$p" in
-    / | . | .. | "" | ./ | ../ | /./* | /../*) return 0 ;; # dangerous
-  esac
-  # All-slash paths ("//") are root in disguise
-  local stripped="${p%"${p##*[!/]}"}"
-  [[ -z "$stripped" ]] && return 0 # dangerous
-  # Resolve through the filesystem only when the final component is "." or ".."
-  # (only those can normalize to /, e.g. "/usr/.."); skipping the resolution
-  # for plain names is what keeps this script from forking per file
-  local base="${stripped##*/}"
-  if [[ "$base" == "." || "$base" == ".." ]]; then
-    local resolved
-    resolved="$(cd -- "$p" 2>/dev/null && pwd -P)" || resolved=""
-    [[ "$resolved" == "/" ]] && return 0 # dangerous
-  fi
-  return 1 # safe
-}
+# Shared with bin/rm so the two safety checks can't drift apart
+# shellcheck source=bin/lib/dangerous-path.sh
+source "${0%/*}/lib/dangerous-path.sh"
 
 force=0
 verbose=0
