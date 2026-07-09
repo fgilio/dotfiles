@@ -9,8 +9,10 @@
 HISTSIZE=50000              # Maximum events for internal history
 HISTFILE=~/.zsh_history     # History file location
 SAVEHIST=50000             # Maximum events in history file (dedup opts keep file small)
-setopt appendhistory       # Append history to the history file (no overwriting)
-setopt incappendhistory    # Add commands to the history immediately
+# share_history alone covers file writing: it appends each command as it's typed
+# AND imports other sessions' entries. zshoptions(1) says inc_append_history
+# "should be turned off" when share_history is on (they double-write the file),
+# and append_history is already zsh's default.
 setopt sharehistory        # Share history across ZSH sessions
 setopt hist_find_no_dups   # Don't display duplicate commands during search
 setopt hist_ignore_all_dups # Remove older duplicate entries from history
