@@ -229,7 +229,9 @@ alias dfiles-h='defaults write com.apple.finder AppleShowAllFiles NO; killall Fi
 alias php-srv="open http://localhost:4444 && php -S localhost:4444"
 
 # Clipboard operations
-alias copy-ssh="cat ~/.ssh/id_ed25519.pub | pbcopy"
+# Redirect instead of `cat file |`: cat is aliased to bat above, so the old
+# form forked bat just to stream one file into pbcopy
+alias copy-ssh="pbcopy < ~/.ssh/id_ed25519.pub"
 # /bin/rm on purpose: the screenshot is throwaway, keep it out of the Trash wrapper
 alias ocr='screencapture -i ~/tmp/screenshot.png && tesseract ~/tmp/screenshot.png stdout | pbcopy && /bin/rm -f ~/tmp/screenshot.png'
 
