@@ -18,12 +18,12 @@ setopt hist_find_no_dups   # Don't display duplicate commands during search
 setopt hist_ignore_all_dups # Remove older duplicate entries from history
 setopt hist_save_no_dups   # Don't save duplicate entries to history file
 
-# History search bindings
+# History search bindings. Only the forward-end widget is registered: up-arrow
+# uses the custom nudge widget below, which inlines the backward search itself.
 autoload -U history-search-end
-zle -N history-beginning-search-backward-end history-search-end
 zle -N history-beginning-search-forward-end history-search-end
 
-# Substring history search with arrow keys
+# Prefix history search with arrow keys
 bindkey '^[[B' history-beginning-search-forward-end   # Down arrow for forward history search
 
 # Up arrow does backward history search, but after a run of consecutive presses
@@ -272,7 +272,7 @@ _source_generated_init() {
   [[ -s "$cache_file" ]] && source "$cache_file"
 }
 
-# Custom functions and aliases: r, edit, gnah, gdesktop, gopen/gop, clskills
+# Custom functions, aliases, and habit nudges — see the file for the full list
 source "$DOTFILES/functions/dev-tools.zsh"
 
 
@@ -364,8 +364,7 @@ if [[ -o login ]] && [[ -f "$HOME/.env" ]]; then
   source "$HOME/.env"
 fi
 
-# Zoo formatting and linting commands
-alias zsetup-hooks="$HOME/pla/zoo/bin/zsetup-hooks"
+# Zoo formatting and linting commands (zsetup-hooks etc. resolve via PATH)
 [[ -d "$HOME/pla/zoo/bin" ]] && path+=("$HOME/pla/zoo/bin")
 [[ -d "$HOME/.local/bin" ]] && path+=("$HOME/.local/bin")
 

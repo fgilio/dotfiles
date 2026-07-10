@@ -6,9 +6,9 @@
 export DOTFILES="$HOME/.dotfiles"
 
 
-# Set up PATH with automatic deduplication
+# Set up PATH with automatic deduplication (PATH keeps its default export
+# attribute; typeset -gU doesn't strip it)
 typeset -gU path PATH
-export PATH  # Ensure PATH is exported
 
 # Add dotfiles bin to PATH for custom commands
 path=("$DOTFILES/bin" $path)
