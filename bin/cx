@@ -6,6 +6,6 @@ if [[ $# -eq 0 || "$1" == -* ]]; then
     # Interactive: no args, or flags (--resume, etc.)
     exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-5.6-sol --config model_reasoning_effort="high" "$@"
 else
-    # Non-interactive one-shot
-    exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-5.6-sol --config model_reasoning_effort="high" exec --skip-git-repo-check "$@"
+    # Non-interactive one-shot: medium effort keeps one-offs fast
+    exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-5.6-sol --config model_reasoning_effort="medium" exec --skip-git-repo-check "$@"
 fi

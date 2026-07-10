@@ -4,10 +4,12 @@
 if [[ $# -eq 0 || "$1" == -* ]]; then
     # Interactive: no args, or flags (--resume, --continue, etc.)
     # NOTE: flags before a positional arg route here too (e.g. cl --verbose "query")
-    exec claude "$@"
+    # --effort first so a user-passed --effort in "$@" wins
+    exec claude --effort high "$@"
 else
     # Non-interactive: one-off query, pinned to Opus
     # ANTHROPIC_API_KEY="" forces CLI auth instead of the env key, so --print
     # bills the Max subscription instead of the API
-    ANTHROPIC_API_KEY="" exec claude --print --output-format=text --tools default --no-session-persistence --model opus "$@"
+    # Medium effort keeps one-offs fast; interactive sessions run at high
+    ANTHROPIC_API_KEY="" exec claude --print --output-format=text --tools default --no-session-persistence --model opus --effort medium "$@"
 fi
