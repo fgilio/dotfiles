@@ -281,6 +281,12 @@ source "$DOTFILES/functions/dev-tools.zsh"
 #####################
 # Starship configuration
 export STARSHIP_COMMAND_TIMEOUT=1000            # 1 second timeout (default 500ms is too aggressive)
+# The cached init embeds starship.toml-derived output (the PROMPT2 bake below),
+# but _source_generated_init only invalidates on the starship BINARY's mtime.
+# Truncating on a newer toml makes config edits regenerate + re-bake on the
+# next shell — two stats and a truncation, no forks.
+[[ "$DOTFILES/starship.toml" -nt "$_zsh_cache_dir/starship-init.zsh" ]] && \
+  : >| "$_zsh_cache_dir/starship-init.zsh"
 # Initialize Starship prompt
 _source_generated_init starship "$_zsh_cache_dir/starship-init.zsh" init zsh
 # Bake the continuation prompt into the cache: the generated init forks
@@ -288,8 +294,8 @@ _source_generated_init starship "$_zsh_cache_dir/starship-init.zsh" init zsh
 # top startup cost) for output that only changes with starship.toml. Sourcing
 # above already paid that fork and set PROMPT2, so write the literal back into
 # the cache; every later shell skips the fork. The content check below is a
-# pure-zsh file read (no fork) and only matches right after a regeneration.
-# After changing continuation_prompt in starship.toml: rm the cache file.
+# pure-zsh file read (no fork) and only matches right after a regeneration
+# (starship.toml edits invalidate the cache automatically — see above).
 _starship_cache="$_zsh_cache_dir/starship-init.zsh"
 if (( $+commands[starship] )) && [[ -s "$_starship_cache" && "$(<"$_starship_cache")" == *"starship prompt --continuation"* ]]; then
   _baked=()
