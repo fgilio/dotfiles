@@ -7,7 +7,7 @@
 #   - no `brew --prefix` at runtime (subprocess startup cost)
 #   - tracked file modes match content (shebang means 755, data means 644)
 #   - every CLAUDE.md has an AGENTS.md symlink pointing to it
-#   - Hammerspoon modules are wired (require in init.lua + ln -s in fresh.sh)
+#   - Hammerspoon modules are wired (require in init.lua; fresh.sh globs *.lua)
 #   - Brewfile and ci.yml install the same dev-tool deps (no drift)
 #   - no trailing whitespace / CRLF (workflows/ excluded: Automator XML)
 #   - FormatTranscription stays on-device (Info.plist, build.sh, main.swift,
@@ -25,33 +25,25 @@ status=0
 failures=0 # monotonic counter, snapshotted by sections to detect their own failures
 section_start=0
 
-bash_files=(
-  fresh.sh
-  ssh.sh
-  .macos
-  apps/format-transcription/build.sh
-  setup/editors.sh
-  bin/rm
-  bin/trash
-  bin/rm-test
-  bin/check
-  bin/raycast/strip-padding.sh
-)
-
+# Lint rosters are derived from tracked shebangs rather than hand-maintained
+# lists: a new script missing from a list would silently skip shellcheck,
+# shfmt, `zsh -n`, and the brew-prefix ban. .zshrc is added explicitly (it
+# has no shebang); workflows/ is Automator-generated XML, never hand-edited.
 # `zsh -n` is the only zsh static analyzer in our toolchain.
-zsh_files=(
-  .zshrc
-  .zshenv
-  functions/dev-tools.zsh
-  bin/cl
-  bin/cls
-  bin/cr
-  bin/cx
-  bin/cxs
-  bin/gm
-  bin/gms
-  bin/node
-)
+bash_files=()
+zsh_files=(.zshrc)
+while IFS= read -r f; do
+  case "$f" in
+    workflows/*) continue ;;
+  esac
+  [[ -f "$f" ]] || continue
+  first_line=""
+  IFS= read -r first_line <"$f" 2>/dev/null || true
+  case "$first_line" in
+    '#!'*bash*) bash_files+=("$f") ;;
+    '#!'*zsh*) zsh_files+=("$f") ;;
+  esac
+done < <(git ls-files)
 
 required_brews=(shellcheck shfmt actionlint luacheck gitleaks)
 
@@ -78,17 +70,13 @@ section_ok() {
 
 is_sourced() {
   case "$1" in
-    .zshrc | .zshenv | functions/dev-tools.zsh) return 0 ;;
+    .zshrc | .zshenv | functions/dev-tools.zsh | bin/lib/*) return 0 ;;
   esac
   return 1
 }
 
 has_require() {
   grep -qE "require[[:space:]]*\(?[[:space:]]*[\"']${1}[\"']" hammerspoon/init.lua
-}
-
-has_symlink_for() {
-  grep -qE "(^|[^[:alnum:]_])ln[[:space:]]+-s[a-zA-Z]*([[:space:]]|$).*hammerspoon/${1}\.lua" fresh.sh
 }
 
 # ---- shellcheck ---------------------------------------------------------
@@ -213,13 +201,9 @@ else
       printf '  FAIL %s.lua: missing require("%s") in hammerspoon/init.lua\n' "$mod" "$mod"
       fail
     fi
-    if ! has_symlink_for "$mod"; then
-      printf '  FAIL %s.lua: missing `ln -sf` line for hammerspoon/%s.lua in fresh.sh\n' "$mod" "$mod"
-      fail
-    fi
   done
   if [[ $failures -ne $section_start ]]; then
-    echo "  Adding a Hammerspoon module needs: the .lua file + require() in init.lua + ln -sf in fresh.sh."
+    echo "  Adding a Hammerspoon module needs: the .lua file + require() in init.lua (fresh.sh symlinks *.lua automatically)."
   fi
   section_ok "${#hs_modules[@]} module(s) wired correctly"
 fi
@@ -240,6 +224,19 @@ for tool in "${required_brews[@]}"; do
   fi
 done
 section_ok "lint dependencies present in Brewfile and ci.yml"
+
+# ---- Brewfile tap trust drift ---------------------------------------------
+# Homebrew requires explicit trust for third-party taps: every `tap` in the
+# Brewfile needs a matching `brew trust` line in fresh.sh or `brew bundle`
+# halts on a fresh machine (the exact seam the section above manages for CI).
+section "Brewfile tap trust"
+while IFS= read -r tap_name; do
+  if ! grep -qE "brew trust (--formula|--cask) ${tap_name}/" fresh.sh; then
+    printf '  FAIL tap %s in Brewfile but no `brew trust` line in fresh.sh\n' "$tap_name"
+    fail
+  fi
+done < <(sed -nE "s/^tap '([^']+)'.*/\1/p" Brewfile)
+section_ok "every Brewfile tap is trusted in fresh.sh"
 
 # ---- FormatTranscription invariants -------------------------------------
 # The built bundle is not committed (fresh.sh runs build.sh from source), so

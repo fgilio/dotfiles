@@ -6,9 +6,9 @@
 export DOTFILES="$HOME/.dotfiles"
 
 
-# Set up PATH with automatic deduplication
+# Set up PATH with automatic deduplication (PATH keeps its default export
+# attribute; typeset -gU doesn't strip it)
 typeset -gU path PATH
-export PATH  # Ensure PATH is exported
 
 # Add dotfiles bin to PATH for custom commands
 path=("$DOTFILES/bin" $path)
@@ -45,6 +45,7 @@ nvm_find_nvmrc() { echo ""; }
 for cmd in node npm npx nvm; do
   eval "$cmd() { _nvm_lazy_load; $cmd \"\$@\" }"
 done
+unset cmd  # Don't leak the loop variable into every shell
 
 # Antigravity CLI
 [[ -d "$HOME/.antigravity/antigravity/bin" ]] && path=("$HOME/.antigravity/antigravity/bin" $path)

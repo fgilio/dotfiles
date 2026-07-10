@@ -44,7 +44,6 @@ After backing up your old Mac you may now follow these install instructions to s
 6. Run the installation with:
 
     ```zsh
-    chmod +x ~/.dotfiles/fresh.sh
     ~/.dotfiles/fresh.sh
     ```
 

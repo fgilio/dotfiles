@@ -6,8 +6,11 @@
 set -euo pipefail
 
 REAL_RM="/bin/rm"
-# Sibling trash script: avoids resolving to /usr/bin/trash (macOS native)
-TRASH="$(dirname -- "$0")/trash"
+# Sibling trash script: avoids resolving to /usr/bin/trash (macOS native).
+# ${0%/*} instead of $(dirname): this wrapper runs constantly and the dirname
+# subshell+exec costs ~1-3ms per invocation. $0 always contains a slash here
+# (PATH lookup or explicit path), and the -x check below fails loudly if not.
+TRASH="${0%/*}/trash"
 
 # Debug mode: RM_DEBUG=1 rm file
 [[ "${RM_DEBUG:-0}" == "1" ]] && set -x
@@ -17,26 +20,9 @@ TRASH="$(dirname -- "$0")/trash"
   exit 127
 }
 
-is_dangerous_path() {
-  local p="$1"
-  # Obvious dangerous raw forms, no forking needed
-  case "$p" in
-    / | . | .. | "" | ./ | ../ | /./* | /../*) return 0 ;; # dangerous
-  esac
-  # All-slash paths ("//") are root in disguise
-  local stripped="${p%"${p##*[!/]}"}"
-  [[ -z "$stripped" ]] && return 0 # dangerous
-  # Resolve through the filesystem only when the final component is "." or ".."
-  # (only those can normalize to /, e.g. "/usr/.."); skipping the resolution
-  # for plain names is what keeps this wrapper from forking per file
-  local base="${stripped##*/}"
-  if [[ "$base" == "." || "$base" == ".." ]]; then
-    local resolved
-    resolved="$(cd -- "$p" 2>/dev/null && pwd -P)" || resolved=""
-    [[ "$resolved" == "/" ]] && return 0 # dangerous
-  fi
-  return 1 # safe
-}
+# Shared with bin/trash so the two safety checks can't drift apart
+# shellcheck source=bin/lib/dangerous-path.sh
+source "${0%/*}/lib/dangerous-path.sh"
 
 force=0 allow_dirs=0 verbose=0
 
@@ -54,8 +40,7 @@ while [[ $# -gt 0 ]]; do
         c="${opts:i:1}"
         case "$c" in
           f) force=1 ;;
-          r | R) allow_dirs=1 ;;
-          d) allow_dirs=1 ;;
+          r | R | d) allow_dirs=1 ;;
           i | I) : ;; # ignore interactive flags (agents need non-interactive)
           v) verbose=1 ;;
           *)

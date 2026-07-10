@@ -4,9 +4,8 @@
 
 1. Create the `.lua` file in this directory
 2. Add `require("name")` to the end of `init.lua`
-3. Add `ln -sf` for the new file in `fresh.sh`
 
-Hammerspoon resolves `require()` from `~/.hammerspoon/`, not the dotfiles source dir, so an unsymlinked module silently fails to load. `bin/check` enforces all three steps.
+Hammerspoon resolves `require()` from `~/.hammerspoon/`, not the dotfiles source dir. `fresh.sh` symlinks every `hammerspoon/*.lua` automatically (per-file, not whole-dir, so Hammerspoon's own writes like `Spoons/` never land in the repo); `bin/check` enforces the `require()` step.
 
 ## Module Pattern
 

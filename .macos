@@ -240,7 +240,7 @@ defaults write com.apple.finder FXInfoPanesExpanded -dict \
   Privileges -bool true
 
 ###############################################################################
-# Dock, Dashboard, and hot corners                                            #
+# Dock and hot corners                                                        #
 ###############################################################################
 
 # Set the icon size of Dock items to 36 pixels
@@ -381,7 +381,7 @@ defaults write com.apple.ActivityMonitor SortColumn -string "CPUUsage"
 defaults write com.apple.ActivityMonitor SortDirection -int 0
 
 ###############################################################################
-# Address Book, Dashboard, iCal, TextEdit, and Disk Utility                   #
+# TextEdit and Calendar                                                       #
 ###############################################################################
 
 # Use plain text mode for new TextEdit documents
@@ -445,9 +445,9 @@ defaults -currentHost write com.apple.ImageCapture disableHotPlug -bool true
 # Kill affected applications                                                  #
 ###############################################################################
 
-for app in "Activity Monitor" "Address Book" "Calendar" "Contacts" "cfprefsd" \
+for app in "Activity Monitor" "Calendar" "Contacts" "cfprefsd" \
   "Dock" "Finder" "Mail" "Messages" "Photos" "Safari" "SystemUIServer" \
-  "Terminal" "iCal"; do
+  "Terminal"; do
   killall "${app}" &>/dev/null
 done
 

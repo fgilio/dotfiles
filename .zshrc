@@ -9,19 +9,21 @@
 HISTSIZE=50000              # Maximum events for internal history
 HISTFILE=~/.zsh_history     # History file location
 SAVEHIST=50000             # Maximum events in history file (dedup opts keep file small)
-setopt appendhistory       # Append history to the history file (no overwriting)
-setopt incappendhistory    # Add commands to the history immediately
+# share_history alone covers file writing: it appends each command as it's typed
+# AND imports other sessions' entries. zshoptions(1) says inc_append_history
+# "should be turned off" when share_history is on (they double-write the file),
+# and append_history is already zsh's default.
 setopt sharehistory        # Share history across ZSH sessions
 setopt hist_find_no_dups   # Don't display duplicate commands during search
 setopt hist_ignore_all_dups # Remove older duplicate entries from history
 setopt hist_save_no_dups   # Don't save duplicate entries to history file
 
-# History search bindings
+# History search bindings. Only the forward-end widget is registered: up-arrow
+# uses the custom nudge widget below, which inlines the backward search itself.
 autoload -U history-search-end
-zle -N history-beginning-search-backward-end history-search-end
 zle -N history-beginning-search-forward-end history-search-end
 
-# Substring history search with arrow keys
+# Prefix history search with arrow keys
 bindkey '^[[B' history-beginning-search-forward-end   # Down arrow for forward history search
 
 # Up arrow does backward history search, but after a run of consecutive presses
@@ -70,6 +72,14 @@ zle -N up-arrow-nudge
 bindkey '^[[A' up-arrow-nudge                         # Up arrow (with ctrl-r nudge)
 
 #####################
+# Paste Safety
+#####################
+# Off by default in interactive zsh: a pasted line starting with `#` errors with
+# "command not found: #" and an inline ` # comment` becomes literal arguments.
+# Snippets copied from docs/AI output carry comments all the time.
+setopt interactive_comments
+
+#####################
 # Directory Navigation
 #####################
 setopt auto_cd            # Type a directory name alone to cd into it
@@ -94,6 +104,10 @@ autoload -Uz compinit
 # Only regenerate completion dump once per day (check if older than 24h)
 if [[ -n "$_zsh_cache_dir/zcompdump"(#qN.mh+24) ]]; then
   compinit -d "$_zsh_cache_dir/zcompdump"
+  # compinit only rewrites the dump when it's stale, so a still-valid dump keeps
+  # its old mtime — without the touch, every shell after the first 24h would take
+  # this slow path (compaudit re-scans fpath, ~6ms+) instead of once per day.
+  touch "$_zsh_cache_dir/zcompdump"
 else
   compinit -C -d "$_zsh_cache_dir/zcompdump"  # -C skips security check for speed
 fi
@@ -106,6 +120,12 @@ fi
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'  # Case-insensitive + substring matching
 
 # Colored completions
+# LS_COLORS is the GNU-format twin of LSCOLORS (set in the Aliases section) and
+# was previously never defined, so the zstyle below expanded to nothing and file
+# completions rendered with zsh's plain defaults. It also drives gls in the `ll`
+# alias, keeping listings and completion menus on one palette. Hardcoded because
+# `gdircolors` would fork on every startup.
+export LS_COLORS='di=01;34:ln=01;36:so=01;31:pi=01;33:ex=01;32:bd=01;34;46:cd=01;34;43:su=00;41:sg=00;46:tw=00;42:ow=00;43'
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 zstyle ':completion:*:*:*:*:descriptions' format '%F{green}-- %d --%f'
 zstyle ':completion:*:*:*:*:corrections' format '%F{yellow}!- %d (errors: %e) -!%f'
@@ -126,7 +146,7 @@ zstyle ':completion:*' menu select=1
 
 # Performance: Use cache for expensive completions
 zstyle ':completion::complete:*' use-cache true
-zstyle ':completion::complete:*' cache-path ~/.zsh/cache
+zstyle ':completion::complete:*' cache-path "$_zsh_cache_dir"
 
 #####################
 # Path Configuration
@@ -165,7 +185,7 @@ alias ...="cd ../.."
 # File operations
 # Enable colors for common commands
 export CLICOLOR=1                   # Enable colors in ls and other commands
-export LSCOLORS=ExGxBxDxCxEgEdxbxgxcxd  # Customize ls colors
+export LSCOLORS=ExGxBxDxCxEgEdxbxgxcxd  # BSD ls colors (GNU twin LS_COLORS lives in the Completion section)
 # Colorized, syntax-highlighted man pages via bat (col strips backspace overstrike)
 export MANPAGER="sh -c 'col -bx | bat -l man -p'"
 export MANROFFOPT="-c"              # Avoid bat rendering garbled groff escapes
@@ -209,7 +229,9 @@ alias dfiles-h='defaults write com.apple.finder AppleShowAllFiles NO; killall Fi
 alias php-srv="open http://localhost:4444 && php -S localhost:4444"
 
 # Clipboard operations
-alias copy-ssh="cat ~/.ssh/id_ed25519.pub | pbcopy"
+# Redirect instead of `cat file |`: cat is aliased to bat above, so the old
+# form forked bat just to stream one file into pbcopy
+alias copy-ssh="pbcopy < ~/.ssh/id_ed25519.pub"
 # /bin/rm on purpose: the screenshot is throwaway, keep it out of the Trash wrapper
 alias ocr='screencapture -i ~/tmp/screenshot.png && tesseract ~/tmp/screenshot.png stdout | pbcopy && /bin/rm -f ~/tmp/screenshot.png'
 
@@ -250,7 +272,7 @@ _source_generated_init() {
   [[ -s "$cache_file" ]] && source "$cache_file"
 }
 
-# Custom functions and aliases: r, edit, gnah, gdesktop, gopen/gop, clskills
+# Custom functions, aliases, and habit nudges — see the file for the full list
 source "$DOTFILES/functions/dev-tools.zsh"
 
 
@@ -259,6 +281,12 @@ source "$DOTFILES/functions/dev-tools.zsh"
 #####################
 # Starship configuration
 export STARSHIP_COMMAND_TIMEOUT=1000            # 1 second timeout (default 500ms is too aggressive)
+# The cached init embeds starship.toml-derived output (the PROMPT2 bake below),
+# but _source_generated_init only invalidates on the starship BINARY's mtime.
+# Truncating on a newer toml makes config edits regenerate + re-bake on the
+# next shell — two stats and a truncation, no forks.
+[[ "$DOTFILES/starship.toml" -nt "$_zsh_cache_dir/starship-init.zsh" ]] && \
+  : >| "$_zsh_cache_dir/starship-init.zsh"
 # Initialize Starship prompt
 _source_generated_init starship "$_zsh_cache_dir/starship-init.zsh" init zsh
 # Bake the continuation prompt into the cache: the generated init forks
@@ -266,8 +294,8 @@ _source_generated_init starship "$_zsh_cache_dir/starship-init.zsh" init zsh
 # top startup cost) for output that only changes with starship.toml. Sourcing
 # above already paid that fork and set PROMPT2, so write the literal back into
 # the cache; every later shell skips the fork. The content check below is a
-# pure-zsh file read (no fork) and only matches right after a regeneration.
-# After changing continuation_prompt in starship.toml: rm the cache file.
+# pure-zsh file read (no fork) and only matches right after a regeneration
+# (starship.toml edits invalidate the cache automatically — see above).
 _starship_cache="$_zsh_cache_dir/starship-init.zsh"
 if (( $+commands[starship] )) && [[ -s "$_starship_cache" && "$(<"$_starship_cache")" == *"starship prompt --continuation"* ]]; then
   _baked=()
@@ -287,7 +315,8 @@ _source_generated_init zoxide "$_zsh_cache_dir/zoxide-init.zsh" init zsh
 # Fzf / fd integration
 #####################
 # Use fd as the default source for fzf (fast, honors .gitignore)
-if command -v fd >/dev/null; then
+# $+commands hash lookup, matching the rest of this file (no PATH scan)
+if (( $+commands[fd] )); then
   export FZF_DEFAULT_COMMAND='fd --type f --hidden --exclude .git'
   export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 fi
@@ -341,8 +370,7 @@ if [[ -o login ]] && [[ -f "$HOME/.env" ]]; then
   source "$HOME/.env"
 fi
 
-# Zoo formatting and linting commands
-alias zsetup-hooks="$HOME/pla/zoo/bin/zsetup-hooks"
+# Zoo formatting and linting commands (zsetup-hooks etc. resolve via PATH)
 [[ -d "$HOME/pla/zoo/bin" ]] && path+=("$HOME/pla/zoo/bin")
 [[ -d "$HOME/.local/bin" ]] && path+=("$HOME/.local/bin")
 

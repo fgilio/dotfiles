@@ -1,7 +1,10 @@
+-- Hyper = ctrl+alt+cmd+shift everywhere (the convention in CLAUDE.md)
+local hyper = {'ctrl', 'alt', 'cmd', 'shift'}
+
 -- Hyper+S: Toggle sidebar in supported apps
 -- Uses global hotkey with app check (more reliable than window.filter)
 local hyperSHotkey
-hyperSHotkey = hs.hotkey.bind({'ctrl', 'alt', 'cmd', 'shift'}, 's', function()
+hyperSHotkey = hs.hotkey.bind(hyper, 's', function()
   local app = hs.application.frontmostApplication()
   if not app then return end
 
@@ -14,7 +17,7 @@ hyperSHotkey = hs.hotkey.bind({'ctrl', 'alt', 'cmd', 'shift'}, 's', function()
     -- Disable hotkey, pass through, re-enable with safety guarantees
     hyperSHotkey:disable()
     pcall(function()
-      hs.eventtap.keyStroke({'ctrl', 'alt', 'cmd', 'shift'}, 's')
+      hs.eventtap.keyStroke(hyper, 's')
     end)
     -- Timer delay avoids rapid-tap interleaving
     hs.timer.doAfter(0, function() hyperSHotkey:enable() end)
@@ -39,7 +42,7 @@ local function applyGhosttyFontSize(size)
   local ghostty = hs.application.get("com.mitchellh.ghostty")
   if ghostty then
     local key = size == 13 and "1" or "2"
-    hs.eventtap.keyStroke({"ctrl", "alt", "cmd", "shift"}, key, 0, ghostty)
+    hs.eventtap.keyStroke(hyper, key, 0, ghostty)
     hs.alert.show("Ghostty → " .. size .. "pt", 1)
   else
     hs.alert.show("Ghostty not running", 1)
@@ -60,8 +63,8 @@ local function handleScreenChange()
 end
 
 -- Hyper+Enter: Apply detected Ghostty font size
-hs.hotkey.bind({"ctrl", "alt", "cmd", "shift"}, "return", function()
-  local size, _ = getTargetFontSize()
+hs.hotkey.bind(hyper, "return", function()
+  local size = getTargetFontSize()
   applyGhosttyFontSize(size)
 end)
 
@@ -75,7 +78,7 @@ end)
 screenWatcher:start()
 
 -- Debug: Hyper+G to manually trigger Ghostty font size prompt
-hs.hotkey.bind({"ctrl", "alt", "cmd", "shift"}, "g", function()
+hs.hotkey.bind(hyper, "g", function()
   ghosttyScreen.lastScreenName = nil
   handleScreenChange()
 end)

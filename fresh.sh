@@ -21,9 +21,6 @@ ln -sf "$DOTFILES/.zshrc" "$HOME/.zshrc"
 ln -sf "$DOTFILES/.zshenv" "$HOME/.zshenv"
 ln -sf "$DOTFILES/.gitconfig" "$HOME/.gitconfig"
 
-# Ensure dotfiles bin directory scripts are executable
-chmod +x "$DOTFILES/bin/"*
-
 # Install FormatTranscription.app (on-device LLM markdown formatter)
 # .app wrapper needed for TCC/FoundationModels access from Quick Actions.
 # Built from source instead of shipping a committed Mach-O nobody can verify;
@@ -43,9 +40,13 @@ mkdir -p "$HOME/.config/ghostty"
 ln -sf "$DOTFILES/ghostty.config" "$HOME/.config/ghostty/config"
 ln -sfn "$DOTFILES/ghostty/themes" "$HOME/.config/ghostty/themes"
 
-# Symlink Hammerspoon config
+# Symlink Hammerspoon config. Glob instead of per-file lines so a new module
+# can't be forgotten; per-file symlinks (not a whole-dir link) so Hammerspoon's
+# own writes (Spoons/, state) never land inside the repo tree.
 mkdir -p "$HOME/.hammerspoon"
-ln -sf "$DOTFILES/hammerspoon/init.lua" "$HOME/.hammerspoon/init.lua"
+for f in "$DOTFILES/hammerspoon/"*.lua; do
+  ln -sf "$f" "$HOME/.hammerspoon/"
+done
 
 # Create ~/tmp for ocr alias and other temp operations
 mkdir -p "$HOME/tmp"
@@ -106,11 +107,6 @@ brew bundle --file "$DOTFILES/Brewfile"
 # Install git hooks (idempotent, safe to re-run)
 if [[ -d "$DOTFILES/.git" ]]; then
   lefthook install
-fi
-
-# Install fzf key bindings and completion (no shell rc modifications)
-if [[ -x /opt/homebrew/opt/fzf/install ]]; then
-  /opt/homebrew/opt/fzf/install --key-bindings --completion --no-update-rc
 fi
 
 # Create Sublime Text terminal launcher (subl, not sublime)
