@@ -3,10 +3,9 @@
 # Sandbox config in ~/.codex/config.toml (sandbox_mode = "danger-full-access")
 
 if [[ $# -eq 0 || "$1" == -* ]]; then
-    # Interactive: no args, or flags (--resume, etc.). xhigh reasoning because
-    # a long-lived session favors answer quality over latency
-    exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-5.5 --config model_reasoning_effort="xhigh" "$@"
+    # Interactive: no args, or flags (--resume, etc.)
+    exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-5.6-sol --config model_reasoning_effort="high" "$@"
 else
-    # Non-interactive one-shot: medium reasoning, latency matters more here
-    exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-5.5 --config model_reasoning_effort="medium" exec --skip-git-repo-check "$@"
+    # Non-interactive one-shot
+    exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-5.6-sol --config model_reasoning_effort="high" exec --skip-git-repo-check "$@"
 fi
