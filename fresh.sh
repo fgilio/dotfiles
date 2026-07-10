@@ -43,9 +43,13 @@ mkdir -p "$HOME/.config/ghostty"
 ln -sf "$DOTFILES/ghostty.config" "$HOME/.config/ghostty/config"
 ln -sfn "$DOTFILES/ghostty/themes" "$HOME/.config/ghostty/themes"
 
-# Symlink Hammerspoon config
+# Symlink Hammerspoon config. Glob instead of per-file lines so a new module
+# can't be forgotten; per-file symlinks (not a whole-dir link) so Hammerspoon's
+# own writes (Spoons/, state) never land inside the repo tree.
 mkdir -p "$HOME/.hammerspoon"
-ln -sf "$DOTFILES/hammerspoon/init.lua" "$HOME/.hammerspoon/init.lua"
+for f in "$DOTFILES/hammerspoon/"*.lua; do
+  ln -sf "$f" "$HOME/.hammerspoon/"
+done
 
 # Create ~/tmp for ocr alias and other temp operations
 mkdir -p "$HOME/tmp"

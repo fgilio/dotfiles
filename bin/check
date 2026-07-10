@@ -7,7 +7,7 @@
 #   - no `brew --prefix` at runtime (subprocess startup cost)
 #   - tracked file modes match content (shebang means 755, data means 644)
 #   - every CLAUDE.md has an AGENTS.md symlink pointing to it
-#   - Hammerspoon modules are wired (require in init.lua + ln -s in fresh.sh)
+#   - Hammerspoon modules are wired (require in init.lua; fresh.sh globs *.lua)
 #   - Brewfile and ci.yml install the same dev-tool deps (no drift)
 #   - no trailing whitespace / CRLF (workflows/ excluded: Automator XML)
 #   - FormatTranscription stays on-device (Info.plist, build.sh, main.swift,
@@ -77,10 +77,6 @@ is_sourced() {
 
 has_require() {
   grep -qE "require[[:space:]]*\(?[[:space:]]*[\"']${1}[\"']" hammerspoon/init.lua
-}
-
-has_symlink_for() {
-  grep -qE "(^|[^[:alnum:]_])ln[[:space:]]+-s[a-zA-Z]*([[:space:]]|$).*hammerspoon/${1}\.lua" fresh.sh
 }
 
 # ---- shellcheck ---------------------------------------------------------
@@ -205,13 +201,9 @@ else
       printf '  FAIL %s.lua: missing require("%s") in hammerspoon/init.lua\n' "$mod" "$mod"
       fail
     fi
-    if ! has_symlink_for "$mod"; then
-      printf '  FAIL %s.lua: missing `ln -sf` line for hammerspoon/%s.lua in fresh.sh\n' "$mod" "$mod"
-      fail
-    fi
   done
   if [[ $failures -ne $section_start ]]; then
-    echo "  Adding a Hammerspoon module needs: the .lua file + require() in init.lua + ln -sf in fresh.sh."
+    echo "  Adding a Hammerspoon module needs: the .lua file + require() in init.lua (fresh.sh symlinks *.lua automatically)."
   fi
   section_ok "${#hs_modules[@]} module(s) wired correctly"
 fi
