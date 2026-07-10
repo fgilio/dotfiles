@@ -51,6 +51,6 @@ CLAUDE.local.md
 # gstack: per-project local state (sessions, analytics, learnings)
 .gstack/
 
-# Env files: ~/.env is sourced by .zshrc but must never be committed anywhere
-.env
+# Env files: ~/.env is sourced by .zshrc but must never be committed anywhere.
+# * matches the empty string, so this covers bare .env too.
 *.env
