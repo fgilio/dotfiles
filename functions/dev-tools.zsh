@@ -106,6 +106,9 @@ _nudge_bump() {                            # $1=cache filename  $2=hint (print -
 # doesn't count. No backticks in the hint: in a double-quoted print they'd run
 # cpwd as a side effect.
 _cpwd_preexec() {
+    # Cheap glob bail before the whitespace-stripping copy below: this hook runs
+    # on EVERY command, and agents routinely execute multi-KB command strings.
+    [[ "$1" == *pwd* ]] || return
     [[ "${1// /}" == pwd ]] || return
     _nudge_bump pwd-nudge \
         "%F{8}💡 You keep reaching for pwd — 'cpwd' prints the path AND copies it to your clipboard.%f"
@@ -114,6 +117,8 @@ add-zsh-hook preexec _cpwd_preexec
 
 # Nudges toward the `gpl` / `gcm` aliases.
 _git_alias_preexec() {
+    # Cheap glob bail before the (z) shell-lexing below — see _cpwd_preexec.
+    [[ "$1" == *'git '* ]] || return
     # (z) splits like the shell would, collapsing any whitespace runs; rejoining
     # with $[w] gives a single-spaced form for exact matching, so `git pull origin
     # x` (which gpl doesn't replace) won't trip the bare-`git pull` nudge.
