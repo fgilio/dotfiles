@@ -7,11 +7,7 @@ r() {
 }
 
 edit() {
-    if [ -z "$1" ]; then
-        zed "."
-    else
-        zed "$1"
-    fi
+    zed "${1:-.}"
 }
 
 # Throw away all uncommitted work, no confirmation (intentional ergonomic shortcut)
@@ -134,12 +130,9 @@ _git_alias_preexec() {
 }
 add-zsh-hook preexec _git_alias_preexec
 
-# List Claude Code skills
+# List Claude Code skills. (/) keeps dirs only, :t is a fork-free basename
+# (the old loop forked $(basename) once per skill).
 clskills() {
-    local names=()
-    for dir in "$HOME/.claude/skills"/*/; do
-        [[ -d "$dir" ]] || continue
-        names+=("$(basename "$dir")")
-    done
+    local names=("$HOME/.claude/skills"/*(/:t))
     printf "%s\n" "${(j: - :)names}"
 }
