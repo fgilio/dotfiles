@@ -25,34 +25,25 @@ status=0
 failures=0 # monotonic counter, snapshotted by sections to detect their own failures
 section_start=0
 
-bash_files=(
-  fresh.sh
-  ssh.sh
-  .macos
-  apps/format-transcription/build.sh
-  setup/editors.sh
-  bin/rm
-  bin/trash
-  bin/lib/dangerous-path.sh
-  bin/rm-test
-  bin/check
-  bin/raycast/strip-padding.sh
-)
-
+# Lint rosters are derived from tracked shebangs rather than hand-maintained
+# lists: a new script missing from a list would silently skip shellcheck,
+# shfmt, `zsh -n`, and the brew-prefix ban. .zshrc is added explicitly (it
+# has no shebang); workflows/ is Automator-generated XML, never hand-edited.
 # `zsh -n` is the only zsh static analyzer in our toolchain.
-zsh_files=(
-  .zshrc
-  .zshenv
-  functions/dev-tools.zsh
-  bin/cl
-  bin/cls
-  bin/cr
-  bin/cx
-  bin/cxs
-  bin/gm
-  bin/gms
-  bin/node
-)
+bash_files=()
+zsh_files=(.zshrc)
+while IFS= read -r f; do
+  case "$f" in
+    workflows/*) continue ;;
+  esac
+  [[ -f "$f" ]] || continue
+  first_line=""
+  IFS= read -r first_line <"$f" 2>/dev/null || true
+  case "$first_line" in
+    '#!'*bash*) bash_files+=("$f") ;;
+    '#!'*zsh*) zsh_files+=("$f") ;;
+  esac
+done < <(git ls-files)
 
 required_brews=(shellcheck shfmt actionlint luacheck gitleaks)
 
