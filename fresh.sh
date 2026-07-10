@@ -21,9 +21,6 @@ ln -sf "$DOTFILES/.zshrc" "$HOME/.zshrc"
 ln -sf "$DOTFILES/.zshenv" "$HOME/.zshenv"
 ln -sf "$DOTFILES/.gitconfig" "$HOME/.gitconfig"
 
-# Ensure dotfiles bin directory scripts are executable
-chmod +x "$DOTFILES/bin/"*
-
 # Install FormatTranscription.app (on-device LLM markdown formatter)
 # .app wrapper needed for TCC/FoundationModels access from Quick Actions.
 # Built from source instead of shipping a committed Mach-O nobody can verify;
@@ -110,11 +107,6 @@ brew bundle --file "$DOTFILES/Brewfile"
 # Install git hooks (idempotent, safe to re-run)
 if [[ -d "$DOTFILES/.git" ]]; then
   lefthook install
-fi
-
-# Install fzf key bindings and completion (no shell rc modifications)
-if [[ -x /opt/homebrew/opt/fzf/install ]]; then
-  /opt/homebrew/opt/fzf/install --key-bindings --completion --no-update-rc
 fi
 
 # Create Sublime Text terminal launcher (subl, not sublime)
