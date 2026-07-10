@@ -7,5 +7,5 @@ if [[ $# -eq 0 || "$1" == -* ]]; then
     exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-5.6-sol --config model_reasoning_effort="high" "$@"
 else
     # Non-interactive one-shot: medium effort keeps one-offs fast
-    exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-5.6-sol --config model_reasoning_effort="medium" exec --skip-git-repo-check "$@"
+    exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-5.6-sol --config model_reasoning_effort="medium" exec --skip-git-repo-check --ephemeral "$@"
 fi
