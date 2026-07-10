@@ -233,6 +233,19 @@ for tool in "${required_brews[@]}"; do
 done
 section_ok "lint dependencies present in Brewfile and ci.yml"
 
+# ---- Brewfile tap trust drift ---------------------------------------------
+# Homebrew requires explicit trust for third-party taps: every `tap` in the
+# Brewfile needs a matching `brew trust` line in fresh.sh or `brew bundle`
+# halts on a fresh machine (the exact seam the section above manages for CI).
+section "Brewfile tap trust"
+while IFS= read -r tap_name; do
+  if ! grep -qE "brew trust (--formula|--cask) ${tap_name}/" fresh.sh; then
+    printf '  FAIL tap %s in Brewfile but no `brew trust` line in fresh.sh\n' "$tap_name"
+    fail
+  fi
+done < <(sed -nE "s/^tap '([^']+)'.*/\1/p" Brewfile)
+section_ok "every Brewfile tap is trusted in fresh.sh"
+
 # ---- FormatTranscription invariants -------------------------------------
 # The built bundle is not committed (fresh.sh runs build.sh from source), so
 # the source files carry the invariants. A locally built bundle, when present,
