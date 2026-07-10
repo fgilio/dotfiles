@@ -24,6 +24,9 @@
 # whenever Node is upgraded. This script dynamically resolves the default version.
 #
 
-NVM_DIR="$HOME/Library/Application Support/Herd/config/nvm"
+# zsh -f skips rc files but not the environment: .zshenv's exported NVM_DIR
+# (the canonical copy) reaches us in every normal invocation. The hardcoded
+# fallback covers env-less contexts (launchd, cron).
+NVM_DIR="${NVM_DIR:-$HOME/Library/Application Support/Herd/config/nvm}"
 version=$(<"$NVM_DIR/alias/default")
 exec "$NVM_DIR/versions/node/$version/bin/node" "$@"
