@@ -9,7 +9,9 @@ hyperSHotkey = hs.hotkey.bind(hyper, 's', function()
   if not app then return end
 
   local name = app:name()
-  if name == 'Slack' then
+  if name == 'Claude' then
+    hs.eventtap.keyStroke({'cmd'}, 'b')
+  elseif name == 'Slack' then
     hs.eventtap.keyStroke({'cmd', 'shift'}, 'd')
   elseif name == 'Linear' then
     hs.eventtap.keyStroke({}, '[')
