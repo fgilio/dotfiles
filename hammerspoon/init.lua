@@ -1,6 +1,24 @@
 -- Hyper = ctrl+alt+cmd+shift everywhere (the convention in CLAUDE.md)
 local hyper = {'ctrl', 'alt', 'cmd', 'shift'}
 
+local function toggleChromeTabSidebar(app)
+  local window = app:focusedWindow()
+  if not window then return end
+
+  -- State-aware labels avoid coupling the hotkey to the button's position.
+  local windowElement = hs.axuielement.windowElement(window)
+  local buttons = windowElement:elementSearch(nil, function(element)
+    local description = element:attributeValue('AXDescription')
+
+    return element:attributeValue('AXRole') == 'AXButton'
+      and (description == 'Collapse Tabs' or description == 'Expand Tabs')
+  end, {noCallback = true, depth = 8, count = 1})
+
+  if buttons[1] then
+    buttons[1]:performAction('AXPress')
+  end
+end
+
 -- Hyper+S: Toggle sidebar in supported apps
 -- Uses global hotkey with app check (more reliable than window.filter)
 local hyperSHotkey
@@ -11,6 +29,8 @@ hyperSHotkey = hs.hotkey.bind(hyper, 's', function()
   local name = app:name()
   if name == 'Claude' then
     hs.eventtap.keyStroke({'cmd'}, 'b')
+  elseif name == 'Google Chrome' then
+    toggleChromeTabSidebar(app)
   elseif name == 'Slack' then
     hs.eventtap.keyStroke({'cmd', 'shift'}, 'd')
   elseif name == 'Linear' then
