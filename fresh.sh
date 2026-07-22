@@ -123,8 +123,15 @@ fi
 # Herd handles PHP and extensions
 
 # Install global Composer packages
+# Let Composer infer constraints from the latest compatible CLI releases.
 if command -v composer &>/dev/null; then
-  composer global require laravel/installer beyondcode/expose ymirapp/cli
+  composer global require \
+    beyondcode/expose \
+    cpx/cpx \
+    humbug/box \
+    laravel/cloud-cli \
+    laravel/forge-cli \
+    laravel/installer
 fi
 
 # Symlink the Mackup config file to the home directory
