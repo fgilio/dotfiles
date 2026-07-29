@@ -197,8 +197,18 @@ alias ll="gls -alth --color=auto"   # GNU coreutils ls (gls) for --color support
 # unaffected. Use `command cat` for true raw output.
 alias cat="bat --paging=never --style=plain"
 # No rm alias needed: dotfiles/bin/rm intercepts and moves to Trash instead of deleting
-alias cp="cp -iv"                   # Interactive and verbose copy
-alias mv="mv -iv"                   # Interactive and verbose move
+# Overwrite guards, only where something can answer the prompt. Without a TTY
+# (Claude Code, Codex, CI, any script) the prompt blocks forever and silently
+# kills the rest of the command chain, so gate them on a real terminal.
+# Both tests are needed: -o interactive alone still aliases in an agent shell
+# that sources this file, and -t 0 alone still aliases an agent running under a
+# pseudo-TTY. The else branch keeps re-sourcing idempotent.
+if [[ -o interactive && -t 0 ]]; then
+  alias cp="cp -iv"                 # Interactive and verbose copy
+  alias mv="mv -iv"                 # Interactive and verbose move
+else
+  unalias cp mv 2>/dev/null || true
+fi
 alias mkdir="mkdir -pv"             # Create parent dirs as needed, verbose
 
 # Disk and memory utilities
