@@ -1,0 +1,16 @@
+#!/bin/bash
+# Daily qmd index refresh. Silent on success; macOS notification on failure.
+set -uo pipefail
+export PATH="$HOME/.bun/bin:$PATH"
+LOG="$HOME/.cache/qmd/refresh.log"
+mkdir -p "$(dirname "$LOG")"
+
+{
+  echo "=== qmd refresh $(date '+%Y-%m-%d %H:%M:%S') ==="
+  qmd update && qmd embed
+} >>"$LOG" 2>&1
+
+if [ $? -ne 0 ]; then
+  osascript -e 'display notification "Index refresh failed. Check ~/.cache/qmd/refresh.log" with title "qmd" sound name "Basso"'
+  exit 1
+fi

@@ -120,6 +120,12 @@ if [[ -d "/Applications/Zed.app" ]]; then
   ln -sf /Applications/Zed.app/Contents/MacOS/cli "$HOME/.local/bin/zed"
 fi
 
+# qmd index refresh: daily launchd job, notifies on failure only
+# Plist is copied (not symlinked) because launchd is unreliable with symlinked plists
+ln -sf "$DOTFILES/bin/qmd-refresh" "$HOME/.local/bin/qmd-refresh"
+cp "$DOTFILES/launchagents/com.fgilio.qmd-refresh.plist" "$HOME/Library/LaunchAgents/"
+launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/com.fgilio.qmd-refresh.plist" 2>/dev/null || true
+
 # Herd handles PHP and extensions
 
 # Install global Composer packages
