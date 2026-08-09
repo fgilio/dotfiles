@@ -1,16 +1,29 @@
 #!/bin/bash
-# Daily qmd index refresh. Silent on success; macOS notification on failure.
+# Daily qmd index refresh. Silent on success; modal alert on failure.
 set -uo pipefail
-export PATH="$HOME/.bun/bin:$PATH"
 LOG="$HOME/.cache/qmd/refresh.log"
 mkdir -p "$(dirname "$LOG")"
 
-{
-  echo "=== qmd refresh $(date '+%Y-%m-%d %H:%M:%S') ==="
-  qmd update && qmd embed
-} >>"$LOG" 2>&1
+# launchd runs this with a bare environment. qmd's shebang is `#!/usr/bin/env
+# node`, and node only exists via NVM, which .zshenv lazy-loads and launchd
+# never sources. Source nvm.sh here so the default node lands on PATH; do not
+# hardcode a version path, it breaks silently on the next node upgrade.
+export NVM_DIR="$HOME/Library/Application Support/Herd/config/nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" >/dev/null 2>&1
+export PATH="$HOME/.bun/bin:$PATH"
 
-if [ $? -ne 0 ]; then
-  osascript -e 'display notification "Index refresh failed. Check ~/.cache/qmd/refresh.log" with title "qmd" sound name "Basso"'
+fail() {
+  # A banner is too easy to miss for a once-a-day job that only speaks up when
+  # something is broken, so this blocks until acknowledged.
+  osascript -e "display alert \"qmd index refresh failed\" message \"$1
+
+Log: ~/.cache/qmd/refresh.log\" as critical" >/dev/null 2>&1
   exit 1
-fi
+}
+
+echo "=== qmd refresh $(date '+%Y-%m-%d %H:%M:%S') ===" >>"$LOG"
+
+command -v node >/dev/null 2>&1 || fail "node not found on PATH."
+command -v qmd >/dev/null 2>&1 || fail "qmd not found on PATH."
+
+{ qmd update && qmd embed; } >>"$LOG" 2>&1 || fail "$(tail -3 "$LOG")"
