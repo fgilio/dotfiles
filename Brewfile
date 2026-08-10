@@ -63,6 +63,10 @@ brew 'bun' # JavaScript runtime
 brew 'cloudflared' # Cloudflare tunnel
 # Composer is bundled with Herd
 brew 'imagemagick'
+# PHP language server used by Zed (zed/settings.json). Installed here instead of
+# letting the Zed PHP extension manage its own copy: a binary on PATH is also
+# usable by CLI agents, and Zed prefers the PATH build when present.
+brew 'phpantom-lsp'
 
 # Apps
 # TODO: Switch to stable `jordanbaird-ice` once 0.11.13 is released

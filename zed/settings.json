@@ -9,10 +9,18 @@
 {
   "languages": {
     "PHP": {
-      // Intelephense is painfully slow and eats CPU/RAM. Disabling the language
-      // server entirely (vs "language_servers": ["!intelephense"]) also stops Zed
-      // from spinning up the extension's fallbacks (phpactor, phptools) instead.
-      "enable_language_server": false
+      // PHPantom (Rust, ~360MB RAM, ready in seconds) replaces Intelephense, which
+      // was painfully slow and ate CPU/RAM. The `!` entries suppress the PHP
+      // extension's other servers so Zed cannot silently fall back to them.
+      // Shipped by the official Zed PHP extension >= 0.5.x, no extra extension needed.
+      // https://phpantom-dev.github.io/phpantom_lsp/editor-setup/
+      "language_servers": [
+        "phpantom",
+        "!intelephense",
+        "!phpactor",
+        "!phptools",
+        "...",
+      ],
     }
   },
   "cli_default_open_behavior": "existing_window",
