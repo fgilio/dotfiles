@@ -60,7 +60,10 @@
       // This file is public and copied; keep the safe default.
       "default": "confirm",
     },
-    "play_sound_when_agent_done": true,
+    // Was `true` until Zed 1.14 turned this into an enum: "never" | "when_hidden"
+    // | "always". `true` migrates to "always"; use "when_hidden" to only get the
+    // sound when the Zed window is not in front.
+    "play_sound_when_agent_done": "always",
     "default_model": {
       "provider": "anthropic",
       // claude-sonnet-4-latest is not a valid Anthropic alias; pin the real model
