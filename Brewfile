@@ -72,7 +72,7 @@ brew 'phpantom-lsp'
 # TODO: Switch to stable `jordanbaird-ice` once 0.11.13 is released
 cask 'jordanbaird-ice@beta' # Menu bar manager (beta for macOS Tahoe fixes)
 cask '1password'
-brew '1password-cli'
+cask '1password-cli'
 cask 'ghostty'
 cask 'cloudflare-warp' # Cloudflare WARP VPN (1.1.1.1)
 cask 'discord'
