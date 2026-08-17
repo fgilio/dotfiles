@@ -79,6 +79,7 @@ cask 'cloudflare-warp' # Cloudflare WARP VPN (1.1.1.1)
 cask 'discord'
 cask 'orbstack' # Docker/Linux VMs (replaces Docker Desktop; provides docker CLI)
 cask 'dockdoor' # Window preview on Dock hover
+cask 'finetune' # Per-app volume mixer
 cask 'github'
 cask 'gitup-app'
 cask 'handbrake-app'
