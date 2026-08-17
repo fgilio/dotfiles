@@ -74,7 +74,6 @@ cask 'jordanbaird-ice@beta' # Menu bar manager (beta for macOS Tahoe fixes)
 cask '1password'
 brew '1password-cli'
 cask 'ghostty'
-cask 'krisp'
 cask 'cloudflare-warp' # Cloudflare WARP VPN (1.1.1.1)
 cask 'discord'
 cask 'orbstack' # Docker/Linux VMs (replaces Docker Desktop; provides docker CLI)
