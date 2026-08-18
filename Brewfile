@@ -119,6 +119,12 @@ cask 'raycast'
 cask 'tinkerwell'
 cask 'whatsapp'
 
+# Dictation (trialing - keep the winner, drop the rest)
+# Both self-update via Sparkle, so `brew upgrade --cask` skips them and the
+# recorded version goes stale. That is expected; do not use --greedy here.
+cask 'fluidvoice'  # altic-dev/FluidVoice - local STT, Parakeet/Whisper models
+cask 'openwhispr'  # OpenWhispr - local STT with AI agents
+
 # Quicklook
 # Unsigned app - requires right-click > Open on first launch to bypass Gatekeeper
 cask 'syntax-highlight'
