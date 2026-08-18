@@ -92,7 +92,6 @@ cask 'sublime-text'
 cask 'zed'
 cask 'cursor'
 # Agent CLIs exec'd by bin/cl, bin/cx, bin/cr
-cask 'claude-code'
 cask 'codex'
 cask 'codexbar' # Codex menu-bar companion (steipete/tap)
 cask 'cursor-cli'

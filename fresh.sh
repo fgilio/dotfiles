@@ -120,6 +120,13 @@ if [[ -d "/Applications/Zed.app" ]]; then
   ln -sf /Applications/Zed.app/Contents/MacOS/cli "$HOME/.local/bin/zed"
 fi
 
+# Claude Code via native installer, NOT the brew cask: the cask lags behind
+# releases and disables self-update; the native install (~/.local/bin/claude)
+# keeps itself on the latest version automatically
+if ! command -v claude &>/dev/null; then
+  curl -fsSL https://claude.ai/install.sh | bash
+fi
+
 # qmd index refresh: daily launchd job, notifies on failure only
 # Plist is copied (not symlinked) because launchd is unreliable with symlinked plists
 ln -sf "$DOTFILES/bin/qmd-refresh" "$HOME/.local/bin/qmd-refresh"
