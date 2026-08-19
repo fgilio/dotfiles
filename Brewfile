@@ -69,8 +69,8 @@ brew 'imagemagick'
 brew 'phpantom-lsp'
 
 # Apps
-# TODO: Switch to stable `jordanbaird-ice` once 0.11.13 is released
-cask 'jordanbaird-ice@beta' # Menu bar manager (beta for macOS Tahoe fixes)
+# @beta on purpose: stable lags months behind, the 2.x line targets macOS 26+
+cask 'thaw@beta' # Menu bar manager (maintained Ice fork)
 cask '1password'
 cask '1password-cli'
 cask 'ghostty'
