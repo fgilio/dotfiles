@@ -59,7 +59,7 @@ brew 'moat'       # Security posture auditing for GitHub orgs/repos (laravel/moa
 # Development
 # PHP is managed by Laravel Herd (see cask 'herd' below), not Homebrew
 brew 'biome' # Fast formatter/linter
-brew 'bun' # JavaScript runtime
+# Bun is installed by fresh.sh instead: the formula lags every release
 brew 'cloudflared' # Cloudflare tunnel
 # Composer is bundled with Herd
 brew 'imagemagick'

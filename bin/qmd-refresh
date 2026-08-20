@@ -10,6 +10,7 @@ mkdir -p "$(dirname "$LOG")"
 # hardcode a version path, it breaks silently on the next node upgrade.
 export NVM_DIR="$HOME/Library/Application Support/Herd/config/nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" >/dev/null 2>&1
+# qmd is a bun global package, so its shim lives here too.
 export PATH="$HOME/.bun/bin:$PATH"
 
 fail() {

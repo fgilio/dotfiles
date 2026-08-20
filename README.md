@@ -75,7 +75,7 @@ After you've set up your new Mac you may want to wipe and clean install your old
 - **Shell**: Zsh with [Starship](https://starship.rs/) prompt (no Oh My Zsh)
 - **Package Manager**: [Homebrew](https://brew.sh/)
 - **PHP**: [Laravel Herd](https://herd.laravel.com/) (also manages Node via NVM)
-- **JavaScript Runtime**: [Bun](https://bun.sh/)
+- **JavaScript Runtime**: [Bun](https://bun.sh/) (self-managed in `~/.bun`, upgrade with `bun upgrade`)
 - **Navigation**: [zoxide](https://github.com/ajeetdsouza/zoxide) (smart cd)
 
 ## Customizing

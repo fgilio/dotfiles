@@ -165,12 +165,12 @@ zstyle ':completion::complete:*' cache-path "$_zsh_cache_dir"
 #####################
 # Bun Configuration
 #####################
-# Bun completions, zcompiled once: parsing the 1000-line source costs ~1.8ms per shell
+# Bun completions, zcompiled once: parsing the 1000-line source costs ~1.8ms per
+# shell. `bun upgrade` rewrites _bun, so recompile whenever the source is newer.
 if [[ -s "$HOME/.bun/_bun" ]]; then
   [[ ! -s "$HOME/.bun/_bun.zwc" || "$HOME/.bun/_bun" -nt "$HOME/.bun/_bun.zwc" ]] && zcompile "$HOME/.bun/_bun"
   source "$HOME/.bun/_bun"
 fi
-[[ -d "$HOME/.bun/bin" ]] && path+=("$HOME/.bun/bin")
 
 #####################
 # Aliases

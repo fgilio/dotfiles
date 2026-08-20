@@ -47,5 +47,8 @@ for cmd in node npm npx nvm; do
 done
 unset cmd  # Don't leak the loop variable into every shell
 
+# Bun and its global packages
+[[ -d "$HOME/.bun/bin" ]] && path+=("$HOME/.bun/bin")
+
 # Antigravity CLI
 [[ -d "$HOME/.antigravity/antigravity/bin" ]] && path=("$HOME/.antigravity/antigravity/bin" $path)

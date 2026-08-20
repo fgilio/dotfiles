@@ -127,6 +127,18 @@ if ! command -v claude &>/dev/null; then
   curl -fsSL https://claude.ai/install.sh | bash
 fi
 
+# Bun via official installer, NOT Homebrew: the formula trails upstream releases
+# by hours to days, and a brew-managed bun rejects `bun upgrade`
+if ! command -v bun &>/dev/null; then
+  zshrc_was_clean=$(git -C "$DOTFILES" status --porcelain .zshrc)
+  curl -fsSL https://bun.sh/install | bash
+  # The installer appends its own completions block to .zshrc, which symlinks into
+  # tracked source. Ours is already zcompiled, so restore the file when we can.
+  if [[ -z "$zshrc_was_clean" ]]; then
+    git -C "$DOTFILES" checkout -- .zshrc
+  fi
+fi
+
 # qmd index refresh: daily launchd job, notifies on failure only
 # Plist is copied (not symlinked) because launchd is unreliable with symlinked plists
 ln -sf "$DOTFILES/bin/qmd-refresh" "$HOME/.local/bin/qmd-refresh"
