@@ -56,5 +56,8 @@ unset cmd  # Don't leak the loop variable into every shell
 # already on PATH: when it doesn't, it appends its own block to ~/.zprofile.
 [[ -d "$HOME/.local/bin" ]] && path+=("$HOME/.local/bin")
 
+# opencode keeps its own bin directory
+[[ -d "$HOME/.opencode/bin" ]] && path+=("$HOME/.opencode/bin")
+
 # Antigravity CLI
 [[ -d "$HOME/.antigravity/antigravity/bin" ]] && path=("$HOME/.antigravity/antigravity/bin" $path)

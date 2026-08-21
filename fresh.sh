@@ -147,6 +147,16 @@ if ! command -v codex &>/dev/null; then
   curl -fsSL https://chatgpt.com/codex/install.sh | CODEX_NON_INTERACTIVE=true sh
 fi
 
+# opencode has no Homebrew formula, so the official installer is the only route
+# (~/.opencode/bin, upgrade with `opencode upgrade`). --no-modify-path: it would
+# otherwise append its own PATH export to .zshrc, which symlinks into tracked
+# source; .zshenv already has the entry. The installer resolves the version
+# through the unauthenticated GitHub API, so it can fail with "Failed to fetch
+# version information" when that hourly limit is spent; rerunning later works.
+if ! command -v opencode &>/dev/null; then
+  curl -fsSL https://opencode.ai/install | bash -s -- --no-modify-path
+fi
+
 # qmd index refresh: daily launchd job, notifies on failure only
 # Plist is copied (not symlinked) because launchd is unreliable with symlinked plists
 ln -sf "$DOTFILES/bin/qmd-refresh" "$HOME/.local/bin/qmd-refresh"

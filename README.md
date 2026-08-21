@@ -76,6 +76,7 @@ After you've set up your new Mac you may want to wipe and clean install your old
 - **Package Manager**: [Homebrew](https://brew.sh/)
 - **PHP**: [Laravel Herd](https://herd.laravel.com/) (also manages Node via NVM)
 - **JavaScript Runtime**: [Bun](https://bun.sh/) (self-managed in `~/.bun`, upgrade with `bun upgrade`)
+- **Agent CLIs**: [Claude Code](https://claude.com/claude-code), [Codex](https://developers.openai.com/codex/cli), and [opencode](https://opencode.ai/), each self-managed by its own installer (`bin/cl`, `bin/cx` wrap the first two)
 - **Navigation**: [zoxide](https://github.com/ajeetdsouza/zoxide) (smart cd)
 
 ## Customizing
