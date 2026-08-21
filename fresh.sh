@@ -139,6 +139,14 @@ if ! command -v bun &>/dev/null; then
   fi
 fi
 
+# Codex via the standalone installer, NOT the brew cask or a bun global: the
+# cask trails releases, and `codex upgrade` only works on a standalone install.
+# CODEX_NON_INTERACTIVE stops it prompting to uninstall a rival install or to
+# launch the TUI in the middle of setup.
+if ! command -v codex &>/dev/null; then
+  curl -fsSL https://chatgpt.com/codex/install.sh | CODEX_NON_INTERACTIVE=true sh
+fi
+
 # qmd index refresh: daily launchd job, notifies on failure only
 # Plist is copied (not symlinked) because launchd is unreliable with symlinked plists
 ln -sf "$DOTFILES/bin/qmd-refresh" "$HOME/.local/bin/qmd-refresh"

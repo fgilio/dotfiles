@@ -50,5 +50,11 @@ unset cmd  # Don't leak the loop variable into every shell
 # Bun and its global packages
 [[ -d "$HOME/.bun/bin" ]] && path+=("$HOME/.bun/bin")
 
+# Native CLI installs (claude, codex) and the skill launchers symlinked next to
+# them. Here instead of .zshrc so scripts, launchd jobs, and agent shells all
+# resolve the same binaries, and so the Codex installer sees the directory
+# already on PATH: when it doesn't, it appends its own block to ~/.zprofile.
+[[ -d "$HOME/.local/bin" ]] && path+=("$HOME/.local/bin")
+
 # Antigravity CLI
 [[ -d "$HOME/.antigravity/antigravity/bin" ]] && path=("$HOME/.antigravity/antigravity/bin" $path)

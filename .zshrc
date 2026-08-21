@@ -382,7 +382,6 @@ fi
 
 # Zoo formatting and linting commands (zsetup-hooks etc. resolve via PATH)
 [[ -d "$HOME/pla/zoo/bin" ]] && path+=("$HOME/pla/zoo/bin")
-[[ -d "$HOME/.local/bin" ]] && path+=("$HOME/.local/bin")
 
 ################################################################################
 # Herd
