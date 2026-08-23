@@ -97,6 +97,7 @@ ln -sf "$DOTFILES/hushlogin" "$HOME/.hushlogin"
 # exact formula/cask we need (not whole taps) so the bundle install doesn't halt.
 # laravel/moat repo lacks the `homebrew-` prefix; short form 404s, URL required.
 brew tap laravel/moat https://github.com/laravel/moat && brew trust --formula laravel/moat/moat
+brew tap modem-dev/tap && brew trust --formula modem-dev/tap/hunk
 brew tap steipete/tap && brew trust --cask steipete/tap/codexbar
 brew tap teamookla/speedtest && brew trust --formula teamookla/speedtest/speedtest
 
