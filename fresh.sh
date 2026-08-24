@@ -164,6 +164,11 @@ ln -sf "$DOTFILES/bin/qmd-refresh" "$HOME/.local/bin/qmd-refresh"
 cp "$DOTFILES/launchagents/com.fgilio.qmd-refresh.plist" "$HOME/Library/LaunchAgents/"
 launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/com.fgilio.qmd-refresh.plist" 2>/dev/null || true
 
+# Zed buffer backup: half-hourly snapshot of unsaved buffers and tab lists.
+# bin/zed-buffer-backup is already on PATH via $DOTFILES/bin, so no symlink here.
+cp "$DOTFILES/launchagents/com.fgilio.zed-buffer-backup.plist" "$HOME/Library/LaunchAgents/"
+launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/com.fgilio.zed-buffer-backup.plist" 2>/dev/null || true
+
 # Herd handles PHP and extensions
 
 # Install global Composer packages

@@ -1,0 +1,148 @@
+#!/bin/bash
+# Snapshot every unsaved Zed buffer and every workspace's tab list.
+#
+# Zed keeps untitled buffers only inside its own sqlite DB, and it silently
+# drops a session whose workspace has a root path that no longer exists. Both
+# happened on 2026-08-23 and cost 42 tabs. This job makes that a non-event:
+# buffers land on disk content-addressed, and the tab list is written as a
+# replayable manifest.
+#
+# Safe to run while Zed is open: the DB is copied (with its WAL) before reading.
+set -uo pipefail
+
+STORE="$HOME/zed-recovered-notes/auto"
+LOG="$STORE/backup.log"
+ALERT_STAMP="$STORE/.last-alert"
+mkdir -p "$STORE"
+
+log() { printf '%s  %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" >>"$LOG"; }
+
+fail() {
+  log "FAIL: $1"
+  # A modal every 30 minutes would train Franco to dismiss it, so speak up at
+  # most once a day and stay quiet in the log the rest of the time.
+  local today
+  today=$(date +%F)
+  if [ "$(cat "$ALERT_STAMP" 2>/dev/null)" != "$today" ]; then
+    echo "$today" >"$ALERT_STAMP"
+    osascript -e "display alert \"Zed buffer backup failed\" message \"$1\"" >/dev/null 2>&1
+  fi
+  exit 1
+}
+
+DB_DIR="$HOME/Library/Application Support/Zed/db/0-stable"
+[ -f "$DB_DIR/db.sqlite" ] || fail "Zed database not found at $DB_DIR"
+
+TMP=$(mktemp -d) || fail "cannot create temp dir"
+trap 'rm -rf "$TMP"' EXIT
+# Copy the WAL and SHM too. Without them the snapshot silently omits everything
+# written since the last checkpoint, which is exactly the recent work.
+for f in db.sqlite db.sqlite-wal db.sqlite-shm; do
+  [ -f "$DB_DIR/$f" ] && cp "$DB_DIR/$f" "$TMP/$f"
+done
+
+/usr/bin/python3 - "$TMP/db.sqlite" "$STORE" <<'PY' >>"$LOG" 2>&1 || fail "snapshot script errored, see $LOG"
+import hashlib, os, re, sqlite3, sys, time
+
+db, store = sys.argv[1], sys.argv[2]
+buffers = os.path.join(store, "buffers")
+sessions = os.path.join(store, "sessions")
+index = os.path.join(store, "index.tsv")
+for d in (buffers, sessions):
+    os.makedirs(d, exist_ok=True)
+
+now = time.strftime("%Y-%m-%d %H:%M:%S")
+c = sqlite3.connect(db)
+
+
+def slug(text):
+    line = next((l.strip() for l in text.splitlines() if l.strip()), "untitled")
+    line = re.sub(r"^[#\-*/>\s]+", "", line)
+    line = re.sub(r"[^A-Za-z0-9 ]+", " ", line)
+    return (re.sub(r"\s+", "-", line.strip()).lower()[:60] or "untitled").strip("-")
+
+
+known = set()
+if os.path.exists(index):
+    with open(index) as fh:
+        known = {l.split("\t", 1)[0] for l in fh if l.strip()}
+
+new = 0
+with open(index, "a") as idx:
+    rows = c.execute(
+        "select workspace_id, item_id, contents from editors"
+        " where contents is not null and length(contents) > 0"
+    )
+    for wid, item_id, contents in rows:
+        digest = hashlib.sha1(contents.encode()).hexdigest()
+        if digest in known:
+            continue
+        known.add(digest)
+        name = f"{digest[:12]}_{slug(contents)}.md"
+        with open(os.path.join(buffers, name), "w") as fh:
+            fh.write(contents)
+        idx.write(f"{digest}\t{now}\tws{wid}\titem{item_id}\t{len(contents)}\t{name}\n")
+        new += 1
+
+# The tab list is as easy to lose as the buffers and far more annoying to
+# rebuild from memory, so every run leaves a manifest that can be replayed.
+lines = [f"# Zed workspace snapshot — {now}\n"]
+workspaces = c.execute(
+    "select workspace_id, paths, session_id, window_id, timestamp from workspaces"
+    " order by timestamp desc"
+).fetchall()
+for wid, paths, session, window, stamp in workspaces:
+    tabs = c.execute(
+        "select i.position, cast(e.path as text), length(coalesce(e.contents, '')),"
+        "       coalesce(e.contents, '')"
+        " from items i"
+        " left join editors e on e.item_id = i.item_id and e.workspace_id = i.workspace_id"
+        " where i.workspace_id = ? order by i.position",
+        (wid,),
+    ).fetchall()
+    if not tabs:
+        continue
+    roots = [p for p in (paths or "").split("\n") if p]
+    missing = [p for p in roots if not os.path.exists(p)]
+    lines.append(f"\n## workspace {wid} — {len(tabs)} tabs — last used {stamp}")
+    lines.append(f"session `{session or '-'}` window `{window}`")
+    if roots:
+        lines.append("\nRoots:")
+        lines += [f"- {'MISSING ' if p in missing else ''}`{p}`" for p in roots]
+    if missing:
+        # This is the exact condition that makes Zed drop a session on startup.
+        lines.append(
+            f"\n> WARNING: {len(missing)} root path(s) missing."
+            " Zed will not restore this workspace until they are removed from it."
+        )
+    lines.append("\nTabs:")
+    for pos, path, length, contents in tabs:
+        if path:
+            lines.append(f"{pos:>3}. `{path}`")
+        else:
+            digest = hashlib.sha1(contents.encode()).hexdigest()[:12] if contents else "-"
+            head = (contents.splitlines() or ["<empty>"])[0][:70]
+            lines.append(f"{pos:>3}. [unsaved {length}B {digest}] {head}")
+
+manifest = os.path.join(sessions, time.strftime("%Y-%m-%d_%H%M") + ".md")
+body = "\n".join(lines) + "\n"
+with open(manifest, "w") as fh:
+    fh.write(body)
+with open(os.path.join(store, "latest.md"), "w") as fh:
+    fh.write(body)
+
+# Manifests are a log, not an archive: keep a quarter of them and let the
+# content-addressed buffers carry the long history.
+cutoff = time.time() - 90 * 86400
+for name in os.listdir(sessions):
+    p = os.path.join(sessions, name)
+    if os.path.getmtime(p) < cutoff:
+        os.remove(p)
+
+print(f"{now}  ok: {new} new buffer(s), {len(workspaces)} workspace(s), manifest {os.path.basename(manifest)}")
+PY
+
+# Keep the log from growing without bound.
+if [ -f "$LOG" ] && [ "$(wc -l <"$LOG")" -gt 2000 ]; then
+  tail -1000 "$LOG" >"$LOG.tmp" && mv "$LOG.tmp" "$LOG"
+fi
