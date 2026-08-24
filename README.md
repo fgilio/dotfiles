@@ -31,7 +31,7 @@ After backing up your old Mac you may now follow these install instructions to s
    curl https://raw.githubusercontent.com/fgilio/dotfiles/HEAD/ssh.sh | bash
    ```
 
-   It creates `~/.ssh/id_ed25519_github`, writes the matching `~/.ssh/config` blocks, and opens the page to register the key. Safe to re-run; the last line reports whether authentication works.
+   It creates `~/.ssh/id_ed25519_github`, writes the matching `~/.ssh/config` blocks, trusts GitHub's host keys, and opens the page to register the key. Safe to re-run; the last line reports whether authentication works. This is `curl | bash` against a mutable `HEAD`: if this repo or my GitHub account were compromised, that is code execution on a fresh machine. Read the script first if that bothers you.
 
 3. Paste the key (already on the clipboard) at [github.com/settings/ssh/new](https://github.com/settings/ssh/new), then re-run the script to verify. Skipping this makes the SSH clone below fail with `Permission denied`
 
@@ -81,9 +81,14 @@ Two identities, split by how often they are used:
 | `github.com` | `~/.ssh/id_ed25519_github`, on disk, no passphrase | none |
 | everything else | 1Password SSH agent | Touch ID per use |
 
-Routine `git fetch`/`push` runs constantly, and a biometric prompt on each is not worth the protection: the key it would guard reaches GitHub only, and is revoked with one click at [github.com/settings/keys](https://github.com/settings/keys). Server access keeps the agent and keeps the prompt.
+Routine `git fetch`/`push` runs constantly, and a biometric prompt on each one is not worth what it buys. What it costs is worth stating plainly: the key has no passphrase, so anything running as my user can copy it and use it from another machine, with access to every repository the GitHub account can reach — private and organization repos included, cloning code and pushing where branch rules allow — until the theft is noticed and the key revoked. FileVault protects a locked volume and mode `0600` protects against other local users; neither protects against malware running as me, or an unencrypted backup. The real control against a stolen push credential is branch protection with required review, not a fingerprint prompt. Server access keeps the agent and keeps the prompt.
 
-The `Host github.com` block must stay **above** `Host *` in `~/.ssh/config` — ssh_config keeps the first value obtained for each keyword, so a later block cannot override `IdentityAgent`. `ssh.sh` writes them in that order. `~/.ssh/config` itself is not tracked here (it holds work hostnames), so `ssh.sh` is the reproducible part.
+Two mechanics worth remembering:
+
+- The `Host github.com` block must stay **above** `Host *` — ssh_config keeps the first value obtained for each keyword, so a later block cannot override `IdentityAgent` and is silently ignored. `ssh.sh` checks the effective result with `ssh -G` rather than grepping for the block, because a misplaced block greps as present while doing nothing.
+- `ssh.sh` seeds `known_hosts` from GitHub's TLS-authenticated `api.github.com/meta` rather than `ssh-keyscan`, which trusts whatever answers on port 22. Without it, verification on a fresh machine fails before authentication is attempted, since `BatchMode` refuses to prompt for an unknown host key.
+
+`~/.ssh/config` itself is not tracked here (it holds work hostnames), so `ssh.sh` is the reproducible part.
 
 ### Stack
 
