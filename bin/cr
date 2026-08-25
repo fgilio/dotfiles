@@ -1,10 +1,19 @@
 #!/usr/bin/env zsh
 # Cursor Agent wrapper: works in any shell context
+# AGENT_CLI_STDIN=inherit waits on a slow pipe; AGENT_CLI_STDIN_GRACE sets the wait in ms
 
 if [[ $# -eq 0 || "$1" == -* ]]; then
     # Interactive: no args, or flags (--resume, etc.), default model, skip permissions
     exec cursor-agent -f "$@"
 else
+    # Shared with bin/cx and bin/cl so the three stdin guards can't drift apart
+    source "${0:h}/lib/agent-stdin.sh"
+
+    if agent_stdin_is_idle; then
+        print -ru2 -- "cr: ignoring idle stdin (AGENT_CLI_STDIN=inherit to wait for it)"
+        exec </dev/null
+    fi
+
     # Non-interactive: default model, skip permissions
     exec cursor-agent -p --output-format=text -f "$@"
 fi

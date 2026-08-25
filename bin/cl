@@ -1,5 +1,6 @@
 #!/usr/bin/env zsh
 # Claude Code: trusted mode (no permission prompts)
+# AGENT_CLI_STDIN=inherit waits on a slow pipe; AGENT_CLI_STDIN_GRACE sets the wait in ms
 
 if [[ $# -eq 0 || "$1" == -* ]]; then
     # Interactive: no args, or flags (--resume, --continue, etc.)
@@ -7,6 +8,14 @@ if [[ $# -eq 0 || "$1" == -* ]]; then
     # --effort first so a user-passed --effort in "$@" wins
     exec claude --effort high "$@"
 else
+    # Shared with bin/cx and bin/cr so the three stdin guards can't drift apart
+    source "${0:h}/lib/agent-stdin.sh"
+
+    if agent_stdin_is_idle; then
+        print -ru2 -- "cl: ignoring idle stdin (AGENT_CLI_STDIN=inherit to wait for it)"
+        exec </dev/null
+    fi
+
     # Non-interactive: one-off query, pinned to Opus
     # ANTHROPIC_API_KEY="" forces CLI auth instead of the env key, so --print
     # bills the Max subscription instead of the API
