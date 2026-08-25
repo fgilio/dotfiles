@@ -96,7 +96,7 @@ Two mechanics worth remembering:
 - **Package Manager**: [Homebrew](https://brew.sh/)
 - **PHP**: [Laravel Herd](https://herd.laravel.com/) (also manages Node via NVM)
 - **JavaScript Runtime**: [Bun](https://bun.sh/) (self-managed in `~/.bun`, upgrade with `bun upgrade`)
-- **Agent CLIs**: [Claude Code](https://claude.com/claude-code), [Codex](https://developers.openai.com/codex/cli), and [opencode](https://opencode.ai/), each self-managed by its own installer (`bin/cl`, `bin/cx` wrap the first two)
+- **Agent CLIs**: [Claude Code](https://claude.com/claude-code), [Codex](https://developers.openai.com/codex/cli), and [opencode](https://opencode.ai/), each self-managed by its own installer, plus [Cursor CLI](https://cursor.com/cli) from the Brewfile. `bin/cl`, `bin/cx` and `bin/cr` wrap Claude Code, Codex and Cursor.
 - **Navigation**: [zoxide](https://github.com/ajeetdsouza/zoxide) (smart cd)
 
 ## Customizing
