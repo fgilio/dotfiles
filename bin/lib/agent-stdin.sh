@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
-# Sourced by bin/cx, bin/cl and bin/cr — never executed (tracked 644 on purpose).
+# Sourced by bin/cx, bin/cl, bin/cr and bin/oc — never executed (tracked 644 on purpose).
 #
 # These CLIs append piped stdin to the prompt when stdin is not a TTY. `codex
 # exec --help` says it outright: "instructions are read from stdin. If stdin is

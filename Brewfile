@@ -112,7 +112,7 @@ cask 'slack'
 cask 'sublime-text'
 cask 'zed'
 cask 'cursor'
-# Agent CLIs exec'd by bin/cl, bin/cx, bin/cr
+# Agent CLIs exec'd by bin/cl, bin/cx, bin/cr, bin/oc
 # Codex is installed by fresh.sh instead: the cask lags every release
 cask 'codexbar' # Codex menu-bar companion (steipete/tap)
 cask 'cursor-cli'

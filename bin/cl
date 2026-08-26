@@ -8,7 +8,7 @@ if [[ $# -eq 0 || "$1" == -* ]]; then
     # --effort first so a user-passed --effort in "$@" wins
     exec claude --effort high "$@"
 else
-    # Shared with bin/cx and bin/cr so the three stdin guards can't drift apart
+    # Shared with bin/cx, bin/cr and bin/oc so the four stdin guards can't drift apart
     source "${0:h}/lib/agent-stdin.sh"
 
     if agent_stdin_is_idle; then

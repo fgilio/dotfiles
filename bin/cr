@@ -6,7 +6,7 @@ if [[ $# -eq 0 || "$1" == -* ]]; then
     # Interactive: no args, or flags (--resume, etc.), default model, skip permissions
     exec cursor-agent -f "$@"
 else
-    # Shared with bin/cx and bin/cl so the three stdin guards can't drift apart
+    # Shared with bin/cx, bin/cl and bin/oc so the four stdin guards can't drift apart
     source "${0:h}/lib/agent-stdin.sh"
 
     if agent_stdin_is_idle; then

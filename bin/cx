@@ -7,7 +7,7 @@ if [[ $# -eq 0 || "$1" == -* ]]; then
     # Interactive: no args, or flags (--resume, etc.)
     exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-5.6-sol --config model_reasoning_effort="high" "$@"
 else
-    # Shared with bin/cl and bin/cr so the three stdin guards can't drift apart
+    # Shared with bin/cl, bin/cr and bin/oc so the four stdin guards can't drift apart
     source "${0:h}/lib/agent-stdin.sh"
 
     if agent_stdin_is_idle; then
