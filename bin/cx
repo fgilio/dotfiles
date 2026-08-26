@@ -2,6 +2,7 @@
 # Codex wrapper: works in any shell context
 # Sandbox config in ~/.codex/config.toml (sandbox_mode = "danger-full-access")
 # AGENT_CLI_STDIN=inherit waits on a slow pipe; AGENT_CLI_STDIN_GRACE sets the wait in ms
+# CX_MCP=1 keeps the MCP servers on for a one-shot run
 
 if [[ $# -eq 0 || "$1" == -* ]]; then
     # Interactive: no args, or flags (--resume, etc.)
@@ -15,6 +16,17 @@ else
         exec </dev/null
     fi
 
+    # MCP servers are dead weight in a one-shot, and the OAuth ones (sentry) hijack
+    # Chrome mid-run to re-authenticate. Read the server names out of config.toml so
+    # a newly added server is switched off too.
+    local -a mcp_off
+    if [[ -z "$CX_MCP" ]]; then
+        local server
+        for server in ${(u)${(f)"$(grep -oE '^\[mcp_servers\.[^].]+' ${CODEX_HOME:-$HOME/.codex}/config.toml)"}#\[mcp_servers.}; do
+            mcp_off+=(--config "mcp_servers.${server}.enabled=false")
+        done
+    fi
+
     # Non-interactive one-shot: medium effort keeps one-offs fast
-    exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-5.6-sol --config model_reasoning_effort="medium" exec --skip-git-repo-check --ephemeral "$@"
+    exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-5.6-sol --config model_reasoning_effort="medium" $mcp_off exec --skip-git-repo-check --ephemeral "$@"
 fi
