@@ -1,7 +1,9 @@
 #!/usr/bin/env zsh
 # OpenCode wrapper: works in any shell context
-# Defaults to the free 0x Alpha model (opencode-go/ox-alpha-free); `opencode models`
-# lists the rest — anything suffixed -free costs nothing.
+# Defaults to Muse Spark on OpenCode Zen (opencode/muse-spark-1.2-contributor-free),
+# a free first-party model: no OpenRouter hop, 1M context, fastest of the free tier.
+# Fallback if it ever gets gated: opencode/hy3-free. `opencode models` lists the rest;
+# on the opencode/ provider anything suffixed -free costs nothing.
 # AGENT_CLI_STDIN=inherit waits on a slow pipe; AGENT_CLI_STDIN_GRACE sets the wait in ms
 
 # Repeating -m makes yargs collect an array and opencode crashes on it, so the
@@ -9,7 +11,7 @@
 # spelling: -m VAL, -mVAL, -m=VAL, --model VAL, --model=VAL. Args after -- are
 # positionals to yargs, so the scan stops at the first -- ((i) is its index,
 # or $#+1 when absent). (I)/(i) match the subscript as a pattern.
-model=(-m opencode-go/ox-alpha-free)
+model=(-m opencode/muse-spark-1.2-contributor-free)
 opts=("${@[1,${@[(i)--]}-1]}")
 (( ${opts[(I)-m*]} + ${opts[(I)--model]} + ${opts[(I)--model=*]} )) && model=()
 
