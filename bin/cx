@@ -18,11 +18,14 @@ else
 
     # MCP servers are dead weight in a one-shot, and the OAuth ones (sentry) hijack
     # Chrome mid-run to re-authenticate. Read the server names out of config.toml so
-    # a newly added server is switched off too.
+    # a newly added server is switched off too. Bare TOML keys only: codex's own
+    # --config parser splits on every dot, so a quoted name like [mcp_servers."a.b"]
+    # is unreachable by any override. Skipping it leaves that one server on; emitting
+    # a half-key would abort codex with `invalid transport`.
     local -a mcp_off
     if [[ -z "$CX_MCP" ]]; then
         local server
-        for server in ${(u)${(f)"$(grep -oE '^\[mcp_servers\.[^].]+' ${CODEX_HOME:-$HOME/.codex}/config.toml)"}#\[mcp_servers.}; do
+        for server in ${(u)${(f)"$(grep -oE '^\[mcp_servers\.[A-Za-z0-9_-]+' ${CODEX_HOME:-$HOME/.codex}/config.toml)"}#\[mcp_servers.}; do
             mcp_off+=(--config "mcp_servers.${server}.enabled=false")
         done
     fi
