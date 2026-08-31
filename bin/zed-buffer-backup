@@ -7,7 +7,14 @@
 # buffers land on disk content-addressed, and the tab list is written as a
 # replayable manifest.
 #
-# Safe to run while Zed is open: the DB is copied (with its WAL) before reading.
+# The dead-root failure then repeated on 2026-08-31 and cost 20 more tabs,
+# because a snapshot only preserves the loss - it does not prevent it. So the
+# job also repairs the cause: whenever Zed is closed, a workspace that still
+# has tabs gets its dead roots pruned, which makes the next launch restore it
+# normally. See the repair pass at the bottom.
+#
+# Safe to run while Zed is open: the DB is copied (with its WAL) before reading,
+# and the repair pass stands down until Zed exits.
 set -uo pipefail
 
 STORE="$HOME/zed-recovered-notes/auto"
@@ -25,7 +32,7 @@ fail() {
   today=$(date +%F)
   if [ "$(cat "$ALERT_STAMP" 2>/dev/null)" != "$today" ]; then
     echo "$today" >"$ALERT_STAMP"
-    osascript -e "display alert \"Zed buffer backup failed\" message \"$1\"" >/dev/null 2>&1
+    osascript -e "display alert \"Zed buffer backup failed\" message \"$1\" giving up after 120" >/dev/null 2>&1
   fi
   exit 1
 }
@@ -141,6 +148,223 @@ for name in os.listdir(sessions):
 
 print(f"{now}  ok: {new} new buffer(s), {len(workspaces)} workspace(s), manifest {os.path.basename(manifest)}")
 PY
+
+# Zed refuses to restore a workspace whose root path no longer exists, and it
+# does so silently: the tabs are still in the DB, but the session is dropped
+# and the next launch is an empty window. That cost 42 tabs on 2026-08-23 and
+# 20 more on 2026-08-31, both times because a file was opened out of ~/.Trash
+# (which makes it a workspace root) and the Trash was emptied later.
+#
+# Detecting it is not enough. The warning above only ever reached a manifest
+# nobody reads, so the same failure landed twice. With Zed closed, dropping a
+# dead root is safe and turns the next launch back into an ordinary restore.
+if pgrep -x zed >/dev/null 2>&1; then
+  : # Zed owns the DB while it runs; repairing underneath it would race the writer.
+else
+  REPAIR=$(
+    /usr/bin/python3 - "$DB_DIR" "$STORE" 2>&1 <<'PY'
+import errno, os, re, sqlite3, shutil, subprocess, sys, time
+
+db_dir, store = sys.argv[1], sys.argv[2]
+db = os.path.join(db_dir, "db.sqlite")
+
+
+def zed_running():
+    return subprocess.run(["pgrep", "-x", "zed"], capture_output=True).returncode == 0
+
+
+def split(text):
+    return [x for x in (text or "").split("\n") if x]
+
+
+def confidently_gone(path):
+    """True only when a root is provably deleted, not merely unreachable.
+
+    An unmounted disk, an unreadable directory or a broken symlink all make a
+    path fail a plain existence test, and pruning on those would throw away a
+    root that comes back on the next mount. Only a missing entry inside a
+    parent directory we can actually read counts as dead.
+    """
+    try:
+        os.lstat(path)
+        return False  # a broken symlink is still a root the user put there
+    except OSError as e:
+        # Only "no such entry" means deleted. EACCES, ENOTDIR, EIO and a
+        # dropped network mount all mean "cannot tell", and os.path.lexists
+        # would flatten every one of them into a bare False.
+        if e.errno != errno.ENOENT:
+            return False
+    parent = os.path.dirname(path)
+    if parent == "/Volumes":
+        return False  # a volume root; absent here only means "not mounted"
+    # Search permission matters as much as read: a parent that is readable but
+    # not searchable fails every child lookup while still looking healthy.
+    return os.path.isdir(parent) and os.access(parent, os.R_OK | os.X_OK)
+
+
+def rebuild(text, order, keep):
+    """Keep the given path indexes and re-index the display-order permutation."""
+    items = split(text)
+    try:
+        o = [int(x) for x in (order or "").split(",") if x != ""]
+    except ValueError:
+        o = []  # unreadable column; the permutation check below falls back
+    remap = {old: new for new, old in enumerate(keep)}
+    new_order = [remap[i] for i in o if i in remap]
+    if sorted(new_order) != list(range(len(keep))):
+        # The order column should be a permutation of the path indexes. If it
+        # is not, rebuilding it faithfully is guesswork, so fall back to the
+        # stored path order rather than write something Zed cannot read.
+        new_order = list(range(len(keep)))
+    return "\n".join(items[i] for i in keep), ",".join(str(i) for i in new_order)
+
+
+c = sqlite3.connect(db, timeout=30)
+c.isolation_level = None  # transactions are managed explicitly below
+c.execute("pragma busy_timeout = 30000")
+
+rows = c.execute(
+    "select workspace_id, paths, paths_order, identity_paths, identity_paths_order,"
+    "       (select count(*) from items i where i.workspace_id = w.workspace_id)"
+    " from workspaces w"
+).fetchall()
+
+# A workspace is identified by its set of root paths, so a prune that makes two
+# workspaces identical would be worse than the problem it fixes.
+taken = {}
+for wid, paths, _, _, _, _ in rows:
+    taken.setdefault(tuple(sorted(split(paths))), []).append(wid)
+
+todo = []
+for wid, paths, order, ipaths, iorder, tabs in rows:
+    p = split(paths)
+    if not p or not tabs:
+        continue
+    # Decide liveness exactly once and carry the result through to the update.
+    # Testing the filesystem a second time inside the prune would let a root
+    # disappear in between and slip past the guards below.
+    keep = [i for i, x in enumerate(p) if not confidently_gone(x)]
+    if len(keep) == len(p):
+        continue
+    if not keep:
+        # Nothing survives to anchor the workspace to. Its unsaved buffers are
+        # already on disk from the snapshot above, so leave the row alone
+        # rather than invent a second rootless workspace.
+        print(f"repair: ws {wid} has no surviving root, left alone ({len(p)} dead)")
+        continue
+    # identity_paths is paired with paths position for position, but it holds
+    # the project root, which is often an ancestor rather than the same string
+    # (ws 59 opens .../farfalla/.claude/notes/... under identity .../farfalla).
+    # Pairing is what lets one keep-set drive both columns; equal strings are
+    # not required, equal length is. If the lengths disagree the pairing is
+    # unknown, and guessing it would strand a root in one column only.
+    if ipaths is not None and len(split(ipaths)) != len(p):
+        print(f"repair: ws {wid} paths/identity_paths length mismatch, left alone")
+        continue
+    key = tuple(sorted(p[i] for i in keep))
+    if taken.get(key):
+        print(f"repair: ws {wid} would collide with ws {taken[key][0]}, left alone")
+        continue
+    taken[key] = [wid]
+    todo.append((wid, paths, order, ipaths, iorder, keep, len(p) - len(keep)))
+
+if not todo:
+    sys.exit(0)
+if zed_running():
+    print("repair: aborted, Zed started during the scan")
+    sys.exit(0)
+
+# Keep the DB as it was before any mutation; a bad prune has to be undoable.
+# SQLite's own backup API is used rather than copying the file with its WAL,
+# because those are three files and Zed could start between two of the copies.
+backup = os.path.join(store, "db-backup-" + time.strftime("%Y%m%d-%H%M%S"))
+os.makedirs(backup, exist_ok=True)
+dst = sqlite3.connect(os.path.join(backup, "db.sqlite"))
+with dst:
+    c.backup(dst)
+dst.close()
+
+done = []
+committed = False
+c.execute("begin immediate")  # take the write lock up front, before Zed can
+try:
+    for wid, paths, order, ipaths, iorder, keep, dead in todo:
+        # One malformed row must not cost every other workspace its repair.
+        try:
+            new_paths, new_order = rebuild(paths, order, keep)
+            # identity_paths arrived in a later migration, so old rows hold NULL.
+            if ipaths is None:
+                new_ipaths, new_iorder = ipaths, iorder
+            else:
+                new_ipaths, new_iorder = rebuild(ipaths, iorder, keep)
+            # Compare and swap. Zed may have started and rewritten this row
+            # since the scan, and in that case its value has to win over the
+            # stale copy this pass is holding.
+            cur = c.execute(
+                "update workspaces set paths = ?, paths_order = ?,"
+                " identity_paths = ?, identity_paths_order = ?"
+                " where workspace_id = ? and paths is ? and paths_order is ?"
+                "   and identity_paths is ?",
+                (new_paths, new_order, new_ipaths, new_iorder,
+                 wid, paths, order, ipaths),
+            )
+            if cur.rowcount != 1:
+                print(f"repair: ws {wid} changed under us, left alone")
+                continue
+        except Exception as e:
+            print(f"repair: ws {wid} skipped, {type(e).__name__}: {e}")
+            continue
+        done.append((wid, dead))
+
+    # Last look before the write becomes visible. Anything Zed wrote after the
+    # scan is caught by the compare-and-swap above; this catches the rest.
+    if done and zed_running():
+        print("repair: rolled back, Zed started during the update")
+        done = []
+    if done:
+        c.execute("commit")
+        committed = True
+finally:
+    # Nothing here may raise on the way out: an exception thrown from the
+    # cleanup would mask the real error and turn a clean no-op into a failure.
+    if not committed:
+        try:
+            c.execute("rollback")
+        except sqlite3.OperationalError:
+            pass
+
+if not committed:
+    # The DB is exactly as the backup found it, so the copy protects nothing.
+    # Keeping it would grow the store by a database per run on the two paths
+    # that reach here, which are both the ordinary outcome of Zed starting
+    # mid-pass, and neither of them reaches the retention prune below.
+    shutil.rmtree(backup, ignore_errors=True)
+    sys.exit(0)
+
+for wid, dead in done:
+    print(f"repair: ws {wid} pruned {dead} dead root(s), backup {os.path.basename(backup)}")
+print("PRUNED: " + re.sub(r'[\\"]', "", ", ".join(f"ws {w} ({d} dead)" for w, d in done)))
+
+# Ten copies is enough history to undo a bad prune without filling the disk.
+old = sorted(d for d in os.listdir(store) if d.startswith("db-backup-"))
+for name in old[:-10]:
+    shutil.rmtree(os.path.join(store, name), ignore_errors=True)
+PY
+  )
+  REPAIR_STATUS=$?
+  # stderr is folded into REPAIR above, so a traceback reaches the log too.
+  [ -n "$REPAIR" ] && printf '%s\n' "$REPAIR" | while IFS= read -r line; do log "$line"; done
+  [ "$REPAIR_STATUS" -ne 0 ] && fail "repair pass exited $REPAIR_STATUS, see $LOG"
+
+  SUMMARY=$(printf '%s\n' "$REPAIR" | sed -n 's/^PRUNED: //p')
+  if [ -n "$SUMMARY" ]; then
+    # A modal would block this job until someone dismissed it, so notify
+    # instead, and bound it in case Apple Events is wedged.
+    osascript -e 'with timeout of 20 seconds' \
+      -e "display notification \"$SUMMARY — restored on next launch\" with title \"Zed workspace repaired\"" \
+      -e 'end timeout' >/dev/null 2>&1 || log "repair: notification failed"
+  fi
+fi
 
 # Keep the log from growing without bound.
 if [ -f "$LOG" ] && [ "$(wc -l <"$LOG")" -gt 2000 ]; then
