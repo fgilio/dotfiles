@@ -25,7 +25,7 @@ fail() {
   today=$(date +%F)
   if [ "$(cat "$ALERT_STAMP" 2>/dev/null)" != "$today" ]; then
     echo "$today" >"$ALERT_STAMP"
-    osascript -e "display alert \"Zed buffer backup failed\" message \"$1\"" >/dev/null 2>&1
+    osascript -e "display alert \"Zed buffer backup failed\" message \"$1\" giving up after 120" >/dev/null 2>&1
   fi
   exit 1
 }
