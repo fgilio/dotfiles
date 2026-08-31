@@ -325,6 +325,11 @@ finally:
             pass
 
 if not committed:
+    # The DB is exactly as the backup found it, so the copy protects nothing.
+    # Keeping it would grow the store by a database per run on the two paths
+    # that reach here, which are both the ordinary outcome of Zed starting
+    # mid-pass, and neither of them reaches the retention prune below.
+    shutil.rmtree(backup, ignore_errors=True)
     sys.exit(0)
 
 for wid, dead in done:
