@@ -14,7 +14,8 @@ typeset -gU path PATH
 path=("$DOTFILES/bin" $path)
 
 # Default editor
-export EDITOR="zed --wait"
+# subl -w blocks until the tab closes, which git commit and similar rely on
+export EDITOR="subl -w"
 export VISUAL="$EDITOR"
 
 # Suppress git advice messages (cleaner output for AI agents and scripts)

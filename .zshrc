@@ -228,7 +228,7 @@ alias today='claude --resume "today" --model sonnet'  # Resume today's Claude Co
 alias blog='cd ~/dev/fgilio.com && claude'  # Claude Code session for the blog
 
 # Configuration editing
-alias edit-zsh-config='$EDITOR "$HOME/.zshrc"'  # Edit ZSH config (uses Zed)
+alias edit-zsh-config='$EDITOR "$HOME/.zshrc"'  # Edit ZSH config
 alias zsh-edit-config='edit-zsh-config'         # Alternative for editing ZSH config
 
 # Show/Hide dotfiles in Finder

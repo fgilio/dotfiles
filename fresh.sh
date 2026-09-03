@@ -202,7 +202,7 @@ if ! command -v utiluti &>/dev/null; then
   rm -rf "$UTILUTI_DIR"
 fi
 
-# Set default apps using utiluti (Zed for text/code, VLC for video, etc.)
+# Set default apps using utiluti (Sublime for text/code, VLC for video, etc.)
 if command -v utiluti &>/dev/null; then
   utiluti manage --type-file "$DOTFILES/default-apps.plist" --url-file "$DOTFILES/default-urls.plist"
 fi

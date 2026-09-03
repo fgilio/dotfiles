@@ -7,21 +7,21 @@
   Keys are UTIs (Uniform Type Identifiers), values are bundle IDs.
 -->
 <dict>
-  <!-- Text/Code files → Zed -->
+  <!-- Text/Code files → Sublime Text -->
   <key>public.plain-text</key>
-  <string>dev.zed.Zed</string>
+  <string>com.sublimetext.4</string>
   <key>public.source-code</key>
-  <string>dev.zed.Zed</string>
+  <string>com.sublimetext.4</string>
   <key>public.shell-script</key>
-  <string>dev.zed.Zed</string>
+  <string>com.sublimetext.4</string>
   <key>public.json</key>
-  <string>dev.zed.Zed</string>
+  <string>com.sublimetext.4</string>
   <key>public.xml</key>
-  <string>dev.zed.Zed</string>
+  <string>com.sublimetext.4</string>
   <key>public.yaml</key>
-  <string>dev.zed.Zed</string>
+  <string>com.sublimetext.4</string>
   <key>net.daringfireball.markdown</key>
-  <string>dev.zed.Zed</string>
+  <string>com.sublimetext.4</string>
 
   <!-- Video files → VLC -->
   <key>public.movie</key>
