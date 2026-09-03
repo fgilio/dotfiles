@@ -1,0 +1,3 @@
+[
+	{ "keys": ["super+ctrl+alt+shift+s"], "command": "toggle_side_bar" },
+]

@@ -1,0 +1,31 @@
+// Sublime Text user preferences. Sublime is the scratchpad + quick file viewer;
+// all real coding happens through agents, so no LSP or heavy packages here.
+{
+	"ignored_packages":
+	[
+		"Vintage",
+	],
+	"font_size": 17,
+	// No symbol indexing: project roots are large and Goto Symbol is never used.
+	"index_files": false,
+
+	// --- Buffer persistence ---
+	// Both are already the build 4200 defaults; pinned so an update can't
+	// silently turn them off. "always" also covers untitled buffers on Cmd-Q.
+	"hot_exit": "always",
+	"hot_exit_projects": true,
+	// Saves named files only; untitled buffers rely on hot_exit.
+	"save_on_focus_lost": true,
+	// Files opened from Finder/CLI join the existing window instead of spawning
+	// a second window with its own session record.
+	"open_files_in_new_window": "never",
+	"close_windows_when_empty": false,
+
+	// Catppuccin (Package Control) color schemes. Adaptive derives UI
+	// colors from the active color scheme, so one theme covers light and dark.
+	"theme": "Adaptive.sublime-theme",
+	"color_scheme": "auto",
+	"light_color_scheme": "Catppuccin Latte.sublime-color-scheme",
+	"dark_color_scheme": "Catppuccin Macchiato.sublime-color-scheme",
+	"show_full_path": true,
+}

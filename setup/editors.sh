@@ -1,6 +1,6 @@
 #!/bin/bash
 # Editor configs: symlink settings + keybindings from dotfiles.
-# VSCode, Cursor, and Zed are all tracked. Cursor is a VSCode fork but keeps its
+# VSCode, Cursor, Sublime and Zed are all tracked. Cursor is a VSCode fork but keeps its
 # own (diverged) config, so it gets an independent dotfiles/cursor dir.
 
 DOTFILES="${DOTFILES:-$HOME/.dotfiles}"
@@ -16,6 +16,22 @@ CURSOR_USER="$HOME/Library/Application Support/Cursor/User"
 mkdir -p "$CURSOR_USER"
 ln -sf "$DOTFILES/cursor/settings.json" "$CURSOR_USER/settings.json"
 ln -sf "$DOTFILES/cursor/keybindings.json" "$CURSOR_USER/keybindings.json"
+
+# --- Sublime Text ---
+# Only prefs + keymap are tracked. The project file under Projects/ lists
+# private paths and stays local.
+ST="$HOME/Library/Application Support/Sublime Text"
+mkdir -p "$ST/Packages/User" "$ST/Local"
+ln -sf "$DOTFILES/sublime/Preferences.sublime-settings" "$ST/Packages/User/Preferences.sublime-settings"
+ln -sf "$DOTFILES/sublime/Default (OSX).sublime-keymap" "$ST/Packages/User/Default (OSX).sublime-keymap"
+# Copied, not symlinked: Package Control rewrites this file in place on every
+# install, which would turn a symlink into drift. It only seeds the first run.
+[[ -f "$ST/Packages/User/Package Control.sublime-settings" ]] \
+  || cp "$DOTFILES/sublime/Package Control.sublime-settings" "$ST/Packages/User/"
+# Package Control installs itself from this file on first launch.
+[[ -f "$ST/Installed Packages/Package Control.sublime-package" ]] \
+  || curl -fsSL https://packagecontrol.io/Package%20Control.sublime-package \
+    -o "$ST/Installed Packages/Package Control.sublime-package"
 
 # --- Zed (settings + keymap) ---
 ZED_USER="$HOME/.config/zed"
