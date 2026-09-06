@@ -6,7 +6,7 @@
 
 if [[ $# -eq 0 || "$1" == -* ]]; then
     # Interactive: no args, or flags (--resume, etc.)
-    exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-5.6-sol --config model_reasoning_effort="high" "$@"
+    exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-6-astra --config model_reasoning_effort="medium" "$@"
 else
     # Shared with bin/cl, bin/cr and bin/oc so the four stdin guards can't drift apart
     source "${0:h}/lib/agent-stdin.sh"
@@ -30,6 +30,6 @@ else
         done
     fi
 
-    # Non-interactive one-shot: medium effort keeps one-offs fast
-    exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-5.6-sol --config model_reasoning_effort="medium" $mcp_off exec --skip-git-repo-check --ephemeral "$@"
+    # Non-interactive one-shot: same model/effort as interactive; medium keeps one-offs fast
+    exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-6-astra --config model_reasoning_effort="medium" $mcp_off exec --skip-git-repo-check --ephemeral "$@"
 fi
