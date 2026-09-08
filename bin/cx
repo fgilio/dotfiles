@@ -6,7 +6,19 @@
 
 if [[ $# -eq 0 || "$1" == -* ]]; then
     # Interactive: no args, or flags (--resume, etc.)
-    exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-6-astra --config model_reasoning_effort="medium" "$@"
+    # codex's parser rejects a repeated --model, so `cx --model o3` would exit 2.
+    # Drop our default when the user brings their own. The non-interactive branch
+    # needs no such guard: its flags sit before `exec`, a separate parser scope.
+    local -a model_flag=(--model gpt-6-astra)
+    local arg
+    for arg in "$@"; do
+        if [[ "$arg" == (-m|--model|--model=*) ]]; then
+            model_flag=()
+            break
+        fi
+    done
+
+    exec codex --search --dangerously-bypass-approvals-and-sandbox $model_flag --config model_reasoning_effort="low" "$@"
 else
     # Shared with bin/cl, bin/cr and bin/oc so the four stdin guards can't drift apart
     source "${0:h}/lib/agent-stdin.sh"
@@ -30,6 +42,6 @@ else
         done
     fi
 
-    # Non-interactive one-shot: same model/effort as interactive; medium keeps one-offs fast
-    exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-6-astra --config model_reasoning_effort="medium" $mcp_off exec --skip-git-repo-check --ephemeral "$@"
+    # Non-interactive one-shot: same model/effort as interactive; low keeps one-offs fast
+    exec codex --search --dangerously-bypass-approvals-and-sandbox --model gpt-6-astra --config model_reasoning_effort="low" $mcp_off exec --skip-git-repo-check --ephemeral "$@"
 fi
