@@ -110,6 +110,12 @@ if [[ -d "$DOTFILES/.git" ]]; then
   lefthook install
 fi
 
+# The agent-browser formula ships only the binary; the Chrome for Testing build
+# it drives is a separate ~180MB download into ~/.agent-browser/browsers
+if [[ ! -d "$HOME/.agent-browser/browsers" ]]; then
+  agent-browser install
+fi
+
 # Create Sublime Text terminal launcher (subl, not sublime)
 mkdir -p "$HOME/.local/bin"
 if [[ -d "/Applications/Sublime Text.app" ]]; then

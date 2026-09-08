@@ -8,6 +8,7 @@ tap 'steipete/tap'        # codexbar
 tap 'teamookla/speedtest' # official Ookla speedtest CLI
 
 # Binaries
+brew 'agent-browser' # Chrome automation for AI agents; needs `agent-browser install` for the bundled Chrome
 brew 'awscli'
 brew 'bash' # Latest Bash version
 brew 'nushell'
