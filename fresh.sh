@@ -179,9 +179,8 @@ launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/com.fgilio.zed-bu
 
 # Install global Composer packages
 # Let Composer infer constraints from the latest compatible CLI releases.
-# Exception: cpx is pinned to ^2.0. v2 needs PHP 8.3+ and v1 runs on 8.2, so an
-# unpinned require on an old PHP silently falls back to v1; the pin fails loudly
-# instead, and it also blocks an unreviewed jump to a future v3.
+# Pinned cpx to ^2.0: v2 needs PHP 8.3+, so an unpinned require on older PHP
+# silently falls back to v1. The pin fails loudly and blocks an unreviewed v3.
 if command -v composer &>/dev/null; then
   composer global require \
     beyondcode/expose \

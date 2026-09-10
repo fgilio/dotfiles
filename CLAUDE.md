@@ -78,3 +78,4 @@ source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 | No NVM fallback | Herd always installed on this machine |
 | GNU coreutils `gls` for `ll` | Enables `--color=auto` flag (plain `ls` stays BSD `ls -G`) |
 | `alias top=btop` | Intentional replacement, not shadowing |
+| Composer global bin before Herd bin | Herd bundles cpx, expose, forge, laravel. The Composer copies pinned in `fresh.sh` must win |

@@ -24,6 +24,10 @@ export GIT_ADVICE=0
 # Flicker-free alt-screen rendering with virtualized scrollback
 export CLAUDE_CODE_NO_FLICKER=1
 
+# Composer global tools go ahead of Herd's bin: Herd bundles its own cpx, expose,
+# forge and laravel, and the Composer copies are the ones fresh.sh pins and updates
+[[ -d "$HOME/.composer/vendor/bin" ]] && path+=("$HOME/.composer/vendor/bin")
+
 # Herd: PHP binary and configuration
 [[ -d "$HOME/Library/Application Support/Herd/bin" ]] && path+=("$HOME/Library/Application Support/Herd/bin")
 export HERD_PHP_83_INI_SCAN_DIR="$HOME/Library/Application Support/Herd/config/php/83/"

@@ -158,9 +158,6 @@ zstyle ':completion::complete:*' cache-path "$_zsh_cache_dir"
 # Docker path (OrbStack)
 [[ -d "$HOME/.orbstack/bin" ]] && path+=("$HOME/.orbstack/bin")
 
-# Composer global packages
-[[ -d "$HOME/.composer/vendor/bin" ]] && path+=("$HOME/.composer/vendor/bin")
-
 
 #####################
 # Bun Configuration
