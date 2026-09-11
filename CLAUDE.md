@@ -6,8 +6,6 @@ This is a **public repository**. Even though it's a personal dotfiles project:
 - Assume all committed content is visible to anyone
 - The `~/.env` file is sourced but intentionally NOT tracked
 
----
-
 ## Target Environment
 
 - **macOS only**: no Linux, no Windows, no WSL
@@ -15,15 +13,11 @@ This is a **public repository**. Even though it's a personal dotfiles project:
 - **Homebrew at `/opt/homebrew`**: always this path, never dynamic
 - **Herd always installed**: manages PHP and Node (via NVM)
 
----
-
 ## Core Values (Priority Order)
 
 1. **Speed**: shell startup must stay under 100ms. Every millisecond counts.
 2. **Simplicity**: no over-engineering. No abstractions for one-time operations.
 3. **Developer Experience**: ergonomic aliases, sensible defaults, minimal friction.
-
----
 
 ## Code Style
 
@@ -49,7 +43,3 @@ source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 - **No abstractions for single-use code**: three similar lines > premature helper function
 - **No compatibility shims**: if something is unused, delete it completely
-
----
-
----
