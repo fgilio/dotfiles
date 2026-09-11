@@ -47,7 +47,6 @@ source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 ### What NOT to Do
 
-- **No defensive coding for impossible scenarios**: if Herd is always installed, don't handle "what if NVM is missing"
 - **No abstractions for single-use code**: three similar lines > premature helper function
 - **No compatibility shims**: if something is unused, delete it completely
 
