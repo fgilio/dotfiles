@@ -5,7 +5,6 @@
 This is a **public repository**. Even though it's a personal dotfiles project:
 - Assume all committed content is visible to anyone
 - The `~/.env` file is sourced but intentionally NOT tracked
-- Secret scanning is enforced by `gitleaks` (pre-commit + CI)
 
 ---
 
