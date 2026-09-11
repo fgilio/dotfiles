@@ -28,15 +28,6 @@ A proper `.app` bundle (even background-only, ad-hoc signed) gets its own TCC id
 
 Key: Terminal.app has `com.apple.private.tcc.allow-prompting` for `kTCCServiceAll`. Automator doesn't. The .app wrapper is the simplest way to get proper TCC prompting.
 
-## Files
-
-| File | Purpose |
-|------|---------|
-| `main.swift` | App entry point: reads input file, calls LLM, writes output |
-| `Info.plist` | Bundle config: `LSBackgroundOnly`, bundle ID, min macOS version |
-| `build.sh` | Compiles with `swiftc` + `codesign`, no Xcode needed |
-| `build/` | Local build output, gitignored (an unverifiable Mach-O has no place in a public repo) |
-
 ## Build & Install
 
 ```bash
