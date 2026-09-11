@@ -52,18 +52,6 @@ source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 ---
 
-## Key Files
-
-| File | Purpose | Notes |
-|------|---------|-------|
-| `.zshrc` | Main shell config | Optimized for ~30-40ms startup |
-| `.zshenv` | Environment variables, PATH | Minimal, runs for all shells |
-| `Brewfile` | All packages and casks | Single source of truth |
-| `fresh.sh` | New machine setup | Run once after cloning |
-| `functions/dev-tools.zsh` | Custom shell functions | Sourced by .zshrc |
-| `starship.toml` | Prompt configuration | Minimal for speed |
-| `.macos` | macOS system preferences | Run once, logout required |
-
 ---
 
 ## Technical Decisions Log
