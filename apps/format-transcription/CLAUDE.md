@@ -62,7 +62,6 @@ automator -i ~/Downloads/audio.opus ~/Library/Services/Transcribe\ Audio.workflo
 
 - "Keep the ORIGINAL LANGUAGE" is critical: without it, the ~3B model translates everything to English
 - "without wrapping it in code fences": the model tends to wrap output in ```markdown blocks
-- The model handles paragraph breaks and headers well but occasionally invents section titles
 
 ## Gotchas
 
