@@ -54,11 +54,7 @@ automator -i ~/Downloads/audio.opus ~/Library/Services/Transcribe\ Audio.workflo
 
 ## Key Decisions
 
-- **`open -W -n -g`**: `-W` waits for exit, `-n` forces new instance per run, `-g` prevents focus stealing
 - **Ad-hoc signing** (`codesign --sign -`): sufficient for TCC. Real signing only needed for distribution
-- **`-O` optimization flag**: faster runtime since the LLM call is the bottleneck anyway
-- **Atomic write** (`atomically: true`): prevents partial .md files if interrupted
-- **Best-effort**: workflow uses `|| true` so .txt is always kept even if formatting fails
 
 `bin/check` enforces the on-device-only invariants on the source `Info.plist`, `build.sh`, and `main.swift`, plus the locally built bundle's Info.plist when one exists (`LSBackgroundOnly`, `LSMinimumSystemVersion=26.0`, `-target arm64-apple-macos26.0`, `import FoundationModels` and no `FoundationNetworking`).
 
