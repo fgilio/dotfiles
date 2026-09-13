@@ -137,6 +137,8 @@ def fit(name):
     if len(name.encode()) <= room:
         return name
     stem, ext = os.path.splitext(name)
+    if len(ext.encode()) > 16:
+        stem, ext = name, ""  # a dot deep inside a long name is not an extension
     keep = room - len(ext.encode())
     return stem.encode()[:keep].decode("utf-8", "ignore") + ext
 

@@ -46,6 +46,9 @@ EMPTIED='{"file":"/tmp/x/emptied.md","contents":"","file_size":40,"file_write_ti
 LONG_TXT='unsaved edits in a file with a very long name\n'
 LONG_NAME="$(printf 'n%.0s' $(seq 1 240)).md"
 LONG='{"file":"/tmp/x/'$LONG_NAME'","contents":"'$LONG_TXT'","file_size":1,"file_write_time":1,"settings":{}}'
+LONGEXT_TXT='unsaved edits in a file whose name is one long extension\n'
+LONGEXT_NAME="a.$(printf 'x%.0s' $(seq 1 250))"
+LONGEXT='{"file":"/tmp/x/'$LONGEXT_NAME'","contents":"'$LONGEXT_TXT'","file_size":1,"file_write_time":1,"settings":{}}'
 LOCKED_TXT='typed while another run held the lock\n'
 LOCKED='{"contents":"'$LOCKED_TXT'","settings":{}}'
 FOURTH_TXT='survives a corrupt sibling\n'
@@ -106,7 +109,7 @@ assert_eq "nothing is pushed twice" "ok: 0 new buffer(s), 0 session file(s) chan
 echo ""
 echo "third run, edits"
 echo "----------------"
-write_session "Auto Save Session.sublime_session" 202601011300 "$SHOP2" "$DIRTY" "$SECOND" "$THIRD" "$LONG" "$CLEAN"
+write_session "Auto Save Session.sublime_session" 202601011300 "$SHOP2" "$DIRTY" "$SECOND" "$THIRD" "$LONG" "$LONGEXT" "$CLEAN"
 assert_pass "exit 0" "$BACKUP"
 assert_exists "new buffer captured" "$REMOTE/buffers/$(sha "$THIRD_TXT")_a-third-one.md"
 assert_exists "edited buffer lands beside the old version" "$REMOTE/buffers/$(sha "$SHOP2_TXT")_shopping-list.md"
@@ -114,8 +117,10 @@ assert_exists "old version is kept" "$REMOTE/buffers/$(sha "$SHOP_TXT")_shopping
 long_out="$(cd "$REMOTE/buffers" && ls "$(sha "$LONG_TXT")_"*)"
 # 255 minus ".<pid>.tmp": a pid has 1 to 7 digits, so 242 to 248.
 assert_pass "a 240-char basename is shortened to fit NAME_MAX with the temp suffix" test "${#long_out}" -ge 242 -a "${#long_out}" -le 248 -a "${long_out: -3}" = ".md"
-assert_eq "six buffers now" 6 "$(count "$REMOTE/buffers")"
-assert_eq "only the changed files are pushed" "ok: 3 new buffer(s), 1 session file(s) changed, 3 read, 6 file(s) pushed to Drive" "$(last_msg)"
+longext_out="$(cd "$REMOTE/buffers" && ls "$(sha "$LONGEXT_TXT")_"*)"
+assert_pass "a 250-char extension is dropped, not kept past NAME_MAX" test "${#longext_out}" -ge 242 -a "${#longext_out}" -le 248
+assert_eq "seven buffers now" 7 "$(count "$REMOTE/buffers")"
+assert_eq "only the changed files are pushed" "ok: 4 new buffer(s), 1 session file(s) changed, 3 read, 7 file(s) pushed to Drive" "$(last_msg)"
 assert_pass "pushed copy follows the edit" cmp -s "$LOCAL/Auto Save Session.sublime_session" "$REMOTE/Local/Auto Save Session.sublime_session"
 
 echo ""
