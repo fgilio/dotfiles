@@ -1,9 +1,8 @@
 ---
 name: zsh-zle-testing
 description: >
-  Reliably verify changes to zsh interactive / line-editor behavior — ZLE widgets,
-  keybindings (bindkey), zsh-autosuggestions, prompt, history — by driving a REAL
-  interactive shell under a pty and inspecting live state. Use whenever editing
+  Verify changes to zsh interactive / line-editor behavior — ZLE widgets,
+  keybindings (bindkey), zsh-autosuggestions, prompt, history. Use whenever editing
   .zshrc/.zshenv in ways that touch the terminal, BEFORE claiming a fix works:
   `zsh -n` only checks syntax, never runtime behavior. Trigger words: zsh, zle,
   widget, bindkey, keybinding, autosuggestions, suggestion, prompt, starship,
