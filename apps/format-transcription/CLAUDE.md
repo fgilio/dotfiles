@@ -19,28 +19,12 @@ A proper `.app` bundle (even background-only, ad-hoc signed) gets its own TCC id
 
 Key: Terminal.app has `com.apple.private.tcc.allow-prompting` for `kTCCServiceAll`. Automator doesn't. The .app wrapper is the simplest way to get proper TCC prompting.
 
-## Build & Install
+## Build and test
 
 ```bash
-# Build (output: build/FormatTranscription.app)
-./build.sh
-
-# Install
-cp -R build/FormatTranscription.app ~/Applications/
-```
-
-`fresh.sh` runs both steps (build from source, then install) automatically during machine setup.
-
-## Manual Test
-
-```bash
-# Direct app invocation
-open -W -n -g ~/Applications/FormatTranscription.app --args \
-    ~/Downloads/some-transcription.txt \
-    ~/Downloads/some-transcription.md
-
-# Or test the full workflow via automator CLI
-automator -i ~/Downloads/audio.opus ~/Library/Services/Transcribe\ Audio.workflow
+./build.sh && cp -R build/FormatTranscription.app ~/Applications/   # fresh.sh does both on setup
+open -W -n -g ~/Applications/FormatTranscription.app --args ~/Downloads/some.txt ~/Downloads/some.md
+automator -i ~/Downloads/audio.opus ~/Library/Services/Transcribe\ Audio.workflow   # full pipeline
 ```
 
 ## Key Decisions
