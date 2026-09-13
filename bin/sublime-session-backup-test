@@ -1,0 +1,149 @@
+#!/usr/bin/env bash
+# Automated tests for bin/sublime-session-backup
+# Runs under a throwaway $HOME so the real Sublime and Drive folders are never touched
+set -uo pipefail
+
+# Derived from the script's own location so a worktree or secondary clone
+# tests its own copy, not whatever ~/.dotfiles happens to contain
+DOTFILES="$(cd "$(dirname "$0")/.." && pwd)"
+BACKUP="$DOTFILES/bin/sublime-session-backup"
+
+# shellcheck source=bin/lib/test-assert.sh
+source "$DOTFILES/bin/lib/test-assert.sh"
+
+sandbox="$(mktemp -d)"
+cleanup() { /bin/rm -rf -- "$sandbox"; }
+trap cleanup EXIT
+
+export HOME="$sandbox/home"
+LOCAL="$HOME/Library/Application Support/Sublime Text/Local"
+DRIVE="$HOME/Library/CloudStorage/GoogleDrive-franco.gilio@gmail.com/My Drive"
+STORE="$DRIVE/Apps/SublimeText4Temp"
+CACHE="$HOME/.cache/sublime-session-backup"
+LOG="$CACHE/backup.log"
+mkdir -p "$LOCAL" "$DRIVE/Apps" "$CACHE"
+# A failure alerts through osascript at most once a day; pretend today's alert
+# already happened so no test can pop a dialog.
+date +%F >"$CACHE/.last-alert"
+
+# Buffers as Sublime writes them into a session file. The same escapes are
+# read back by printf %b in sha, so the digests match what the job computes.
+SHOP_TXT='# Shopping list\nmilk\neggs\n'
+SHOP='{"contents":"'$SHOP_TXT'","settings":{"buffer_size":24}}'
+DIRTY_TXT='edited but unsaved\n'
+DIRTY='{"file":"/tmp/x/notes.md","contents":"'$DIRTY_TXT'","file_size":10,"file_write_time":1,"settings":{}}'
+CLEAN='{"file":"/tmp/x/clean.txt","settings":{"buffer_size":5}}'
+SECOND_TXT='second untitled\n'
+SECOND='{"contents":"'$SECOND_TXT'","settings":{}}'
+EMPTY='{"contents":"","settings":{}}'
+THIRD_TXT='a third one\n'
+THIRD='{"contents":"'$THIRD_TXT'","settings":{}}'
+SHOP2_TXT='# Shopping list\nmilk\neggs\nbread\n'
+SHOP2='{"contents":"'$SHOP2_TXT'","settings":{"buffer_size":30}}'
+
+sha() { printf '%b' "$1" | shasum | cut -c1-12; }
+count() { find "$1" -type f | wc -l | tr -d ' '; }
+# Last log line without its timestamp
+last_msg() { tail -1 "$LOG" | sed 's/^[^ ]* [^ ]*  //'; }
+
+# write_session NAME MTIME BUFFER-JSON...
+write_session() {
+  local name="$1" mtime="$2"
+  shift 2
+  local IFS=,
+  printf '{"windows":[{"buffers":[%s]}]}\n' "$*" >"$LOCAL/$name"
+  touch -t "$mtime" "$LOCAL/$name"
+}
+
+write_session "Session.sublime_session" 202601011200 "$SHOP" "$DIRTY" "$CLEAN"
+write_session "Auto Save Session.sublime_session" 202601011230 "$SHOP" "$DIRTY" "$SECOND" "$EMPTY" "$CLEAN"
+write_session "Backup Session.sublime_session" 202601011100 "$CLEAN"
+echo 'half-written' >"$LOCAL/Auto Save Temp Session.sublime_session.tmp"
+
+echo "first run"
+echo "---------"
+assert_pass "exit 0" "$BACKUP"
+assert_exists "mirrors Session" "$STORE/Local/Session.sublime_session"
+assert_exists "mirrors Auto Save Session" "$STORE/Local/Auto Save Session.sublime_session"
+assert_exists "mirrors Backup Session" "$STORE/Local/Backup Session.sublime_session"
+assert_not_exists "skips the .tmp" "$STORE/Local/Auto Save Temp Session.sublime_session.tmp"
+assert_pass "mirror is byte-identical" cmp -s "$LOCAL/Session.sublime_session" "$STORE/Local/Session.sublime_session"
+assert_exists "untitled buffer is named after its first line" "$STORE/buffers/$(sha "$SHOP_TXT")_shopping-list.md"
+assert_exists "dirty file-backed buffer keeps its file name" "$STORE/buffers/$(sha "$DIRTY_TXT")_notes.md"
+assert_exists "buffer only in Auto Save Session is captured" "$STORE/buffers/$(sha "$SECOND_TXT")_second-untitled.md"
+assert_eq "clean and empty buffers are skipped" 3 "$(count "$STORE/buffers")"
+assert_eq "index has one line per buffer" 3 "$(wc -l <"$STORE/index.tsv" | tr -d ' ')"
+assert_pass "buffer content is verbatim" cmp -s <(printf '%b' "$DIRTY_TXT") "$STORE/buffers/$(sha "$DIRTY_TXT")_notes.md"
+assert_file_has "index records the source file and path" $'Auto Save Session.sublime_session\t-\t16\t' "$STORE/index.tsv"
+assert_file_has "manifest lists the open file" '`/tmp/x/clean.txt`' "$STORE/latest.md"
+assert_file_has "manifest flags unsaved edits on a file" '`/tmp/x/notes.md` with unsaved edits' "$STORE/latest.md"
+assert_file_has "manifest comes from the freshest session file" 'from `Auto Save Session.sublime_session`' "$STORE/latest.md"
+assert_file_has "manifest shows an untitled buffer's first line" '# Shopping list' "$STORE/latest.md"
+assert_file_has "log reports the run" 'ok: 3 new buffer(s), 3 session file(s) mirrored, 3 read' "$LOG"
+assert_exists "success stamp written" "$CACHE/.last-ok"
+
+echo ""
+echo "second run, nothing changed"
+echo "---------------------------"
+assert_pass "exit 0" "$BACKUP"
+assert_eq "no duplicate buffers" 3 "$(count "$STORE/buffers")"
+assert_eq "index unchanged" 3 "$(wc -l <"$STORE/index.tsv" | tr -d ' ')"
+assert_eq "unchanged files are not re-mirrored" "ok: 0 new buffer(s), 0 session file(s) mirrored, 3 read" "$(last_msg)"
+
+echo ""
+echo "third run, edits"
+echo "----------------"
+write_session "Auto Save Session.sublime_session" 202601011300 "$SHOP2" "$SECOND" "$THIRD" "$CLEAN"
+assert_pass "exit 0" "$BACKUP"
+assert_exists "new buffer captured" "$STORE/buffers/$(sha "$THIRD_TXT")_a-third-one.md"
+assert_exists "edited buffer lands beside the old version" "$STORE/buffers/$(sha "$SHOP2_TXT")_shopping-list.md"
+assert_exists "old version is kept" "$STORE/buffers/$(sha "$SHOP_TXT")_shopping-list.md"
+assert_eq "five buffers now" 5 "$(count "$STORE/buffers")"
+assert_eq "only the changed file is re-mirrored" "ok: 2 new buffer(s), 1 session file(s) mirrored, 3 read" "$(last_msg)"
+assert_pass "mirror follows the edit" cmp -s "$LOCAL/Auto Save Session.sublime_session" "$STORE/Local/Auto Save Session.sublime_session"
+
+echo ""
+echo "Google Drive not mounted"
+echo "------------------------"
+mv "$DRIVE" "$DRIVE.off"
+touch "$CACHE/.last-ok"
+assert_pass "recent backup: quiet skip, exit 0" "$BACKUP"
+assert_file_has "skip is logged" 'skip: Google Drive not mounted' "$LOG"
+touch -t 202601011200 "$CACHE/.last-ok"
+assert_fail "over a day without a backup: exit 1" "$BACKUP"
+assert_file_has "stale backup is logged with its date" 'FAIL: Google Drive not mounted, nothing backed up since 2026-01-01 12:00' "$LOG"
+/bin/rm -f "$CACHE/.last-ok"
+assert_pass "first run ever: quiet skip, exit 0" "$BACKUP"
+assert_exists "first run starts the grace period" "$CACHE/.last-ok"
+mv "$DRIVE.off" "$DRIVE"
+
+echo ""
+echo "unreadable session file"
+echo "-----------------------"
+before="$(count "$STORE/buffers")"
+echo '{"windows": [' >"$LOCAL/Session.sublime_session"
+touch -t 202601011400 "$LOCAL/Session.sublime_session"
+FOURTH_TXT='survives a corrupt sibling\n'
+write_session "Auto Save Session.sublime_session" 202601011401 "$SHOP2" "{\"contents\":\"$FOURTH_TXT\",\"settings\":{}}" "$CLEAN"
+assert_fail "exit 1" "$BACKUP"
+assert_file_has "unreadable file is logged" 'Session.sublime_session: unreadable, JSONDecodeError' "$LOG"
+assert_file_has "run still fails loudly" 'FAIL: extraction errored' "$LOG"
+assert_exists "readable siblings are still extracted" "$STORE/buffers/$(sha "$FOURTH_TXT")_survives-a-corrupt-sibling.md"
+assert_eq "exactly one new buffer" "$((before + 1))" "$(count "$STORE/buffers")"
+assert_fail "corrupt file does not replace the last good mirror" cmp -s "$LOCAL/Session.sublime_session" "$STORE/Local/Session.sublime_session"
+assert_pass "readable siblings are still mirrored" cmp -s "$LOCAL/Auto Save Session.sublime_session" "$STORE/Local/Auto Save Session.sublime_session"
+
+echo ""
+echo "no session files"
+echo "----------------"
+/bin/rm -f "$LOCAL"/*.sublime_session
+assert_fail "empty Local dir: exit 1" "$BACKUP"
+assert_file_has "empty Local dir is logged" 'FAIL: no *.sublime_session files' "$LOG"
+mv "$LOCAL" "$LOCAL.off"
+assert_fail "missing Local dir: exit 1" "$BACKUP"
+assert_file_has "missing Local dir is logged" 'FAIL: Sublime Local dir not found' "$LOG"
+
+echo ""
+echo "----------"
+printf '%d passed, %d failed\n' "$pass" "$fail"
+[[ $fail -eq 0 ]] && exit 0 || exit 1

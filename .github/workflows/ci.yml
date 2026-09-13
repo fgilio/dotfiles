@@ -43,5 +43,8 @@ jobs:
       - name: Gitleaks
         run: gitleaks detect --no-banner --redact --config .gitleaks.toml
 
-      - name: Tests
+      - name: Test rm and trash
         run: bash bin/rm-test
+
+      - name: Test sublime-session-backup
+        run: bash bin/sublime-session-backup-test
