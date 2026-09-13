@@ -2,7 +2,7 @@
 
 ## Public repository
 
-Everything committed here is visible to anyone. Secrets and machine-local values go in `~/.env` (sourced by `.zshrc`, outside the repo), never in a tracked file.
+Everything committed here is visible to anyone. Secrets go in `~/.env` (sourced by `.zshrc`, outside the repo), never in a tracked file.
 
 ## Target environment
 
