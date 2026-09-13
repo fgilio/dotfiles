@@ -13,12 +13,12 @@
 # mount at login (Sublime starts, finds no session and writes an empty one over
 # the backup) and round-trips every autosave through Drive, so this copies.
 #
-# Drive is write-only from here. macOS gates File Provider folders behind TCC,
-# and a launchd script has no identity to be granted one: under launchd, every
-# read or listing inside ~/Library/CloudStorage fails with EPERM while create,
-# overwrite, rename and delete succeed (measured on macOS 26 with a probe
-# agent). So the full state lives in ~/.local/share and a pushed/ mirror there
-# records what Drive already has; nothing ever opens a Drive file for reading.
+# launchd runs this through SublimeSessionBackup.app (apps/sublime-session-
+# backup): Google Drive's folder is TCC-gated and only an app can hold the
+# grant. The full state lives in ~/.local/share and a pushed/ mirror there
+# records what Drive already has, so the push never opens a Drive file (an
+# evicted one would download first), keeps working while Drive is quit, and
+# retries whatever an interrupted run left behind.
 #
 # Safe to run while Sublime is open: the session files are copied to a temp dir
 # first and only the copies are read.
@@ -99,6 +99,26 @@ def same(a, b):
     return os.path.exists(b) and filecmp.cmp(a, b, shallow=False)
 
 
+def valid(session):
+    """Sublime's shape: windows is a list of dicts, each with a list of dict buffers."""
+    windows = session.get("windows") if isinstance(session, dict) else None
+    return isinstance(windows, list) and all(
+        isinstance(w, dict)
+        and isinstance(w.get("buffers", []), list)
+        and all(isinstance(b, dict) for b in w.get("buffers", []))
+        for w in windows
+    )
+
+
+def place(src, dst):
+    """Copy src to dst through a sibling temp file, so a run killed mid-copy
+    leaves the previous dst intact instead of a truncated one."""
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    tmp = dst + ".tmp"
+    shutil.copyfile(src, tmp)
+    os.replace(tmp, dst)
+
+
 # Sublime keeps three session files: "Auto Save Session" is written while it
 # runs, "Session" on exit and "Backup Session" is its copy of the previous
 # one. Any of them can hold a buffer the others already lost, so all are read
@@ -110,19 +130,22 @@ unreadable = 0
 for name in names:
     try:
         with open(os.path.join(tmp, name), encoding="utf-8") as fh:
-            sessions[name] = json.load(fh)
+            session = json.load(fh)
+        if not valid(session):
+            raise ValueError("not a Sublime session")
+        sessions[name] = session
     except (OSError, ValueError) as e:
         print(f"{now}  {name}: unreadable, {type(e).__name__}: {e}")
         unreadable += 1
 
-# Mirror the raw files, but only the ones that parsed: a file Sublime left
-# corrupt must not replace the last good copy.
+# Mirror the raw files, but only the ones that parsed and have the expected
+# shape: a file Sublime left corrupt must not replace the last good copy.
 changed = 0
 for name in sessions:
     src, dst = os.path.join(tmp, name), os.path.join(mirror, name)
     if same(src, dst):
         continue
-    shutil.copy2(src, dst)
+    place(src, dst)
     changed += 1
 
 known = set()
@@ -135,9 +158,12 @@ with open(index, "a") as idx:
     for name, session in sessions.items():
         for window in session.get("windows", []):
             for buf in window.get("buffers", []):
+                # Only a dirty buffer carries "contents". Empty is dirty too
+                # (all text deleted, not saved) but has nothing to write out;
+                # the manifest below still flags it.
                 contents = buf.get("contents")
                 if not contents:
-                    continue  # absent or empty: the buffer is clean and on disk
+                    continue
                 digest = hashlib.sha1(contents.encode()).hexdigest()
                 if digest in known:
                     continue
@@ -166,10 +192,12 @@ if sessions:
         lines.append(f"\n## window {wi} — {len(tabs)} tabs")
         for buf in tabs:
             contents, path = buf.get("contents"), buf.get("file")
-            if contents:
+            if contents is not None:
                 digest = hashlib.sha1(contents.encode()).hexdigest()[:12]
-                head = next((l for l in contents.splitlines() if l.strip()), "")[:70]
+                head = next((l for l in contents.splitlines() if l.strip()), "(emptied)")[:70]
                 what = f"`{path}` with unsaved edits" if path else head
+                if path and not contents:
+                    what += " (emptied)"
                 lines.append(f"- [unsaved {len(contents)}B {digest}] {what}")
             else:
                 lines.append(f"- `{path}`" if path else "- [empty untitled]")
@@ -190,11 +218,8 @@ sent = 0
 if mounted:
     for rel in pending:
         src = os.path.join(state, rel)
-        dst = os.path.join(remote, rel)
-        os.makedirs(os.path.dirname(dst), exist_ok=True)
-        shutil.copyfile(src, dst)  # write-only on the Drive side, see the header
-        os.makedirs(os.path.dirname(os.path.join(pushed, rel)), exist_ok=True)
-        shutil.copy2(src, os.path.join(pushed, rel))
+        place(src, os.path.join(remote, rel))
+        place(src, os.path.join(pushed, rel))
         sent += 1
     tail = f"{sent} file(s) pushed to Drive"
 else:

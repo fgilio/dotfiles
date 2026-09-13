@@ -12,11 +12,7 @@ BACKUP="$DOTFILES/bin/sublime-session-backup"
 source "$DOTFILES/bin/lib/test-assert.sh"
 
 sandbox="$(mktemp -d)"
-# The write-only section strips read bits; give them back or rm cannot descend.
-cleanup() {
-  chmod -R u+rwx "$sandbox" 2>/dev/null
-  /bin/rm -rf -- "$sandbox"
-}
+cleanup() { /bin/rm -rf -- "$sandbox"; }
 trap cleanup EXIT
 
 export HOME="$sandbox/home"
@@ -46,8 +42,7 @@ SHOP2_TXT='# Shopping list\nmilk\neggs\nbread\n'
 SHOP2='{"contents":"'$SHOP2_TXT'","settings":{"buffer_size":30}}'
 OFFLINE_TXT='typed while Drive was away\n'
 OFFLINE='{"contents":"'$OFFLINE_TXT'","settings":{}}'
-BLIND_TXT='pushed without reading Drive\n'
-BLIND='{"contents":"'$BLIND_TXT'","settings":{}}'
+EMPTIED='{"file":"/tmp/x/emptied.md","contents":"","file_size":40,"file_write_time":1,"settings":{}}'
 FOURTH_TXT='survives a corrupt sibling\n'
 FOURTH='{"contents":"'$FOURTH_TXT'","settings":{}}'
 
@@ -66,7 +61,7 @@ write_session() {
 }
 
 write_session "Session.sublime_session" 202601011200 "$SHOP" "$DIRTY" "$CLEAN"
-write_session "Auto Save Session.sublime_session" 202601011230 "$SHOP" "$DIRTY" "$SECOND" "$EMPTY" "$CLEAN"
+write_session "Auto Save Session.sublime_session" 202601011230 "$SHOP" "$DIRTY" "$SECOND" "$EMPTY" "$EMPTIED" "$CLEAN"
 write_session "Backup Session.sublime_session" 202601011100 "$CLEAN"
 echo 'half-written' >"$LOCAL/Auto Save Temp Session.sublime_session.tmp"
 
@@ -91,6 +86,8 @@ assert_file_has "manifest flags unsaved edits on a file" '`/tmp/x/notes.md` with
 assert_file_has "manifest comes from the freshest session file" 'from `Auto Save Session.sublime_session`' "$REMOTE/latest.md"
 assert_file_has "manifest is dated by that file, not by the run" 'snapshot — 2026-01-01 12:30:00' "$REMOTE/latest.md"
 assert_file_has "manifest shows an untitled buffer's first line" '# Shopping list' "$REMOTE/latest.md"
+assert_file_has "manifest flags a file emptied without saving" '[unsaved 0B da39a3ee5e6b] `/tmp/x/emptied.md` with unsaved edits (emptied)' "$REMOTE/latest.md"
+assert_eq "no temp files left behind" 0 "$(find "$REMOTE" "$STATE" -name '*.tmp' | wc -l | tr -d ' ')"
 assert_eq "log reports the run" "ok: 3 new buffer(s), 3 session file(s) changed, 3 read, 8 file(s) pushed to Drive" "$(last_msg)"
 assert_exists "push stamp written" "$STATE/.last-pushed"
 
@@ -134,23 +131,6 @@ assert_exists "pending buffer is pushed on the next mounted run" "$REMOTE/buffer
 assert_eq "exactly the pending files are pushed" "ok: 0 new buffer(s), 0 session file(s) changed, 3 read, 4 file(s) pushed to Drive" "$(last_msg)"
 
 echo ""
-echo "Drive is write-only from launchd (TCC)"
-echo "--------------------------------------"
-# Under launchd, macOS lets a script create and overwrite files in a File
-# Provider folder but refuses every read and listing. Strip the read bits to
-# get the same terrain: stat works, open for reading and readdir do not.
-find "$REMOTE" -type f -exec chmod 200 {} +
-find "$REMOTE" -type d -exec chmod 300 {} +
-write_session "Auto Save Session.sublime_session" 202601011400 "$SHOP2" "$DIRTY" "$SECOND" "$THIRD" "$OFFLINE" "$BLIND" "$CLEAN"
-assert_pass "exit 0 without reading anything on Drive" "$BACKUP"
-assert_eq "changed files are still pushed" "ok: 1 new buffer(s), 1 session file(s) changed, 3 read, 4 file(s) pushed to Drive" "$(last_msg)"
-# find cannot descend into an unlistable dir, so name the dirs outright.
-chmod 700 "$REMOTE" "$REMOTE/Local" "$REMOTE/buffers"
-chmod -R u+rw "$REMOTE"
-assert_exists "new buffer landed" "$REMOTE/buffers/$(sha "$BLIND_TXT")_pushed-without-reading-drive.md"
-assert_pass "overwritten session file is current" cmp -s "$LOCAL/Auto Save Session.sublime_session" "$REMOTE/Local/Auto Save Session.sublime_session"
-
-echo ""
 echo "unreadable session file"
 echo "-----------------------"
 before="$(count "$REMOTE/buffers")"
@@ -164,6 +144,11 @@ assert_exists "readable siblings are still extracted and pushed" "$REMOTE/buffer
 assert_eq "exactly one new buffer" "$((before + 1))" "$(count "$REMOTE/buffers")"
 assert_fail "corrupt file does not replace the last good copy" cmp -s "$LOCAL/Session.sublime_session" "$REMOTE/Local/Session.sublime_session"
 assert_pass "readable siblings are still pushed" cmp -s "$LOCAL/Auto Save Session.sublime_session" "$REMOTE/Local/Auto Save Session.sublime_session"
+echo '{"windows": null}' >"$LOCAL/Session.sublime_session"
+touch -t 202601011502 "$LOCAL/Session.sublime_session"
+assert_fail "valid JSON with the wrong shape: exit 1" "$BACKUP"
+assert_file_has "wrong shape is logged" 'Session.sublime_session: unreadable, ValueError: not a Sublime session' "$LOG"
+assert_fail "wrong shape does not replace the last good copy" cmp -s "$LOCAL/Session.sublime_session" "$REMOTE/Local/Session.sublime_session"
 
 echo ""
 echo "no session files"
