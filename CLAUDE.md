@@ -10,11 +10,11 @@ Everything committed here is visible to anyone. Secrets and machine-local values
 - Homebrew lives at `/opt/homebrew`. Hardcode it: `$(brew --prefix)` forks a subprocess (~30-50ms) and `bin/check` fails the commit.
 - Herd is always installed and manages PHP and Node (NVM): no handling for a missing Herd or NVM.
 
-## Core Values (Priority Order)
+## Priorities, in order
 
-1. **Speed**: shell startup must stay under 100ms. Every millisecond counts.
-2. **Simplicity**: no over-engineering. No abstractions for one-time operations.
-3. **Developer Experience**: ergonomic aliases, sensible defaults, minimal friction.
+1. Startup speed: an interactive shell must start in under 50ms, and every fork at startup counts.
+2. Simplicity: no over-engineering.
+3. Ergonomics: sensible defaults, minimal friction.
 
 ## Code style
 
