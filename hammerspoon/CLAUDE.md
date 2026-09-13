@@ -1,20 +1,11 @@
 # Hammerspoon Config
 
-## Adding a Module
+## Adding a module
 
-1. Create the `.lua` file in this directory
-2. Add `require("name")` to the end of `init.lua`
+Create `hammerspoon/<name>.lua`, self-contained (it binds its own hotkeys and watchers on load), and add `require("<name>")` at the end of `init.lua`; `bin/check` fails without it. Hammerspoon loads from `~/.hammerspoon/`, not this directory: `fresh.sh` symlinks every `hammerspoon/*.lua` there on a fresh machine, so on this one symlink the new file yourself (`ln -sf`, never a copy).
 
-Hammerspoon resolves `require()` from `~/.hammerspoon/`, not the dotfiles source dir. `fresh.sh` symlinks every `hammerspoon/*.lua` automatically (per-file, not whole-dir, so Hammerspoon's own writes like `Spoons/` never land in the repo); `bin/check` enforces the `require()` step.
+`Hyper` is `ctrl+alt+cmd+shift` everywhere (`hyper` in `init.lua`).
 
-## Hotkey Conventions
+## Ghostty font scaling
 
-| Convention | Detail |
-|---|---|
-| `Hyper` | `ctrl+alt+cmd+shift` everywhere |
-| Pass-through | Disable hotkey, send keystroke, re-enable via `hs.timer.doAfter(0, ...)` |
-| Per-app behavior | Check `hs.application.frontmostApplication():name()` inside a global hotkey |
-
-## Ghostty Font Scaling
-
-Screen watcher debounces 1s because screen change events fire multiple times in rapid succession. Font size is applied via keystrokes sent to Ghostty (`Hyper+1`/`Hyper+2`), not config file edits: this lets Ghostty's own keybindings handle the actual font change.
+Font size changes go through keystrokes to Ghostty (`Hyper+1`/`Hyper+2`, bound in `ghostty.config`), never by editing its config file.

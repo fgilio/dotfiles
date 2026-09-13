@@ -1,19 +1,10 @@
 # FormatTranscription.app
 
-Background-only macOS app that formats raw whisper transcriptions into clean Markdown using Apple's on-device LLM (FoundationModels framework, ~3B param, Metal-accelerated).
+Background-only macOS app: formats a whisper transcript into Markdown with Apple's on-device model (FoundationModels). On-device only: no network, no API keys. Needs macOS 26+ with Apple Intelligence.
 
-100% local, zero network, zero API keys. Requires macOS 26+ with Apple Intelligence enabled.
+## Caller
 
-## Architecture
-
-```
-Finder Quick Action (right-click audio file)
-  -> Automator workflow (workflows/Services/Transcribe Audio.workflow)
-    -> ffmpeg converts to WAV
-    -> whisper-cli transcribes to .txt
-    -> open -W -n -g FormatTranscription.app --args input.txt output.md
-      -> FoundationModels LLM formats to .md
-```
+The app is launched by the Transcribe Audio Quick Action: `workflows/Services/Transcribe Audio.workflow/Contents/document.wflow` (Automator-generated XML, edited in Automator, never by hand). Read it before changing the app's arguments, output path or exit behavior.
 
 ## Why a .app wrapper instead of a CLI tool?
 
@@ -28,35 +19,19 @@ A proper `.app` bundle (even background-only, ad-hoc signed) gets its own TCC id
 
 Key: Terminal.app has `com.apple.private.tcc.allow-prompting` for `kTCCServiceAll`. Automator doesn't. The .app wrapper is the simplest way to get proper TCC prompting.
 
-## Build & Install
+## Build and test
 
 ```bash
-# Build (output: build/FormatTranscription.app)
-./build.sh
-
-# Install
-cp -R build/FormatTranscription.app ~/Applications/
-```
-
-`fresh.sh` runs both steps (build from source, then install) automatically during machine setup.
-
-## Manual Test
-
-```bash
-# Direct app invocation
-open -W -n -g ~/Applications/FormatTranscription.app --args \
-    ~/Downloads/some-transcription.txt \
-    ~/Downloads/some-transcription.md
-
-# Or test the full workflow via automator CLI
-automator -i ~/Downloads/audio.opus ~/Library/Services/Transcribe\ Audio.workflow
+./build.sh && cp -R build/FormatTranscription.app ~/Applications/   # fresh.sh does both on setup
+open -W -n -g ~/Applications/FormatTranscription.app --args ~/Downloads/some.txt ~/Downloads/some.md
+automator -i ~/Downloads/audio.opus ~/Library/Services/Transcribe\ Audio.workflow   # full pipeline
 ```
 
 ## Key Decisions
 
 - **Ad-hoc signing** (`codesign --sign -`): sufficient for TCC. Real signing only needed for distribution
 
-`bin/check` enforces the on-device-only invariants on the source `Info.plist`, `build.sh`, and `main.swift`, plus the locally built bundle's Info.plist when one exists (`LSBackgroundOnly`, `LSMinimumSystemVersion=26.0`, `-target arm64-apple-macos26.0`, `import FoundationModels` and no `FoundationNetworking`).
+`bin/check` pins the on-device invariants across `Info.plist` (`LSBackgroundOnly`, `LSMinimumSystemVersion`), `build.sh` (`-target`) and `main.swift` (FoundationModels imported, FoundationNetworking absent), and checks a locally built bundle too. A target bump changes all of them plus `MACOS_TARGET` in `bin/check`, then rebuilds, or the commit fails.
 
 ## Prompt Engineering Notes
 
@@ -65,6 +40,5 @@ automator -i ~/Downloads/audio.opus ~/Library/Services/Transcribe\ Audio.workflo
 
 ## Gotchas
 
-- **First run after install**: macOS will prompt for Downloads folder access. The TCC grant persists for the bundle ID (`com.fgilio.format-transcription`)
-- **After rebuild**: if the bundle ID stays the same, TCC grants carry over. If you change it, the user gets prompted again
+- **TCC**: the Downloads-folder grant is keyed to the bundle ID (`com.fgilio.format-transcription`); a rebuild keeps it, a new ID re-prompts.
 - **Whisper language**: the workflow uses `-l auto` for whisper-cli. Default is `-l en` which forces English transcription (translation, not transcription)
