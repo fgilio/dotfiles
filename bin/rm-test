@@ -9,7 +9,9 @@ DOTFILES="$(cd "$(dirname "$0")/.." && pwd)"
 RM="$DOTFILES/bin/rm"
 TRASH_CMD="$DOTFILES/bin/trash"
 
-pass=0 fail=0
+# shellcheck source=bin/lib/test-assert.sh
+source "$DOTFILES/bin/lib/test-assert.sh"
+
 sandbox="$(mktemp -d)"
 # Isolated trash dir, no interference with real ~/.Trash
 export TRASH_DIR="$sandbox/.Trash"
@@ -17,81 +19,6 @@ mkdir -p "$TRASH_DIR"
 
 cleanup() { /bin/rm -rf -- "$sandbox"; }
 trap cleanup EXIT
-
-assert_pass() {
-  local desc="$1"
-  shift
-  if "$@" >/dev/null 2>&1; then
-    ((pass++))
-    printf '  \033[32mPASS\033[0m %s\n' "$desc"
-  else
-    ((fail++))
-    printf '  \033[31mFAIL\033[0m %s\n' "$desc"
-  fi
-}
-
-assert_fail() {
-  local desc="$1"
-  shift
-  if "$@" >/dev/null 2>&1; then
-    ((fail++))
-    printf '  \033[31mFAIL\033[0m %s (expected failure)\n' "$desc"
-  else
-    ((pass++))
-    printf '  \033[32mPASS\033[0m %s\n' "$desc"
-  fi
-}
-
-assert_stderr() {
-  local desc="$1" pattern="$2"
-  shift 2
-  local err rc
-  err="$("$@" 2>&1 >/dev/null)" && rc=0 || rc=$?
-  if [[ $rc -ne 0 && "$err" == *"$pattern"* ]]; then
-    ((pass++))
-    printf '  \033[32mPASS\033[0m %s\n' "$desc"
-  else
-    ((fail++))
-    printf '  \033[31mFAIL\033[0m %s (rc=%d, expected "%s" in stderr, got "%s")\n' "$desc" "$rc" "$pattern" "$err"
-  fi
-}
-
-# Like assert_stderr but doesn't require non-zero exit (for info/verbose messages)
-assert_stderr_any() {
-  local desc="$1" pattern="$2"
-  shift 2
-  local err
-  err="$("$@" 2>&1 >/dev/null)" || true
-  if [[ "$err" == *"$pattern"* ]]; then
-    ((pass++))
-    printf '  \033[32mPASS\033[0m %s\n' "$desc"
-  else
-    ((fail++))
-    printf '  \033[31mFAIL\033[0m %s (expected "%s" in stderr, got "%s")\n' "$desc" "$pattern" "$err"
-  fi
-}
-
-assert_exists() {
-  local desc="$1" path="$2"
-  if [[ -e "$path" || -L "$path" ]]; then
-    ((pass++))
-    printf '  \033[32mPASS\033[0m %s\n' "$desc"
-  else
-    ((fail++))
-    printf '  \033[31mFAIL\033[0m %s (not found: %s)\n' "$desc" "$path"
-  fi
-}
-
-assert_not_exists() {
-  local desc="$1" path="$2"
-  if [[ ! -e "$path" && ! -L "$path" ]]; then
-    ((pass++))
-    printf '  \033[32mPASS\033[0m %s\n' "$desc"
-  else
-    ((fail++))
-    printf '  \033[31mFAIL\033[0m %s (should not exist: %s)\n' "$desc" "$path"
-  fi
-}
 
 mkfile() {
   touch "$sandbox/$1"

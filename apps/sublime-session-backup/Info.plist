@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleExecutable</key>
+	<string>SublimeSessionBackup</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.fgilio.sublime-session-backup</string>
+	<key>CFBundleName</key>
+	<string>SublimeSessionBackup</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>26.0</string>
+	<key>LSBackgroundOnly</key>
+	<true/>
+	<key>NSFileProviderDomainUsageDescription</key>
+	<string>Backs up Sublime Text's session and unsaved buffers to Google Drive every 30 minutes.</string>
+</dict>
+</plist>

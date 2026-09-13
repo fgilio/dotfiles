@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.fgilio.sublime-session-backup</string>
+    <!-- The app, not the script: Google Drive's folder is TCC-gated and only a bundle can hold the grant (apps/sublime-session-backup/main.swift). -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/fgilio/Applications/SublimeSessionBackup.app/Contents/MacOS/SublimeSessionBackup</string>
+    </array>
+    <!-- No RunAtLoad: Google Drive mounts after login, so a run at load could only queue the push. -->
+    <key>StartInterval</key>
+    <integer>1800</integer>
+</dict>
+</plist>

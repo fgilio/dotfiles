@@ -12,5 +12,7 @@ pre-commit:
 
 pre-push:
   commands:
-    tests:
+    rm-test:
       run: bin/rm-test
+    sublime-session-backup-test:
+      run: bin/sublime-session-backup-test

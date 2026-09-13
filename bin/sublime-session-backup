@@ -1,0 +1,257 @@
+#!/bin/bash
+# Back up Sublime Text's session files and every unsaved buffer to Google Drive.
+#
+# Sublime keeps untitled buffers and unsaved edits only inside
+# Local/*.sublime_session (hot_exit), so a dead disk takes them along. Every 30
+# minutes this mirrors those files, writes each unsaved buffer out as a
+# readable file (content-addressed, so a later edit never overwrites an earlier
+# one), keeps a readable tab list, and pushes whatever changed to Drive.
+# Recovery on a new Mac: copy Drive's Local/ back before the first launch, or
+# just read buffers/.
+#
+# Issue #1 wanted Local symlinked into Drive instead. A symlink races Drive's
+# mount at login (Sublime starts, finds no session and writes an empty one over
+# the backup) and round-trips every autosave through Drive, so this copies.
+#
+# launchd runs this through SublimeSessionBackup.app (apps/sublime-session-
+# backup): Google Drive's folder is TCC-gated and only an app can hold the
+# grant. The full state lives in ~/.local/share and a pushed/ mirror there
+# records what Drive already has, so the push never opens a Drive file (an
+# evicted one would download first), keeps working while Drive is quit, and
+# retries whatever an interrupted run left behind.
+#
+# Safe to run while Sublime is open: the session files are copied to a temp dir
+# first and only the copies are read.
+set -uo pipefail
+
+LOCAL="$HOME/Library/Application Support/Sublime Text/Local"
+# The same account folder .mackup.cfg and .macos hardcode.
+DRIVE="$HOME/Library/CloudStorage/GoogleDrive-franco.gilio@gmail.com/My Drive"
+REMOTE="$DRIVE/Apps/SublimeText4Temp"
+STATE="$HOME/.local/share/sublime-session-backup"
+LOG="$STATE/backup.log"
+PUSH_STAMP="$STATE/.last-pushed"
+ALERT_STAMP="$STATE/.last-alert"
+mkdir -p "$STATE"
+
+log() { printf '%s  %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" >>"$LOG"; }
+
+fail() {
+  log "FAIL: $1"
+  # A modal every 30 minutes would train Franco to dismiss it, so speak up at
+  # most once a day and stay quiet in the log the rest of the time.
+  local today
+  today=$(date +%F)
+  if [ "$(cat "$ALERT_STAMP" 2>/dev/null)" != "$today" ]; then
+    echo "$today" >"$ALERT_STAMP"
+    osascript -e "display alert \"Sublime session backup failed\" message \"$1\" giving up after 120" >/dev/null 2>&1
+  fi
+  exit 1
+}
+
+[ -d "$LOCAL" ] || fail "Sublime Local dir not found at $LOCAL"
+
+TMP=$(mktemp -d) || fail "cannot create temp dir"
+# /bin/rm, not the bin/rm trash wrapper: a temp dir is not user data.
+trap '/bin/rm -rf "$TMP"' EXIT
+
+# Sublime writes each session file to a .tmp and renames it into place, so a
+# copy taken here is always a complete document; the .tmp itself is skipped.
+shopt -s nullglob
+sessions=("$LOCAL"/*.sublime_session)
+shopt -u nullglob
+[ ${#sessions[@]} -gt 0 ] || fail "no *.sublime_session files in $LOCAL"
+for f in "${sessions[@]}"; do
+  cp -p "$f" "$TMP/" || fail "cannot copy $(basename "$f")"
+done
+
+# Drive is a login item that mounts a little after this agent loads, and it
+# gets quit on purpose now and then. The local state still advances while it
+# is away; the push catches up on the next run that finds it mounted.
+mounted=0
+[ -d "$DRIVE/Apps" ] && mounted=1
+
+/usr/bin/python3 - "$TMP" "$STATE" "$REMOTE" "$mounted" <<'PY' >>"$LOG" 2>&1 || fail "backup errored, see $LOG"
+import fcntl, filecmp, hashlib, json, os, re, shutil, sys, time
+
+tmp, state, remote, mounted = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4] == "1"
+mirror = os.path.join(state, "Local")
+buffers = os.path.join(state, "buffers")
+index = os.path.join(state, "index.tsv")
+pushed = os.path.join(state, "pushed")
+for d in (mirror, buffers, pushed):
+    os.makedirs(d, exist_ok=True)
+now = time.strftime("%Y-%m-%d %H:%M:%S")
+
+# One run at a time: a manual run can overlap the agent, and two writers on
+# the same destination would defeat the atomic replace in place(). The lock
+# is released when this process exits.
+lock = open(os.path.join(state, ".lock"), "w")
+try:
+    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+except OSError:
+    print(f"{now}  skip: another run is in progress")
+    sys.exit(0)
+
+
+def stamp(path):
+    return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(os.path.getmtime(path)))
+
+
+def slug(text):
+    line = next((l.strip() for l in text.splitlines() if l.strip()), "untitled")
+    line = re.sub(r"^[#\-*/>\s]+", "", line)
+    line = re.sub(r"[^A-Za-z0-9 ]+", " ", line)
+    return (re.sub(r"\s+", "-", line.strip()).lower()[:60] or "untitled").strip("-")
+
+
+def same(a, b):
+    return os.path.exists(b) and filecmp.cmp(a, b, shallow=False)
+
+
+def valid(session):
+    """Sublime's shape: windows is a list of dicts, each with a list of dict buffers."""
+    windows = session.get("windows") if isinstance(session, dict) else None
+    return isinstance(windows, list) and all(
+        isinstance(w, dict)
+        and isinstance(w.get("buffers", []), list)
+        and all(isinstance(b, dict) for b in w.get("buffers", []))
+        for w in windows
+    )
+
+
+def place(src, dst):
+    """Copy src to dst through a sibling temp file, so a run killed mid-copy
+    leaves the previous dst intact instead of a truncated one."""
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    tmp = f"{dst}.{os.getpid()}.tmp"
+    shutil.copyfile(src, tmp)
+    os.replace(tmp, dst)
+
+
+# Sublime keeps three session files: "Auto Save Session" is written while it
+# runs, "Session" on exit and "Backup Session" is its copy of the previous
+# one. Any of them can hold a buffer the others already lost, so all are read
+# and the digest dedups the overlap. Oldest first, so the last one parsed is
+# the freshest (cp -p kept the mtimes).
+names = sorted(os.listdir(tmp), key=lambda n: os.path.getmtime(os.path.join(tmp, n)))
+sessions = {}
+unreadable = 0
+for name in names:
+    try:
+        with open(os.path.join(tmp, name), encoding="utf-8") as fh:
+            session = json.load(fh)
+        if not valid(session):
+            raise ValueError("not a Sublime session")
+        sessions[name] = session
+    except (OSError, ValueError) as e:
+        print(f"{now}  {name}: unreadable, {type(e).__name__}: {e}")
+        unreadable += 1
+
+# Mirror the raw files, but only the ones that parsed and have the expected
+# shape: a file Sublime left corrupt must not replace the last good copy.
+changed = 0
+for name in sessions:
+    src, dst = os.path.join(tmp, name), os.path.join(mirror, name)
+    if same(src, dst):
+        continue
+    place(src, dst)
+    changed += 1
+
+known = set()
+if os.path.exists(index):
+    with open(index) as fh:
+        known = {l.split("\t", 1)[0] for l in fh if l.strip()}
+
+new = 0
+with open(index, "a") as idx:
+    for name, session in sessions.items():
+        for window in session.get("windows", []):
+            for buf in window.get("buffers", []):
+                # Only a dirty buffer carries "contents". Empty is dirty too
+                # (all text deleted, not saved) but has nothing to write out;
+                # the manifest below still flags it.
+                contents = buf.get("contents")
+                if not contents:
+                    continue
+                digest = hashlib.sha1(contents.encode()).hexdigest()
+                if digest in known:
+                    continue
+                known.add(digest)
+                path = buf.get("file")
+                # A file-backed buffer with unsaved edits keeps its own name;
+                # an untitled one is named after its first line.
+                if path:
+                    out = f"{digest[:12]}_{os.path.basename(path)}"
+                else:
+                    out = f"{digest[:12]}_{slug(contents)}.md"
+                with open(os.path.join(buffers, out), "w", encoding="utf-8") as fh:
+                    fh.write(contents)
+                idx.write(f"{digest}\t{now}\t{name}\t{path or '-'}\t{len(contents)}\t{out}\n")
+                new += 1
+
+# The tab list is what makes the buffers findable again, so the freshest
+# session file also leaves a readable manifest (the raw copy has it too,
+# buried in the JSON). Dated by that file, not by this run, so an unchanged
+# session yields an identical manifest and nothing to push.
+if sessions:
+    name, session = list(sessions.items())[-1]
+    lines = [f"# Sublime session snapshot — {stamp(os.path.join(tmp, name))}", f"from `{name}`"]
+    for wi, window in enumerate(session.get("windows", []), 1):
+        tabs = window.get("buffers", [])
+        lines.append(f"\n## window {wi} — {len(tabs)} tabs")
+        for buf in tabs:
+            contents, path = buf.get("contents"), buf.get("file")
+            if contents is not None:
+                digest = hashlib.sha1(contents.encode()).hexdigest()[:12]
+                head = next((l for l in contents.splitlines() if l.strip()), "(emptied)")[:70]
+                what = f"`{path}` with unsaved edits" if path else head
+                if path and not contents:
+                    what += " (emptied)"
+                lines.append(f"- [unsaved {len(contents)}B {digest}] {what}")
+            else:
+                lines.append(f"- `{path}`" if path else "- [empty untitled]")
+    with open(os.path.join(state, "latest.md"), "w", encoding="utf-8") as fh:
+        fh.write("\n".join(lines) + "\n")
+
+# Push what Drive does not have yet. pushed/ mirrors every file already sent,
+# so the comparison never touches Drive; a file is recorded there only after
+# its copy landed, so an interrupted push is retried next time.
+pending = []
+for sub in ("Local", "buffers"):
+    for name in sorted(os.listdir(os.path.join(state, sub))):
+        pending.append(os.path.join(sub, name))
+pending += ["index.tsv", "latest.md"]
+pending = [p for p in pending if os.path.isfile(os.path.join(state, p)) and not same(os.path.join(state, p), os.path.join(pushed, p))]
+
+sent = 0
+if mounted:
+    for rel in pending:
+        src = os.path.join(state, rel)
+        place(src, os.path.join(remote, rel))
+        place(src, os.path.join(pushed, rel))
+        sent += 1
+    tail = f"{sent} file(s) pushed to Drive"
+else:
+    tail = f"Drive not mounted, {len(pending)} file(s) pending"
+
+print(f"{now}  ok: {new} new buffer(s), {changed} session file(s) changed, {len(sessions)} read, {tail}")
+sys.exit(1 if unreadable else 0)
+PY
+
+if [ "$mounted" = 1 ]; then
+  touch "$PUSH_STAMP"
+else
+  # Quiet until a whole day has passed without a push. The stamp is created on
+  # the first run so a fresh machine gets the same day of grace.
+  [ -f "$PUSH_STAMP" ] || touch "$PUSH_STAMP"
+  last_push=$(stat -f %m "$PUSH_STAMP")
+  if [ $(($(date +%s) - last_push)) -gt 86400 ]; then
+    fail "Google Drive not mounted, nothing pushed since $(date -r "$last_push" '+%Y-%m-%d %H:%M')"
+  fi
+fi
+
+# Keep the log from growing without bound.
+if [ "$(wc -l <"$LOG")" -gt 2000 ]; then
+  tail -1000 "$LOG" >"$LOG.tmp" && mv "$LOG.tmp" "$LOG"
+fi

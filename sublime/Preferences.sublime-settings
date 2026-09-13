@@ -14,7 +14,8 @@
 	// silently turn them off. "always" also covers untitled buffers on Cmd-Q.
 	"hot_exit": "always",
 	"hot_exit_projects": true,
-	// Saves named files only; untitled buffers rely on hot_exit.
+	// Saves named files only; untitled buffers rely on hot_exit, and
+	// bin/sublime-session-backup mirrors them to Google Drive every 30 minutes.
 	"save_on_focus_lost": true,
 	// Files opened from Finder/CLI join the existing window instead of spawning
 	// a second window with its own session record.

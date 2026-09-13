@@ -164,16 +164,32 @@ if ! command -v opencode &>/dev/null; then
   curl -fsSL https://opencode.ai/install | bash -s -- --no-modify-path
 fi
 
+# LaunchAgents. Plists are copied (not symlinked) because launchd is unreliable
+# with symlinked plists. bootout first so a rerun reloads the current plist
+# instead of failing on "already loaded"; a bootstrap that still fails is a
+# real error and stops setup.
+load_agent() {
+  cp "$DOTFILES/launchagents/$1.plist" "$HOME/Library/LaunchAgents/"
+  launchctl bootout "gui/$(id -u)/$1" 2>/dev/null || true
+  launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/$1.plist"
+}
+
 # qmd index refresh: daily launchd job, notifies on failure only
-# Plist is copied (not symlinked) because launchd is unreliable with symlinked plists
 ln -sf "$DOTFILES/bin/qmd-refresh" "$HOME/.local/bin/qmd-refresh"
-cp "$DOTFILES/launchagents/com.fgilio.qmd-refresh.plist" "$HOME/Library/LaunchAgents/"
-launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/com.fgilio.qmd-refresh.plist" 2>/dev/null || true
+load_agent com.fgilio.qmd-refresh
 
 # Zed buffer backup: half-hourly snapshot of unsaved buffers and tab lists.
 # bin/zed-buffer-backup is already on PATH via $DOTFILES/bin, so no symlink here.
-cp "$DOTFILES/launchagents/com.fgilio.zed-buffer-backup.plist" "$HOME/Library/LaunchAgents/"
-launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/com.fgilio.zed-buffer-backup.plist" 2>/dev/null || true
+load_agent com.fgilio.zed-buffer-backup
+
+# Sublime session backup: half-hourly mirror of Local/*.sublime_session and
+# every unsaved buffer to Google Drive (issue #1). The agent runs the script
+# through an app bundle because Google Drive's folder is TCC-gated; the first
+# run prompts once for access. Built from source like FormatTranscription.
+"$DOTFILES/apps/sublime-session-backup/build.sh"
+rm -rf "$HOME/Applications/SublimeSessionBackup.app"
+cp -R "$DOTFILES/apps/sublime-session-backup/build/SublimeSessionBackup.app" "$HOME/Applications/"
+load_agent com.fgilio.sublime-session-backup
 
 # Herd handles PHP and extensions
 

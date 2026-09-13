@@ -10,8 +10,9 @@
 #   - Hammerspoon modules are wired (require in init.lua; fresh.sh globs *.lua)
 #   - Brewfile and ci.yml install the same dev-tool deps (no drift)
 #   - no trailing whitespace / CRLF (workflows/ excluded: Automator XML)
-#   - FormatTranscription stays on-device (Info.plist, build.sh, main.swift,
-#     plus the locally built bundle when present)
+#   - apps/*/ bundles are background-only and on one macOS target (Info.plist,
+#     build.sh, plus the locally built bundle when present)
+#   - FormatTranscription stays on-device (main.swift)
 #
 # Run: bin/check  (also runs in lefthook pre-commit and GitHub Actions CI)
 set -uo pipefail
@@ -238,13 +239,11 @@ while IFS= read -r tap_name; do
 done < <(sed -nE "s/^tap '([^']+)'.*/\1/p" Brewfile)
 section_ok "every Brewfile tap is trusted in fresh.sh"
 
-# ---- FormatTranscription invariants -------------------------------------
-# The built bundle is not committed (fresh.sh runs build.sh from source), so
-# the source files carry the invariants. A locally built bundle, when present,
-# is checked too so source/built drift is caught before install.
-section "FormatTranscription invariants"
-ft="apps/format-transcription"
-built_plist="$ft/build/FormatTranscription.app/Contents/Info.plist"
+# ---- App bundle invariants ----------------------------------------------
+# Built bundles are not committed (fresh.sh runs each build.sh from source),
+# so the source files carry the invariants. A locally built bundle, when
+# present, is checked too so source/built drift is caught before install.
+section "App bundle invariants"
 
 check_plist() {
   local plist="$1" key="$2" want="$3"
@@ -256,15 +255,23 @@ check_plist() {
   fi
 }
 
-for plist in "$ft/Info.plist" "$built_plist"; do
-  [[ -f "$plist" ]] || continue
-  check_plist "$plist" LSBackgroundOnly true
-  check_plist "$plist" LSMinimumSystemVersion "$MIN_MACOS_VERSION"
+for app in apps/*/; do
+  app="${app%/}"
+  for plist in "$app/Info.plist" "$app"/build/*.app/Contents/Info.plist; do
+    [[ -f "$plist" ]] || continue
+    check_plist "$plist" LSBackgroundOnly true
+    check_plist "$plist" LSMinimumSystemVersion "$MIN_MACOS_VERSION"
+  done
+  if ! grep -vE '^[[:space:]]*#' "$app/build.sh" | grep -qF -- "-target $MACOS_TARGET"; then
+    printf '  FAIL %s/build.sh: missing -target %s\n' "$app" "$MACOS_TARGET"
+    fail
+  fi
 done
-if ! grep -vE '^[[:space:]]*#' "$ft/build.sh" | grep -qF -- "-target $MACOS_TARGET"; then
-  printf '  FAIL build.sh: missing -target %s\n' "$MACOS_TARGET"
-  fail
-fi
+section_ok "every app is background-only and on $MACOS_TARGET"
+
+# ---- FormatTranscription invariants -------------------------------------
+section "FormatTranscription invariants"
+ft="apps/format-transcription"
 # Match attributed forms like `@preconcurrency import FoundationModels` too.
 if ! grep -qE 'import[[:space:]]+FoundationModels(\b|$)' "$ft/main.swift"; then
   echo "  FAIL main.swift: must 'import FoundationModels'"
@@ -274,6 +281,6 @@ if grep -qE 'import[[:space:]]+FoundationNetworking(\b|$)' "$ft/main.swift"; the
   echo "  FAIL main.swift: must NOT 'import FoundationNetworking' (on-device only)"
   fail
 fi
-section_ok "source and built bundle invariants hold"
+section_ok "stays on-device"
 
 exit $status
