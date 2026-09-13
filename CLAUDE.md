@@ -4,12 +4,11 @@
 
 Everything committed here is visible to anyone. Secrets and machine-local values go in `~/.env` (sourced by `.zshrc`, outside the repo), never in a tracked file.
 
-## Target Environment
+## Target environment
 
-- **macOS only**: no Linux, no Windows, no WSL
-- **Apple Silicon only**: no Intel Mac support needed
-- **Homebrew at `/opt/homebrew`**: always this path, never dynamic
-- **Herd always installed**: manages PHP and Node (via NVM)
+- macOS on Apple Silicon only: no Linux, Windows, WSL or Intel fallbacks.
+- Homebrew lives at `/opt/homebrew`. Hardcode it: `$(brew --prefix)` forks a subprocess (~30-50ms) and `bin/check` fails the commit.
+- Herd is always installed and manages PHP and Node (NVM): no handling for a missing Herd or NVM.
 
 ## Core Values (Priority Order)
 
