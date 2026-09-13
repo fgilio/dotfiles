@@ -2,16 +2,9 @@
 
 Background-only macOS app: formats a whisper transcript into Markdown with Apple's on-device model (FoundationModels). On-device only: no network, no API keys. Needs macOS 26+ with Apple Intelligence.
 
-## Architecture
+## Caller
 
-```
-Finder Quick Action (right-click audio file)
-  -> Automator workflow (workflows/Services/Transcribe Audio.workflow)
-    -> ffmpeg converts to WAV
-    -> whisper-cli transcribes to .txt
-    -> open -W -n -g FormatTranscription.app --args input.txt output.md
-      -> FoundationModels LLM formats to .md
-```
+The app is launched by the Transcribe Audio Quick Action: `workflows/Services/Transcribe Audio.workflow/Contents/document.wflow` (Automator-generated XML, edited in Automator, never by hand). Read it before changing the app's arguments, output path or exit behavior.
 
 ## Why a .app wrapper instead of a CLI tool?
 
