@@ -31,7 +31,7 @@ automator -i ~/Downloads/audio.opus ~/Library/Services/Transcribe\ Audio.workflo
 
 - **Ad-hoc signing** (`codesign --sign -`): sufficient for TCC. Real signing only needed for distribution
 
-`bin/check` enforces the on-device-only invariants on the source `Info.plist`, `build.sh`, and `main.swift`, plus the locally built bundle's Info.plist when one exists (`LSBackgroundOnly`, `LSMinimumSystemVersion=26.0`, `-target arm64-apple-macos26.0`, `import FoundationModels` and no `FoundationNetworking`).
+`bin/check` pins the on-device invariants across `Info.plist`, `build.sh` and `main.swift` (background-only, minimum macOS, build target, FoundationModels imported and FoundationNetworking absent) and checks a locally built bundle too: change them together or the commit fails.
 
 ## Prompt Engineering Notes
 
