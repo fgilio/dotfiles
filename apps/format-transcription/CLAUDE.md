@@ -40,5 +40,5 @@ automator -i ~/Downloads/audio.opus ~/Library/Services/Transcribe\ Audio.workflo
 
 ## Gotchas
 
-- **TCC**: the Downloads-folder grant is keyed to the bundle ID (`com.fgilio.format-transcription`); a rebuild keeps it, a new ID re-prompts.
+- **TCC**: the Downloads-folder grant is keyed to the ad-hoc signature's cdhash, not the bundle ID (the TCC.db row decodes to `cdhash H"…"` with `csreq -r- -t`). A rebuild from unchanged source keeps the hash and the grant. Any source change re-prompts on the next run.
 - **Whisper language**: the workflow uses `-l auto` for whisper-cli. Default is `-l en` which forces English transcription (translation, not transcription)
