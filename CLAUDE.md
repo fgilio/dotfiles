@@ -1,10 +1,8 @@
 # Claude Code Instructions for .dotfiles
 
-## Important: Public Repository
+## Public repository
 
-This is a **public repository**. Even though it's a personal dotfiles project:
-- Assume all committed content is visible to anyone
-- The `~/.env` file is sourced but intentionally NOT tracked
+Everything committed here is visible to anyone. Secrets and machine-local values go in `~/.env` (sourced by `.zshrc`, outside the repo), never in a tracked file.
 
 ## Target Environment
 
