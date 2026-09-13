@@ -1,11 +1,8 @@
 # Hammerspoon Config
 
-## Adding a Module
+## Adding a module
 
-1. Create the `.lua` file in this directory
-2. Add `require("name")` to the end of `init.lua`
-
-Hammerspoon resolves `require()` from `~/.hammerspoon/`, not the dotfiles source dir. `fresh.sh` symlinks every `hammerspoon/*.lua` automatically (per-file, not whole-dir, so Hammerspoon's own writes like `Spoons/` never land in the repo); `bin/check` enforces the `require()` step.
+Create `hammerspoon/<name>.lua`, self-contained (it binds its own hotkeys and watchers on load), and add `require("<name>")` at the end of `init.lua`; `bin/check` fails without it. Hammerspoon loads from `~/.hammerspoon/`, not this directory: `fresh.sh` symlinks every `hammerspoon/*.lua` there on a fresh machine, so on this one symlink the new file yourself (`ln -sf`, never a copy).
 
 ## Hotkey Conventions
 
