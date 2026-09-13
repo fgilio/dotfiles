@@ -6,6 +6,6 @@ Create `hammerspoon/<name>.lua`, self-contained (it binds its own hotkeys and wa
 
 `Hyper` is `ctrl+alt+cmd+shift` everywhere (`hyper` in `init.lua`).
 
-## Ghostty Font Scaling
+## Ghostty font scaling
 
-Screen watcher debounces 1s because screen change events fire multiple times in rapid succession. Font size is applied via keystrokes sent to Ghostty (`Hyper+1`/`Hyper+2`), not config file edits: this lets Ghostty's own keybindings handle the actual font change.
+Font size changes go through keystrokes to Ghostty (`Hyper+1`/`Hyper+2`, bound in `ghostty.config`), never by editing its config file.
