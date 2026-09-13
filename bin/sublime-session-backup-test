@@ -43,6 +43,8 @@ SHOP2='{"contents":"'$SHOP2_TXT'","settings":{"buffer_size":30}}'
 OFFLINE_TXT='typed while Drive was away\n'
 OFFLINE='{"contents":"'$OFFLINE_TXT'","settings":{}}'
 EMPTIED='{"file":"/tmp/x/emptied.md","contents":"","file_size":40,"file_write_time":1,"settings":{}}'
+LOCKED_TXT='typed while another run held the lock\n'
+LOCKED='{"contents":"'$LOCKED_TXT'","settings":{}}'
 FOURTH_TXT='survives a corrupt sibling\n'
 FOURTH='{"contents":"'$FOURTH_TXT'","settings":{}}'
 
@@ -129,6 +131,23 @@ mv "$DRIVE.off" "$DRIVE"
 assert_pass "Drive back: exit 0" "$BACKUP"
 assert_exists "pending buffer is pushed on the next mounted run" "$REMOTE/buffers/$(sha "$OFFLINE_TXT")_typed-while-drive-was-away.md"
 assert_eq "exactly the pending files are pushed" "ok: 0 new buffer(s), 0 session file(s) changed, 3 read, 4 file(s) pushed to Drive" "$(last_msg)"
+
+echo ""
+echo "another run in progress"
+echo "-----------------------"
+/usr/bin/python3 -c 'import fcntl, sys, time; f = open(sys.argv[1], "w"); fcntl.flock(f, fcntl.LOCK_EX); time.sleep(4)' "$STATE/.lock" &
+holder=$!
+sleep 1
+before_pushed="$(count "$STATE/pushed")"
+write_session "Auto Save Session.sublime_session" 202601011430 "$SHOP2" "$DIRTY" "$SECOND" "$THIRD" "$OFFLINE" "$LOCKED" "$CLEAN"
+assert_pass "locked: exit 0" "$BACKUP"
+assert_eq "locked: the run is skipped" "skip: another run is in progress" "$(last_msg)"
+assert_not_exists "locked: nothing is extracted" "$STATE/buffers/$(sha "$LOCKED_TXT")_typed-while-another-run-held-the-lock.md"
+assert_eq "locked: nothing is pushed" "$before_pushed" "$(count "$STATE/pushed")"
+wait "$holder"
+assert_pass "lock released: exit 0" "$BACKUP"
+assert_eq "lock released: the edit is pushed" "ok: 1 new buffer(s), 1 session file(s) changed, 3 read, 4 file(s) pushed to Drive" "$(last_msg)"
+assert_exists "lock released: the buffer landed on Drive" "$REMOTE/buffers/$(sha "$LOCKED_TXT")_typed-while-another-run-held-the-lock.md"
 
 echo ""
 echo "unreadable session file"

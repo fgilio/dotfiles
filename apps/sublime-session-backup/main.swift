@@ -8,9 +8,13 @@ import Foundation
 // 26, every read, listing, overwrite, rename and delete of a synced item fails
 // with EPERM and no prompt is ever shown; only creating a new file works. A
 // child process inherits its parent's TCC responsibility, so running the
-// script from inside an ad-hoc signed .app gives it this bundle's identity:
-// the first run prompts for Google Drive access once, and the grant is keyed
-// to the bundle ID, so rebuilds keep it.
+// script from inside an ad-hoc signed .app gives it this bundle's identity
+// and the first run prompts for Google Drive access once.
+//
+// The grant is stored against this build's code requirement, and ad-hoc
+// signing has no certificate to anchor it, so that requirement is the
+// binary's hash: a rebuild that changes the binary prompts once more. A
+// rebuild from unchanged source produces the same hash and keeps the grant.
 @main
 struct SublimeSessionBackup {
     static func main() {

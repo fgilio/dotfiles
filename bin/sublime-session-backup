@@ -72,7 +72,7 @@ mounted=0
 [ -d "$DRIVE/Apps" ] && mounted=1
 
 /usr/bin/python3 - "$TMP" "$STATE" "$REMOTE" "$mounted" <<'PY' >>"$LOG" 2>&1 || fail "backup errored, see $LOG"
-import filecmp, hashlib, json, os, re, shutil, sys, time
+import fcntl, filecmp, hashlib, json, os, re, shutil, sys, time
 
 tmp, state, remote, mounted = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4] == "1"
 mirror = os.path.join(state, "Local")
@@ -82,6 +82,16 @@ pushed = os.path.join(state, "pushed")
 for d in (mirror, buffers, pushed):
     os.makedirs(d, exist_ok=True)
 now = time.strftime("%Y-%m-%d %H:%M:%S")
+
+# One run at a time: a manual run can overlap the agent, and two writers on
+# the same destination would defeat the atomic replace in place(). The lock
+# is released when this process exits.
+lock = open(os.path.join(state, ".lock"), "w")
+try:
+    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+except OSError:
+    print(f"{now}  skip: another run is in progress")
+    sys.exit(0)
 
 
 def stamp(path):
@@ -114,7 +124,7 @@ def place(src, dst):
     """Copy src to dst through a sibling temp file, so a run killed mid-copy
     leaves the previous dst intact instead of a truncated one."""
     os.makedirs(os.path.dirname(dst), exist_ok=True)
-    tmp = dst + ".tmp"
+    tmp = f"{dst}.{os.getpid()}.tmp"
     shutil.copyfile(src, tmp)
     os.replace(tmp, dst)
 
