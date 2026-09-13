@@ -175,6 +175,11 @@ launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/com.fgilio.qmd-re
 cp "$DOTFILES/launchagents/com.fgilio.zed-buffer-backup.plist" "$HOME/Library/LaunchAgents/"
 launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/com.fgilio.zed-buffer-backup.plist" 2>/dev/null || true
 
+# Sublime session backup: half-hourly mirror of Local/*.sublime_session and
+# every unsaved buffer to Google Drive (issue #1). Same PATH note as above.
+cp "$DOTFILES/launchagents/com.fgilio.sublime-session-backup.plist" "$HOME/Library/LaunchAgents/"
+launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/com.fgilio.sublime-session-backup.plist" 2>/dev/null || true
+
 # Herd handles PHP and extensions
 
 # Install global Composer packages

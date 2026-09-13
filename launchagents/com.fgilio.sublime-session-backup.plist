@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.fgilio.sublime-session-backup</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/fgilio/.dotfiles/bin/sublime-session-backup</string>
+    </array>
+    <!-- No RunAtLoad: Google Drive mounts after login, so a run at load could only log a skip. -->
+    <key>StartInterval</key>
+    <integer>1800</integer>
+</dict>
+</plist>

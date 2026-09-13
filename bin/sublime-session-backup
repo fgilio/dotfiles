@@ -1,0 +1,179 @@
+#!/bin/bash
+# Mirror Sublime Text's session files and every unsaved buffer to Google Drive.
+#
+# Sublime keeps untitled buffers and unsaved edits only inside
+# Local/*.sublime_session (hot_exit), so a dead disk takes them along. Every 30
+# minutes this copies those files to Drive and writes each unsaved buffer out
+# as a readable file, content-addressed so a later edit never overwrites an
+# earlier one. Recovery on a new Mac: copy Local/ back before the first launch,
+# or just read buffers/.
+#
+# Issue #1 wanted Local symlinked into Drive instead. A symlink races Drive's
+# mount at login (Sublime starts, finds no session and writes an empty one over
+# the backup) and round-trips every autosave through Drive, so this copies.
+#
+# Safe to run while Sublime is open: the session files are copied to a temp dir
+# first and only the copies are read.
+set -uo pipefail
+
+LOCAL="$HOME/Library/Application Support/Sublime Text/Local"
+# The same account folder .mackup.cfg and .macos hardcode.
+DRIVE="$HOME/Library/CloudStorage/GoogleDrive-franco.gilio@gmail.com/My Drive"
+STORE="$DRIVE/Apps/SublimeText4Temp"
+# Log and stamps stay local: they have to work while Drive is not mounted.
+CACHE="$HOME/.cache/sublime-session-backup"
+LOG="$CACHE/backup.log"
+OK_STAMP="$CACHE/.last-ok"
+ALERT_STAMP="$CACHE/.last-alert"
+mkdir -p "$CACHE"
+
+log() { printf '%s  %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" >>"$LOG"; }
+
+fail() {
+  log "FAIL: $1"
+  # A modal every 30 minutes would train Franco to dismiss it, so speak up at
+  # most once a day and stay quiet in the log the rest of the time.
+  local today
+  today=$(date +%F)
+  if [ "$(cat "$ALERT_STAMP" 2>/dev/null)" != "$today" ]; then
+    echo "$today" >"$ALERT_STAMP"
+    osascript -e "display alert \"Sublime session backup failed\" message \"$1\" giving up after 120" >/dev/null 2>&1
+  fi
+  exit 1
+}
+
+[ -d "$LOCAL" ] || fail "Sublime Local dir not found at $LOCAL"
+
+# Drive is a login item that mounts a little after this agent loads, and it
+# gets quit on purpose now and then. An unmounted Drive is a quiet skip until a
+# whole day has passed without a backup. The stamp is created on the first run
+# so a fresh machine gets the same day of grace.
+if [ ! -d "$DRIVE/Apps" ]; then
+  [ -f "$OK_STAMP" ] || touch "$OK_STAMP"
+  last_ok=$(stat -f %m "$OK_STAMP")
+  if [ $(($(date +%s) - last_ok)) -gt 86400 ]; then
+    fail "Google Drive not mounted, nothing backed up since $(date -r "$last_ok" '+%Y-%m-%d %H:%M')"
+  fi
+  log "skip: Google Drive not mounted"
+  exit 0
+fi
+
+TMP=$(mktemp -d) || fail "cannot create temp dir"
+# /bin/rm, not the bin/rm trash wrapper: a temp dir is not user data.
+trap '/bin/rm -rf "$TMP"' EXIT
+
+# Sublime writes each session file to a .tmp and renames it into place, so a
+# copy taken here is always a complete document; the .tmp itself is skipped.
+shopt -s nullglob
+sessions=("$LOCAL"/*.sublime_session)
+shopt -u nullglob
+[ ${#sessions[@]} -gt 0 ] || fail "no *.sublime_session files in $LOCAL"
+for f in "${sessions[@]}"; do
+  cp -p "$f" "$TMP/" || fail "cannot copy $(basename "$f")"
+done
+
+mkdir -p "$STORE/Local" "$STORE/buffers" || fail "cannot create $STORE"
+
+/usr/bin/python3 - "$TMP" "$STORE" <<'PY' >>"$LOG" 2>&1 || fail "extraction errored, see $LOG"
+import filecmp, hashlib, json, os, re, shutil, sys, time
+
+tmp, store = sys.argv[1], sys.argv[2]
+buffers = os.path.join(store, "buffers")
+index = os.path.join(store, "index.tsv")
+now = time.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def slug(text):
+    line = next((l.strip() for l in text.splitlines() if l.strip()), "untitled")
+    line = re.sub(r"^[#\-*/>\s]+", "", line)
+    line = re.sub(r"[^A-Za-z0-9 ]+", " ", line)
+    return (re.sub(r"\s+", "-", line.strip()).lower()[:60] or "untitled").strip("-")
+
+
+# Sublime keeps three session files: "Auto Save Session" is written while it
+# runs, "Session" on exit and "Backup Session" is its copy of the previous
+# one. Any of them can hold a buffer the others already lost, so all are read
+# and the digest dedups the overlap. Oldest first, so the last one parsed is
+# the freshest (cp -p kept the mtimes).
+names = sorted(os.listdir(tmp), key=lambda n: os.path.getmtime(os.path.join(tmp, n)))
+sessions = {}
+unreadable = 0
+for name in names:
+    try:
+        with open(os.path.join(tmp, name), encoding="utf-8") as fh:
+            sessions[name] = json.load(fh)
+    except (OSError, ValueError) as e:
+        print(f"{now}  {name}: unreadable, {type(e).__name__}: {e}")
+        unreadable += 1
+
+# Mirror the raw files, but only the ones that parsed: a file Sublime left
+# corrupt must not replace the last good copy on Drive. Unchanged files are
+# left alone so Drive does not re-upload three 400KB files every half hour.
+mirrored = 0
+for name in sessions:
+    src, dst = os.path.join(tmp, name), os.path.join(store, "Local", name)
+    if os.path.exists(dst) and filecmp.cmp(src, dst, shallow=False):
+        continue
+    shutil.copyfile(src, dst)
+    mirrored += 1
+
+known = set()
+if os.path.exists(index):
+    with open(index) as fh:
+        known = {l.split("\t", 1)[0] for l in fh if l.strip()}
+
+new = 0
+with open(index, "a") as idx:
+    for name, session in sessions.items():
+        for window in session.get("windows", []):
+            for buf in window.get("buffers", []):
+                contents = buf.get("contents")
+                if not contents:
+                    continue  # absent or empty: the buffer is clean and on disk
+                digest = hashlib.sha1(contents.encode()).hexdigest()
+                if digest in known:
+                    continue
+                known.add(digest)
+                path = buf.get("file")
+                # A file-backed buffer with unsaved edits keeps its own name;
+                # an untitled one is named after its first line.
+                if path:
+                    out = f"{digest[:12]}_{os.path.basename(path)}"
+                else:
+                    out = f"{digest[:12]}_{slug(contents)}.md"
+                with open(os.path.join(buffers, out), "w", encoding="utf-8") as fh:
+                    fh.write(contents)
+                idx.write(f"{digest}\t{now}\t{name}\t{path or '-'}\t{len(contents)}\t{out}\n")
+                new += 1
+
+# The tab list is what makes the buffers findable again, so the freshest
+# session file also leaves a readable manifest (the raw copy has it too,
+# buried in the JSON).
+if sessions:
+    name, session = list(sessions.items())[-1]
+    lines = [f"# Sublime session snapshot — {now}", f"from `{name}`"]
+    for wi, window in enumerate(session.get("windows", []), 1):
+        tabs = window.get("buffers", [])
+        lines.append(f"\n## window {wi} — {len(tabs)} tabs")
+        for buf in tabs:
+            contents, path = buf.get("contents"), buf.get("file")
+            if contents:
+                digest = hashlib.sha1(contents.encode()).hexdigest()[:12]
+                head = next((l for l in contents.splitlines() if l.strip()), "")[:70]
+                what = f"`{path}` with unsaved edits" if path else head
+                lines.append(f"- [unsaved {len(contents)}B {digest}] {what}")
+            else:
+                lines.append(f"- `{path}`" if path else "- [empty untitled]")
+    with open(os.path.join(store, "latest.md"), "w", encoding="utf-8") as fh:
+        fh.write("\n".join(lines) + "\n")
+
+print(f"{now}  ok: {new} new buffer(s), {mirrored} session file(s) mirrored, {len(sessions)} read")
+sys.exit(1 if unreadable else 0)
+PY
+
+touch "$OK_STAMP"
+
+# Keep the log from growing without bound.
+if [ "$(wc -l <"$LOG")" -gt 2000 ]; then
+  tail -1000 "$LOG" >"$LOG.tmp" && mv "$LOG.tmp" "$LOG"
+fi
