@@ -43,6 +43,9 @@ SHOP2='{"contents":"'$SHOP2_TXT'","settings":{"buffer_size":30}}'
 OFFLINE_TXT='typed while Drive was away\n'
 OFFLINE='{"contents":"'$OFFLINE_TXT'","settings":{}}'
 EMPTIED='{"file":"/tmp/x/emptied.md","contents":"","file_size":40,"file_write_time":1,"settings":{}}'
+LONG_TXT='unsaved edits in a file with a very long name\n'
+LONG_NAME="$(printf 'n%.0s' $(seq 1 240)).md"
+LONG='{"file":"/tmp/x/'$LONG_NAME'","contents":"'$LONG_TXT'","file_size":1,"file_write_time":1,"settings":{}}'
 LOCKED_TXT='typed while another run held the lock\n'
 LOCKED='{"contents":"'$LOCKED_TXT'","settings":{}}'
 FOURTH_TXT='survives a corrupt sibling\n'
@@ -103,13 +106,16 @@ assert_eq "nothing is pushed twice" "ok: 0 new buffer(s), 0 session file(s) chan
 echo ""
 echo "third run, edits"
 echo "----------------"
-write_session "Auto Save Session.sublime_session" 202601011300 "$SHOP2" "$DIRTY" "$SECOND" "$THIRD" "$CLEAN"
+write_session "Auto Save Session.sublime_session" 202601011300 "$SHOP2" "$DIRTY" "$SECOND" "$THIRD" "$LONG" "$CLEAN"
 assert_pass "exit 0" "$BACKUP"
 assert_exists "new buffer captured" "$REMOTE/buffers/$(sha "$THIRD_TXT")_a-third-one.md"
 assert_exists "edited buffer lands beside the old version" "$REMOTE/buffers/$(sha "$SHOP2_TXT")_shopping-list.md"
 assert_exists "old version is kept" "$REMOTE/buffers/$(sha "$SHOP_TXT")_shopping-list.md"
-assert_eq "five buffers now" 5 "$(count "$REMOTE/buffers")"
-assert_eq "only the changed files are pushed" "ok: 2 new buffer(s), 1 session file(s) changed, 3 read, 5 file(s) pushed to Drive" "$(last_msg)"
+long_out="$(cd "$REMOTE/buffers" && ls "$(sha "$LONG_TXT")_"*)"
+# 255 minus ".<pid>.tmp": a pid has 1 to 7 digits, so 242 to 248.
+assert_pass "a 240-char basename is shortened to fit NAME_MAX with the temp suffix" test "${#long_out}" -ge 242 -a "${#long_out}" -le 248 -a "${long_out: -3}" = ".md"
+assert_eq "six buffers now" 6 "$(count "$REMOTE/buffers")"
+assert_eq "only the changed files are pushed" "ok: 3 new buffer(s), 1 session file(s) changed, 3 read, 6 file(s) pushed to Drive" "$(last_msg)"
 assert_pass "pushed copy follows the edit" cmp -s "$LOCAL/Auto Save Session.sublime_session" "$REMOTE/Local/Auto Save Session.sublime_session"
 
 echo ""
@@ -168,6 +174,10 @@ touch -t 202601011502 "$LOCAL/Session.sublime_session"
 assert_fail "valid JSON with the wrong shape: exit 1" "$BACKUP"
 assert_file_has "wrong shape is logged" 'Session.sublime_session: unreadable, ValueError: not a Sublime session' "$LOG"
 assert_fail "wrong shape does not replace the last good copy" cmp -s "$LOCAL/Session.sublime_session" "$REMOTE/Local/Session.sublime_session"
+echo '{"windows":[{"buffers":[{"contents":42}]}]}' >"$LOCAL/Session.sublime_session"
+touch -t 202601011503 "$LOCAL/Session.sublime_session"
+assert_fail "buffer with a non-string contents: exit 1" "$BACKUP"
+assert_fail "non-string contents does not replace the last good copy" cmp -s "$LOCAL/Session.sublime_session" "$STATE/Local/Session.sublime_session"
 
 echo ""
 echo "no session files"
