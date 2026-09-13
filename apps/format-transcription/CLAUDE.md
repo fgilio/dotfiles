@@ -40,6 +40,5 @@ automator -i ~/Downloads/audio.opus ~/Library/Services/Transcribe\ Audio.workflo
 
 ## Gotchas
 
-- **First run after install**: macOS will prompt for Downloads folder access. The TCC grant persists for the bundle ID (`com.fgilio.format-transcription`)
-- **After rebuild**: if the bundle ID stays the same, TCC grants carry over. If you change it, the user gets prompted again
+- **TCC**: the Downloads-folder grant is keyed to the bundle ID (`com.fgilio.format-transcription`); a rebuild keeps it, a new ID re-prompts.
 - **Whisper language**: the workflow uses `-l auto` for whisper-cli. Default is `-l en` which forces English transcription (translation, not transcription)
