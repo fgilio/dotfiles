@@ -1,8 +1,6 @@
 # FormatTranscription.app
 
-Background-only macOS app that formats raw whisper transcriptions into clean Markdown using Apple's on-device LLM (FoundationModels framework, ~3B param, Metal-accelerated).
-
-100% local, zero network, zero API keys. Requires macOS 26+ with Apple Intelligence enabled.
+Background-only macOS app: formats a whisper transcript into Markdown with Apple's on-device model (FoundationModels). On-device only: no network, no API keys. Needs macOS 26+ with Apple Intelligence.
 
 ## Architecture
 
