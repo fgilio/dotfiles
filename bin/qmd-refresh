@@ -1,22 +1,7 @@
 #!/bin/bash
 # Daily qmd index refresh: update, embed, and clean up once orphans pile up.
-# Silent on success; one modal alert a day on failure.
-#
-# Why it is shaped like this (three bad runs in a row, 2026-09-12 to 09-15):
-#   - A 09:30 StartCalendarInterval that the Mac slept through fired on the
-#     next wake, usually a Power Nap dark wake that lasts seconds. The Mac
-#     slept again mid-embed, and on wake qmd's 5-minute idle timer was overdue
-#     and disposed the embedding contexts under the running embed
-#     (tobi/qmd#947, fix pending in #948): 568 chunks failed with "Object is
-#     disposed" and `qmd embed` still exited 0 (tobi/qmd#935).
-#   - Auto parallelism opens 8 Metal contexts: 4.9 GB peak to embed 1005
-#     chunks in 1m51s, against 0.8 GB and 2m08s with one context. Under memory
-#     pressure that footprint was compressed out and the embed sat in
-#     llama_decode at 2% CPU until killed.
-# So launchd fires every 30 minutes and this script decides: once a day, only
-# while the Mac reports user activity, awake for the whole run, one context,
-# success read from what is still pending (not from exit codes), and a
-# watchdog for anything that still hangs.
+# Silent on success; one modal alert a day on failure. launchd fires it every
+# 30 minutes and the script decides whether today's refresh is still due.
 set -uo pipefail
 
 STATE="$HOME/.cache/qmd"
@@ -106,7 +91,7 @@ run_limited() {
   return "$rc"
 }
 
-# A bad day's stack traces once grew the log to 26k lines.
+# A failing embed logs a stack trace per chunk, tens of thousands of lines.
 if [ "$(wc -l <"$LOG" 2>/dev/null || echo 0)" -gt 5000 ]; then
   tail -n 3000 "$LOG" >"$LOG.tmp" && mv "$LOG.tmp" "$LOG"
 fi
@@ -119,10 +104,12 @@ export NVM_DIR="$HOME/Library/Application Support/Herd/config/nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" >/dev/null 2>&1
 # qmd is a bun global package, so its shim lives here too.
 export PATH="$HOME/.bun/bin:$PATH"
-# One embedding context instead of eight: see the header.
+# One embedding context caps peak memory near 0.8 GB. Auto opens up to 8
+# Metal contexts (~4.9 GB), which memory pressure can stall, to save seconds.
 export QMD_EMBED_PARALLELISM=1
 
-# Closing the lid still sleeps the Mac; the second embed attempt covers that.
+# A sleep mid-embed fails the rest of the run (see the embed loop). Closing
+# the lid still sleeps the Mac; the second embed attempt covers that.
 caffeinate -i -w $$ &
 caffeinate_pid=$!
 
@@ -132,6 +119,11 @@ command -v qmd >/dev/null 2>&1 || fail "qmd not found on PATH."
 
 run_limited "$UPDATE_LIMIT" "$LOG" qmd update || fail "qmd update failed (exit $?)."
 
+# `qmd embed` exits 0 even when chunks fail (tobi/qmd#935), so success is read
+# from what status still reports pending. After a sleep mid-embed, qmd's
+# 5-minute idle timer disposes the contexts under the running embed and every
+# remaining chunk fails (tobi/qmd#947, fix pending in #948). A fresh process
+# starts with new contexts, so one retry finishes the job.
 for ((attempt = 1; attempt <= EMBED_ATTEMPTS; attempt++)); do
   run_limited "$EMBED_LIMIT" "$LOG" qmd embed
   rc=$?
