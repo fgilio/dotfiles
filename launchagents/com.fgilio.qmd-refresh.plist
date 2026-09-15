@@ -8,12 +8,15 @@
     <array>
         <string>/Users/fgilio/.local/bin/qmd-refresh</string>
     </array>
-    <key>StartCalendarInterval</key>
-    <dict>
-        <key>Hour</key>
-        <integer>9</integer>
-        <key>Minute</key>
-        <integer>30</integer>
-    </dict>
+    <!-- Half-hourly, not a daily calendar slot: a missed slot fires on the
+         next dark wake and the Mac sleeps mid-run. The script runs the refresh
+         once a day, in the first slot where Franco is at the Mac. -->
+    <key>StartInterval</key>
+    <integer>1800</integer>
+    <key>RunAtLoad</key>
+    <true/>
+    <!-- Throttled CPU and I/O. Measured cost: +20% embed time. -->
+    <key>ProcessType</key>
+    <string>Background</string>
 </dict>
 </plist>

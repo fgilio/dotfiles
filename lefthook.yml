@@ -16,3 +16,5 @@ pre-push:
       run: bin/rm-test
     sublime-session-backup-test:
       run: bin/sublime-session-backup-test
+    qmd-refresh-test:
+      run: bin/qmd-refresh-test
