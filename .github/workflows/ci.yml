@@ -48,3 +48,6 @@ jobs:
 
       - name: Test sublime-session-backup
         run: bash bin/sublime-session-backup-test
+
+      - name: Test qmd-refresh
+        run: bash bin/qmd-refresh-test

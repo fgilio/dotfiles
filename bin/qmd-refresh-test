@@ -1,0 +1,240 @@
+#!/usr/bin/env bash
+# Automated tests for bin/qmd-refresh
+# Runs under a throwaway $HOME with stub qmd, pmset, osascript, caffeinate and
+# node, so the real index is never touched and no dialog can pop up.
+set -uo pipefail
+
+# Derived from the script's own location so a worktree or secondary clone
+# tests its own copy, not whatever ~/.dotfiles happens to contain
+DOTFILES="$(cd "$(dirname "$0")/.." && pwd)"
+REFRESH="$DOTFILES/bin/qmd-refresh"
+
+# shellcheck source=bin/lib/test-assert.sh
+source "$DOTFILES/bin/lib/test-assert.sh"
+
+sandbox="$(mktemp -d)"
+cleanup() { /bin/rm -rf -- "$sandbox"; }
+trap cleanup EXIT
+
+export HOME="$sandbox/home"
+export STUB="$sandbox/stub"
+STATE="$HOME/.cache/qmd"
+LOG="$STATE/refresh.log"
+mkdir -p "$HOME/.bun/bin" "$STUB/bin"
+# Only the stubs and the base system: pmset must resolve to the stub, and no
+# real qmd or node may leak in from the caller's PATH.
+export PATH="$STUB/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+
+# The script finds qmd where bun installs it, under $HOME/.bun/bin. Behaviour
+# is scripted through files in $STUB/s: pending_seq holds the pending count
+# left after each embed attempt (line N for attempt N), embed_hang the attempt
+# that hangs, orphans the orphaned-vector percentage status reports.
+cat >"$HOME/.bun/bin/qmd" <<'EOF'
+#!/bin/bash
+s="$STUB/s"
+echo "qmd $*" >>"$s/calls"
+case "$1" in
+  update) exit "$(cat "$s/update_rc" 2>/dev/null || echo 0)" ;;
+  embed)
+    n=$(($(cat "$s/embeds" 2>/dev/null || echo 0) + 1))
+    echo "$n" >"$s/embeds"
+    # Stands in for the bun process the real launcher spawns and never signals.
+    if [ "$(cat "$s/embed_hang" 2>/dev/null)" = "$n" ]; then
+      sleep 300 &
+      echo $! >"$s/child"
+      wait
+    fi
+    sed -n "${n}p" "$s/pending_seq" >"$s/pending"
+    echo "Done!"
+    ;;
+  status)
+    [ -f "$s/status_hang" ] && sleep 300
+    if [ -f "$s/status_reworded" ]; then
+      echo "  Embeddings: 100"
+      exit 0
+    fi
+    # Mirrors the real layout, color codes included.
+    o=$(cat "$s/orphans" 2>/dev/null || echo 0)
+    p=$(cat "$s/pending" 2>/dev/null)
+    echo "  Vectors:  100 embedded"
+    [ "$o" -gt 0 ] && printf '  \033[33mOrphaned: %s embedding chunks (%s%%)\033[0m\n' "$o" "$o"
+    [ "${p:-0}" -gt 0 ] && printf '  \033[33mPending:  %s need embedding\033[0m\n' "$p"
+    ;;
+  cleanup) echo "cleaned" ;;
+esac
+exit 0
+EOF
+cat >"$STUB/bin/pmset" <<'EOF'
+#!/bin/bash
+printf '   UserIsActive                   %s\n   PreventUserIdleSystemSleep     1\n' "$(cat "$STUB/s/active" 2>/dev/null || echo 1)"
+# Far more than a pipe buffer after the match, so a reader that stops early
+# kills pmset with SIGPIPE. exec, so the death is pmset's own exit status.
+[ -f "$STUB/s/pmset_big" ] && exec seq 1 200000
+exit 0
+EOF
+cat >"$STUB/bin/osascript" <<'EOF'
+#!/bin/bash
+echo "$*" >>"$STUB/s/alerts"
+EOF
+cat >"$STUB/bin/caffeinate" <<'EOF'
+#!/bin/bash
+echo "caffeinate $*" >>"$STUB/s/calls"
+EOF
+printf '#!/bin/bash\n' >"$STUB/bin/node"
+chmod +x "$HOME/.bun/bin/qmd" "$STUB/bin/"*
+
+today=$(date +%F)
+# fresh_day: a new day with a clean index and no stamps
+fresh_day() {
+  /bin/rm -rf -- "$STUB/s" "$STATE"
+  mkdir -p "$STUB/s"
+  : >"$STUB/s/calls"
+  printf '0\n' >"$STUB/s/pending_seq"
+}
+# grep -c prints 0 itself on no match, then exits 1
+count_calls() { grep -c "^qmd $1" "$STUB/s/calls" || true; }
+
+echo "dark wake"
+echo "---------"
+fresh_day
+echo 0 >"$STUB/s/active"
+assert_pass "exits 0" "$REFRESH"
+assert_eq "runs nothing" 0 "$(wc -l <"$STUB/s/calls" | tr -d ' ')"
+assert_not_exists "leaves no stamp, so a later slot runs today" "$STATE/.refresh-last-ok"
+
+echo ""
+echo "clean run"
+echo "---------"
+fresh_day
+echo 5 >"$STUB/s/orphans"
+assert_pass "exits 0" "$REFRESH"
+assert_eq "updates once" 1 "$(count_calls update)"
+assert_eq "embeds once" 1 "$(count_calls embed)"
+assert_eq "no cleanup below 10% orphans" 0 "$(count_calls cleanup)"
+assert_file_has "holds idle sleep off for the run" "caffeinate -i -w" "$STUB/s/calls"
+assert_eq "stamps today" "$today" "$(cat "$STATE/.refresh-last-ok")"
+assert_not_exists "no alert" "$STUB/s/alerts"
+assert_file_has "logs the attempt" "embed attempt 1: exit 0, 0 documents pending" "$LOG"
+assert_file_has "logs qmd's own output" "Done!" "$LOG"
+
+echo ""
+echo "second run the same day"
+echo "-----------------------"
+: >"$STUB/s/calls"
+assert_pass "exits 0" "$REFRESH"
+assert_eq "runs nothing" 0 "$(wc -l <"$STUB/s/calls" | tr -d ' ')"
+
+echo ""
+echo "chunks fail, retry recovers"
+echo "---------------------------"
+fresh_day
+printf '3\n0\n' >"$STUB/s/pending_seq"
+assert_pass "exits 0" "$REFRESH"
+assert_eq "embeds twice" 2 "$(count_calls embed)"
+assert_file_has "logs the pending count" "embed attempt 1: exit 0, 3 documents pending" "$LOG"
+assert_not_exists "no alert" "$STUB/s/alerts"
+
+echo ""
+echo "chunks keep failing"
+echo "-------------------"
+fresh_day
+printf '3\n2\n' >"$STUB/s/pending_seq"
+assert_fail "exits 1" "$REFRESH"
+assert_eq "stops after two attempts" 2 "$(count_calls embed)"
+assert_file_has "alert names what is left" "2 documents still need embedding after 2 attempts." "$STUB/s/alerts"
+assert_file_has "alert gives up before the next 30-minute slot" "giving up after 1500" "$STUB/s/alerts"
+assert_file_has "message goes in as an argument, not spliced into the script" "message (item 1 of argv)" "$STUB/s/alerts"
+assert_not_exists "no stamp, so the next slot retries" "$STATE/.refresh-last-ok"
+/bin/rm -- "$STUB/s/embeds"
+assert_fail "the next slot fails again" "$REFRESH"
+assert_eq "but alerts once a day" 1 "$(grep -c "qmd index refresh failed" "$STUB/s/alerts")"
+assert_eq "and logs every failure" 2 "$(grep -c "FAIL: 2 documents" "$LOG")"
+
+echo ""
+echo "embed hangs"
+echo "-----------"
+fresh_day
+echo 5 >"$STUB/s/pending"
+echo 1 >"$STUB/s/embed_hang"
+printf '5\n0\n' >"$STUB/s/pending_seq"
+assert_pass "exits 0" env QMD_REFRESH_EMBED_LIMIT=2 "$REFRESH"
+assert_file_has "logs the kill" "killed after 2s: qmd embed" "$LOG"
+assert_fail "kills the whole process group" kill -0 "$(cat "$STUB/s/child")"
+assert_eq "the retry finishes the job" 2 "$(count_calls embed)"
+assert_file_has "logs the killed attempt" "embed attempt 1: exit 124, 5 documents pending" "$LOG"
+
+echo ""
+echo "job stopped mid-embed"
+echo "---------------------"
+fresh_day
+echo 1 >"$STUB/s/embed_hang"
+"$REFRESH" &
+job=$!
+for _ in $(seq 1 50); do
+  [ -s "$STUB/s/child" ] && break
+  sleep 0.2
+done
+assert_exists "embed is running" "$STUB/s/child"
+kill -TERM "$job"
+wait "$job"
+assert_eq "exits 143" 143 "$?"
+sleep 1
+assert_fail "takes the embed's process group down too" kill -0 "$(cat "$STUB/s/child")"
+
+echo ""
+echo "status hangs"
+echo "------------"
+fresh_day
+touch "$STUB/s/status_hang"
+assert_fail "exits 1" env QMD_REFRESH_STATUS_LIMIT=2 "$REFRESH"
+assert_file_has "alerts with the kill exit code" "qmd status failed (exit 124)." "$STUB/s/alerts"
+
+echo ""
+echo "status reworded by a qmd release"
+echo "--------------------------------"
+fresh_day
+touch "$STUB/s/status_reworded"
+assert_fail "exits 1 instead of reading success" "$REFRESH"
+assert_file_has "says why" "qmd status output not recognized." "$STUB/s/alerts"
+assert_not_exists "no stamp" "$STATE/.refresh-last-ok"
+
+echo ""
+echo "large assertion output"
+echo "----------------------"
+fresh_day
+touch "$STUB/s/pmset_big"
+assert_pass "exits 0" "$REFRESH"
+assert_eq "still runs" 1 "$(count_calls update)"
+
+echo ""
+echo "orphans pile up"
+echo "---------------"
+fresh_day
+echo 42 >"$STUB/s/orphans"
+assert_pass "exits 0" "$REFRESH"
+assert_eq "cleans up" 1 "$(count_calls cleanup)"
+assert_file_has "logs why" "cleanup: 42% of vectors orphaned" "$LOG"
+
+echo ""
+echo "update fails"
+echo "------------"
+fresh_day
+echo 2 >"$STUB/s/update_rc"
+assert_fail "exits 1" "$REFRESH"
+assert_eq "never embeds" 0 "$(count_calls embed)"
+assert_file_has "alerts with the exit code" "qmd update failed (exit 2)." "$STUB/s/alerts"
+
+echo ""
+echo "long log"
+echo "--------"
+fresh_day
+mkdir -p "$STATE"
+seq 1 6000 >"$LOG"
+assert_pass "exits 0" "$REFRESH"
+assert_pass "trims to the newest lines" test "$(wc -l <"$LOG")" -lt 3100
+assert_eq "keeps the tail" "6000" "$(grep -m1 -x '6000' "$LOG")"
+
+echo ""
+echo "----------"
+printf '%d passed, %d failed\n' "$pass" "$fail"
+[[ $fail -eq 0 ]] && exit 0 || exit 1

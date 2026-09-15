@@ -1,8 +1,100 @@
 #!/bin/bash
-# Daily qmd index refresh. Silent on success; modal alert on failure.
+# Daily qmd index refresh: update, embed, and clean up once orphans pile up.
+# Silent on success; one modal alert a day on failure. launchd fires it every
+# 30 minutes and the script decides whether today's refresh is still due.
 set -uo pipefail
-LOG="$HOME/.cache/qmd/refresh.log"
-mkdir -p "$(dirname "$LOG")"
+
+STATE="$HOME/.cache/qmd"
+LOG="$STATE/refresh.log"
+STATUS="$STATE/.refresh-status"
+OK_STAMP="$STATE/.refresh-last-ok"
+ALERT_STAMP="$STATE/.refresh-last-alert"
+# Tests shrink the limits; real runs never set them. The embed limit sits above
+# qmd's own 30-minute embed session cap, so a slow but live embed stops on
+# qmd's terms and the next attempt resumes it; only a real hang reaches it.
+UPDATE_LIMIT="${QMD_REFRESH_UPDATE_LIMIT:-600}"
+EMBED_LIMIT="${QMD_REFRESH_EMBED_LIMIT:-2400}"
+STATUS_LIMIT="${QMD_REFRESH_STATUS_LIMIT:-120}"
+EMBED_ATTEMPTS=2
+# qmd's own cleanup hint fires past 10% too. Not every run: cleanup also drops
+# the LLM result cache and vacuums a ~200 MB database.
+CLEANUP_ORPHAN_PCT=10
+mkdir -p "$STATE"
+
+today=$(date +%F)
+[ "$(cat "$OK_STAMP" 2>/dev/null)" = "$today" ] && exit 0
+# UserIsActive is 0 in a dark wake and once the Mac sits idle past the display
+# sleep timer: exactly the runs the Mac is likely to sleep through. It is
+# declared activity (apps can assert it too), a filter rather than proof that
+# Franco is there. grep reads to the end instead of -q: an early exit would
+# SIGPIPE pmset and, under pipefail, skip the run.
+pmset -g assertions | grep -E '^[[:space:]]*UserIsActive[[:space:]]+1$' >/dev/null || exit 0
+
+log() { printf '%s  %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1" >>"$LOG"; }
+
+fail() {
+  log "FAIL: $1"
+  # The alert blocks the script; do not hold the Mac awake meanwhile.
+  kill "${caffeinate_pid:-}" 2>/dev/null
+  # Modal, not a banner, which is easy to miss. It gives up before the next
+  # 30-minute slot, because launchd skips slots while this job still runs and
+  # an unanswered alert would stop the retries. Every later retry today stays
+  # quiet in the log so the alert does not come back every 30 minutes.
+  if [ "$(cat "$ALERT_STAMP" 2>/dev/null)" != "$today" ]; then
+    echo "$today" >"$ALERT_STAMP"
+    # The message goes in as an argument: spliced into the script, a quote
+    # in it would break the AppleScript and silently drop the alert.
+    osascript -e 'on run argv' \
+      -e 'display alert "qmd index refresh failed" message (item 1 of argv) as critical giving up after 1500' \
+      -e 'end run' "$1"$'\n\nLog: ~/.cache/qmd/refresh.log' >/dev/null 2>&1
+  fi
+  exit 1
+}
+
+# Each qmd step runs in its own process group (see run_limited), which a kill
+# of this script's group does not reach. So take the running step down with
+# us, or a launchd reload mid-embed leaves it running into the next run.
+step_pid=
+stop_step() { [ -n "$step_pid" ] && kill -TERM -- "-$step_pid" 2>/dev/null; }
+trap stop_step EXIT
+trap 'exit 143' TERM INT HUP
+
+# run_limited SECONDS OUT CMD...: run CMD with its output appended to OUT,
+# killed after SECONDS. Own process group, because the qmd launcher spawns bun
+# and forwards no signals: only a group kill reaches the process doing the
+# work. Counts awake time only (sleep 1 pauses while the Mac sleeps), so a run
+# is never killed for having been asleep. Returns 124 after a kill, like
+# timeout(1).
+run_limited() {
+  local limit=$1 out=$2 elapsed=0 rc
+  shift 2
+  set -m
+  "$@" >>"$out" 2>&1 &
+  step_pid=$!
+  set +m
+  while kill -0 "$step_pid" 2>/dev/null; do
+    if [ "$elapsed" -ge "$limit" ]; then
+      log "killed after ${limit}s: $*"
+      kill -TERM -- "-$step_pid" 2>/dev/null
+      sleep 5
+      kill -KILL -- "-$step_pid" 2>/dev/null
+      wait "$step_pid" 2>/dev/null
+      step_pid=
+      return 124
+    fi
+    sleep 1
+    elapsed=$((elapsed + 1))
+  done
+  wait "$step_pid"
+  rc=$?
+  step_pid=
+  return "$rc"
+}
+
+# A failing embed logs a stack trace per chunk, tens of thousands of lines.
+if [ "$(wc -l <"$LOG" 2>/dev/null || echo 0)" -gt 5000 ]; then
+  tail -n 3000 "$LOG" >"$LOG.tmp" && mv "$LOG.tmp" "$LOG"
+fi
 
 # launchd runs this with a bare environment. qmd's shebang is `#!/usr/bin/env
 # node`, and node only exists via NVM, which .zshenv lazy-loads and launchd
@@ -12,19 +104,46 @@ export NVM_DIR="$HOME/Library/Application Support/Herd/config/nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" >/dev/null 2>&1
 # qmd is a bun global package, so its shim lives here too.
 export PATH="$HOME/.bun/bin:$PATH"
+# One embedding context caps peak memory near 0.8 GB. Auto opens up to 8
+# Metal contexts (~4.9 GB), which memory pressure can stall, to save seconds.
+export QMD_EMBED_PARALLELISM=1
 
-fail() {
-  # A banner is too easy to miss for a once-a-day job that only speaks up when
-  # something is broken, so this blocks until acknowledged.
-  osascript -e "display alert \"qmd index refresh failed\" message \"$1
+# A sleep mid-embed fails the rest of the run (see the embed loop). Closing
+# the lid still sleeps the Mac; the second embed attempt covers that.
+caffeinate -i -w $$ &
+caffeinate_pid=$!
 
-Log: ~/.cache/qmd/refresh.log\" as critical" >/dev/null 2>&1
-  exit 1
-}
-
-echo "=== qmd refresh $(date '+%Y-%m-%d %H:%M:%S') ===" >>"$LOG"
-
+log "=== qmd refresh"
 command -v node >/dev/null 2>&1 || fail "node not found on PATH."
 command -v qmd >/dev/null 2>&1 || fail "qmd not found on PATH."
 
-{ qmd update && qmd embed; } >>"$LOG" 2>&1 || fail "$(tail -3 "$LOG")"
+run_limited "$UPDATE_LIMIT" "$LOG" qmd update || fail "qmd update failed (exit $?)."
+
+# `qmd embed` exits 0 even when chunks fail (tobi/qmd#935), so success is read
+# from what status still reports pending. After a sleep mid-embed, qmd's
+# 5-minute idle timer disposes the contexts under the running embed and every
+# remaining chunk fails (tobi/qmd#947, fix pending in #948). A fresh process
+# starts with new contexts, so one retry finishes the job.
+for ((attempt = 1; attempt <= EMBED_ATTEMPTS; attempt++)); do
+  run_limited "$EMBED_LIMIT" "$LOG" qmd embed
+  rc=$?
+  : >"$STATUS"
+  run_limited "$STATUS_LIMIT" "$STATUS" qmd status || fail "qmd status failed (exit $?)."
+  # A missing Pending line means 0 pending, so a qmd release that reworded
+  # status would otherwise read as success forever. Vectors is always printed.
+  grep -qE 'Vectors: +[0-9]+ embedded' "$STATUS" || fail "qmd status output not recognized."
+  pending=$(grep -oE 'Pending: +[0-9]+' "$STATUS" | grep -oE '[0-9]+$')
+  pending=${pending:-0}
+  log "embed attempt $attempt: exit $rc, $pending documents pending"
+  [ "$pending" -eq 0 ] && break
+done
+[ "$pending" -eq 0 ] || fail "$pending documents still need embedding after $EMBED_ATTEMPTS attempts."
+
+orphan_pct=$(grep -oE 'Orphaned: +[0-9]+ embedding chunks \([0-9]+%\)' "$STATUS" | grep -oE '[0-9]+%' | tr -d %)
+if [ "${orphan_pct:-0}" -ge "$CLEANUP_ORPHAN_PCT" ]; then
+  log "cleanup: ${orphan_pct}% of vectors orphaned"
+  run_limited "$UPDATE_LIMIT" "$LOG" qmd cleanup || fail "qmd cleanup failed (exit $?)."
+fi
+
+echo "$today" >"$OK_STAMP"
+log "ok"

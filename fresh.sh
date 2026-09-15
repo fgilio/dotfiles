@@ -174,7 +174,8 @@ load_agent() {
   launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/$1.plist"
 }
 
-# qmd index refresh: daily launchd job, notifies on failure only
+# qmd index refresh: half-hourly launchd check that refreshes once a day while
+# Franco is at the Mac, notifies on failure only
 ln -sf "$DOTFILES/bin/qmd-refresh" "$HOME/.local/bin/qmd-refresh"
 load_agent com.fgilio.qmd-refresh
 
